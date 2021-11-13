@@ -5,8 +5,8 @@
 
 {% block content %}
     <div class="allianceauth-buyback-program-plugin">
-        <h1 class="page-header text-center">{% translate "buybackprogram" %}</h1>
-
+        <h1 class="page-header text-center">{% translate "Buyback Program" %}</h1>
+        {% include 'buybackprogram/menu.html' %}
         {% block details %}{% endblock %}
     </div>
 {% endblock %}

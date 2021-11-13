@@ -13,7 +13,7 @@ class BuybackProgramMenuItem(MenuItemHook):
         # setup menu entry for sidebar
         MenuItemHook.__init__(
             self,
-            _("buybackprogram"),
+            _("Buyback Program"),
             "fas fa-cube fa-fw",
             "buybackprogram:index",
             navactive=["buybackprogram:"],

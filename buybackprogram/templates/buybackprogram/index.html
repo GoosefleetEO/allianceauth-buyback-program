@@ -31,7 +31,9 @@
                     <a class="btn btn-success btn-sm"></a>
                     <a class="btn btn-success btn-sm"></a>
                     {% if perms.buybackprogram.manage_programs %}
-                    <a class="btn btn-success btn-sm"></a>
+                    <a class="btn btn-sm btn-success" href="{% url 'buybackprogram:program_add_item' program_pk=program.id %}">
+    Add item & price
+  </a>
                     <a class="btn btn-success btn-sm"></a>
                     <a class="btn btn-success btn-sm"></a>
                     {% endif %}

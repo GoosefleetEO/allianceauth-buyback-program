@@ -10,7 +10,7 @@ from esi.decorators import token_required
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
-from buybackprogram.forms import ProgramForm
+from buybackprogram.forms import ProgramForm, ProgramItemForm
 from buybackprogram.models import Owner, Program
 from buybackprogram.utils import messages_plus
 
@@ -108,4 +108,29 @@ def program_add(request):
         return HttpResponseRedirect(reverse("buybackprogram:index"))
 
     context["form"] = form
+
     return render(request, "buybackprogram/program_add.html", context)
+
+
+def program_add_item(request, program_pk):
+    program = Program.objects.filter(pk=program_pk).first()
+
+    if program is None:
+        return redirect("buybackprogram:index")
+
+    # create object of form
+    form = ProgramItemForm(request.POST or None)
+
+    # check if form data is valid
+    if request.POST and form.is_valid():
+        # save the form data to model
+        form.save()
+
+        return HttpResponseRedirect(reverse("buybackprogram:index"))
+
+    context = {
+        "program": program,
+        "form": form,
+    }
+
+    return render(request, "buybackprogram/program_add_item.html", context)

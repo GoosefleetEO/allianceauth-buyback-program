@@ -13,4 +13,4 @@ class ProgramForm(forms.ModelForm):
 class ProgramItemForm(forms.ModelForm):
     class Meta:
         model = ProgramItem
-        fields = "__all__"
+        fields = ("item_tax", "program")

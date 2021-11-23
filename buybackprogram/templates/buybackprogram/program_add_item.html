@@ -9,8 +9,44 @@
   {% csrf_token %}
   {{ form|bootstrap }}
   <button type="submit" class="btn btn-primary">Add item</button>
+
+
+  <div class="panel-group" id="accordion">
+    {% for group in marketgroup %}
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}">
+                    {{ group }} {{ group.id }}
+                </a>
+            </h4>
+        </div>
+        <div id="collapse{{ forloop.counter }}" class="panel-collapse collapse">
+            <div class="panel-body">
+                <table class="table table-hover">
+                    {% for im in group.related_marketgroups %}
+                        <tr>
+                            <td>
+                               {{ im }}
+                            </td>
+                            <td>
+                                tax
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <p>details</p>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
 </form>
 {% endblock %}
+
 
 {% block extra_javascript %}
 <script type="text/javascript" src="{% static 'buybackprogram/js/bootstrap-autocomplete.min.js' %}"></script>

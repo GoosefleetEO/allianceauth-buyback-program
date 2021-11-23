@@ -120,9 +120,7 @@ def program_add_item(request, program_pk):
 
     for m in marketgroups:
 
-        m.related_marketgroups = EveMarketGroup.objects.filter(
-            parent_market_group_id=m.id
-        )
+        m.child_groups = m.market_group_children.all()
 
     if program is None:
         return redirect("buybackprogram:index")

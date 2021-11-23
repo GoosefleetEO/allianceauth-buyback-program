@@ -25,10 +25,10 @@
         <div id="collapse{{ forloop.counter }}" class="panel-collapse collapse">
             <div class="panel-body">
                 <table class="table table-hover">
-                    {% for im in group.related_marketgroups %}
+                    {% for im in group.child_groups %}
                         <tr>
                             <td>
-                               {{ im }}
+                               {{ im }} {{ im.id }} parent {{ im.parent_market_group_id }}
                             </td>
                             <td>
                                 tax

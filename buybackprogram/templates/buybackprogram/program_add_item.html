@@ -31,7 +31,9 @@
                                {{ im }} {{ im.id }} parent {{ im.parent_market_group_id }}
                             </td>
                             <td>
-                                tax
+                                {% for ch in im.child_groups %}
+                                <div>{{ch}}</div>
+                                {% endfor %}
                             </td>
                         </tr>
                     {% endfor %}

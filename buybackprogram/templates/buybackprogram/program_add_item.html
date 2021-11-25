@@ -17,30 +17,43 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}">
-                    {{ group }} {{ group.id }}
+                <a data-toggle="collapse"href="#collapse{{ forloop.counter }}">
+                    {{ group }}
                 </a>
             </h4>
         </div>
-        <div id="collapse{{ forloop.counter }}" class="panel-collapse collapse">
-            <div class="panel-body">
-                <table class="table table-hover">
-                    {% for im in group.child_groups %}
-                        <tr>
-                            <td>
-                               {{ im }} {{ im.id }} parent {{ im.parent_market_group_id }}
-                            </td>
-                            <td>
-                                {% for ch in im.child_groups %}
-                                <div>{{ch}}</div>
-                                {% endfor %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    <p>details</p>
-                </table>
+        
+
+        <div id="collapse{{ forloop.counter }}" class="panel-collapse collapse ">
+            {% for im in group.child_groups %}
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" href="#collapseic{{ forloop.counter }}">
+                        {{ im }}        
+                    </a>
+                </h4>
             </div>
+
+            <div id="collapseic{{ forloop.counter }}" class="panel-collapse collapse ">
+                {% for ic in im.child_groups %}
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" href="#collapse{{ forloop.counter }}">
+                            {{ ic }}        
+                        </a>
+                    </h4>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
         </div>
+
+
+
+
+
+
+
     </div>
     {% endfor %}
 </div>

@@ -6,7 +6,6 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy
 from esi.decorators import token_required
-from eveuniverse.models import EveMarketGroup
 
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
@@ -116,24 +115,6 @@ def program_add(request):
 def program_add_item(request, program_pk):
     program = Program.objects.filter(pk=program_pk).first()
 
-    marketgroups = EveMarketGroup.objects.filter(parent_market_group_id__isnull=True)
-
-    for m in marketgroups:
-        print("market group")
-        print(m)
-
-        m.child_groups = m.market_group_children.all()
-
-        for c in m.child_groups:
-            print("child")
-            print(c)
-            c.child_groups = c.market_group_children.all()
-
-            for d in c.child_groups:
-                print("sub")
-                print(d)
-                d.child_groups = d.market_group_children.all()
-
     if program is None:
         return redirect("buybackprogram:index")
 
@@ -150,7 +131,6 @@ def program_add_item(request, program_pk):
     context = {
         "program": program,
         "form": form,
-        "marketgroup": marketgroups,
     }
 
     return render(request, "buybackprogram/program_add_item.html", context)

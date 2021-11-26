@@ -1,0 +1,25 @@
+{% extends 'buybackprogram/page.html' %}
+{% load i18n %}
+{% load humanize %}
+{% load bootstrap %}
+{% load static %}
+
+{% block body %}
+<form class="form" action="{% url 'buybackprogram:program_edit' program_pk=program.id %}" method="POST">
+  {% csrf_token %}
+  {{ form|bootstrap }}
+  <button type="submit" class="btn btn-primary">Edit Program</button>
+</form>
+{% endblock %}
+
+
+{% block extra_javascript %}
+<script type="text/javascript" src="{% static 'buybackprogram/js/bootstrap-autocomplete.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'buybackprogram/js/autocomplete.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block extra_script %}
+{% endblock %}

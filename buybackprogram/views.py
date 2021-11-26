@@ -112,7 +112,31 @@ def program_add(request):
     return render(request, "buybackprogram/program_add.html", context)
 
 
-def program_add_item(request, program_pk):
+def program_edit(request, program_pk):
+    program = Program.objects.filter(pk=program_pk).first()
+
+    if program is None:
+        return redirect("buybackprogram:index")
+
+    # create object of form
+    form = ProgramForm(request.POST or None)
+
+    # check if form data is valid
+    if request.POST and form.is_valid():
+        # save the form data to model
+        form.save()
+
+        return HttpResponseRedirect(reverse("buybackprogram:index"))
+
+    context = {
+        "program": program,
+        "form": form,
+    }
+
+    return render(request, "buybackprogram/program_edit.html", context)
+
+
+def program_edit_item(request, program_pk):
     program = Program.objects.filter(pk=program_pk).first()
 
     if program is None:
@@ -133,4 +157,4 @@ def program_add_item(request, program_pk):
         "form": form,
     }
 
-    return render(request, "buybackprogram/program_add_item.html", context)
+    return render(request, "buybackprogram/program_edit_item.html", context)

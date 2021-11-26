@@ -10,8 +10,13 @@ urlpatterns = [
     path("setup", views.setup, name="setup"),
     path("program_add", views.program_add, name="program_add"),
     url(
-        r"^program/(?P<program_pk>[0-9]+)/add_item$",
-        views.program_add_item,
-        name="program_add_item",
+        r"^program/(?P<program_pk>[0-9]+)/edit_item$",
+        views.program_edit_item,
+        name="program_edit_item",
+    ),
+    url(
+        r"^program/(?P<program_pk>[0-9]+)",
+        views.program_edit,
+        name="program_edit",
     ),
 ]

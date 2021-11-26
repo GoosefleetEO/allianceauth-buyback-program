@@ -112,34 +112,34 @@ class Program(models.Model):
         validators=[MaxValueValidator(100), MinValueValidator(1)],
     )
 
-    allow_all_items = models.BooleanField(
-        default=True,
-        help_text="If true all items are accepted in this program with the default tax unless an item tax is spesified.",
+    hauling_fuel_cost = models.IntegerField(
+        default=0,
+        help_text="ISK per m³ that will be removed from the buy price ie. to cover jump freighet fuel costs",
     )
 
-    class Meta:
-        default_permissions = ()
-
-
-class ProgramItem(models.Model):
-    """Items in the buyback program for a corp"""
-
-    program = models.ForeignKey(
-        Program,
-        on_delete=models.deletion.CASCADE,
-        related_name="+",
+    price_dencity_modifier = models.BooleanField(
+        default=False,
+        help_text="Should we modify buy prices for items with high volume and low value ie. T1 industrial hulls",
     )
-    item_type = models.ForeignKey(
-        EveType,
-        on_delete=models.deletion.CASCADE,
-        related_name="+",
+
+    isk_cubic_treshold = models.IntegerField(
+        default=0,
+        null=True,
+        help_text="At what ISK/m3 do we start to apply the low isk dencity tax. Tritanium is 500 ISK/m³ @ 5 ISK per unit price. PLEX is 14,5Trillion ISK/m³ @2.9M per unit price.",
     )
-    item_tax = models.IntegerField(
-        blank=False,
-        null=False,
-        help_text="Tax for this item",
+
+    isk_cubic_tax = models.IntegerField(
+        default=0,
+        null=True,
+        help_text="How much tax do we apply on the low isk dencity items.",
         validators=[MaxValueValidator(100), MinValueValidator(1)],
     )
+
+    allow_all_items = models.BooleanField(
+        default=True,
+        help_text="If true all items are accepted in this program with the default tax unless an item tax is spesified. Blueprints are not included in all items.",
+    )
+
     use_refined_value = models.BooleanField(
         default=False,
         help_text="Take refined value into account when calculating prices for ore, ice and moon goo",
@@ -153,6 +153,35 @@ class ProgramItem(models.Model):
     use_raw_value = models.BooleanField(
         default=True,
         help_text="Take raw value into account when calculating prices for ore, ice and moon goo",
+    )
+
+    class Meta:
+        default_permissions = ()
+
+
+class ProgramItem(models.Model):
+    """Items in the buyback program for a corp"""
+
+    program = models.ForeignKey(
+        Program,
+        on_delete=models.deletion.CASCADE,
+        help_text="What program do these items belong to",
+    )
+    item_type = models.ForeignKey(
+        EveType,
+        on_delete=models.deletion.CASCADE,
+        help_text="Select item for special tax",
+    )
+    item_tax = models.IntegerField(
+        default=0,
+        null=True,
+        help_text="How much tax do we add on top of the base tax for this item. Can also be negative.",
+        validators=[MaxValueValidator(100), MinValueValidator(1)],
+    )
+
+    disallow_item = models.BooleanField(
+        default=False,
+        help_text="You can disallow an item from a buyback location. It will return 0 price if disallowed.",
     )
 
     class Meta:

@@ -192,3 +192,9 @@ class ProgramItem(models.Model):
         if not self.item_tax:
             self.item_tax = self.program.tax
         super(ProgramItem, self).save(*args, **kwargs)
+
+
+class ItemPrices(models.Model):
+    buy = models.BigIntegerField()
+    sell = models.BigIntegerField()
+    updated = models.DateTimeField()

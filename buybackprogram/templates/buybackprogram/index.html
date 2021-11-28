@@ -28,7 +28,9 @@
                 {% endif %}
 
                 <td class="text-center">
-                    <a class="btn btn-success btn-sm"></a>
+                    <a class="btn btn-success btn-sm" href="{% url 'buybackprogram:program_calculate' program_pk=program.id %}">
+                        Use
+                    </a>
                     <a class="btn btn-success btn-sm"></a>
                     {% if perms.buybackprogram.manage_programs %}
                     <a class="btn btn-sm btn-success" href="{% url 'buybackprogram:program_edit_item' program_pk=program.id %}">

@@ -15,8 +15,13 @@ urlpatterns = [
         name="program_edit_item",
     ),
     url(
-        r"^program/(?P<program_pk>[0-9]+)",
+        r"^program/(?P<program_pk>[0-9]+)/edit",
         views.program_edit,
         name="program_edit",
+    ),
+    url(
+        r"^program/(?P<program_pk>[0-9]+)/calculate$",
+        views.program_calculate,
+        name="program_calculate",
     ),
 ]

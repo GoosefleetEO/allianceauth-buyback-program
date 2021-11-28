@@ -1,0 +1,31 @@
+{% extends 'buybackprogram/page.html' %}
+{% load i18n %}
+{% load humanize %}
+{% load bootstrap %}
+{% load static %}
+{% load dict %}
+{% load number %}
+
+{% block body %}
+<h4>{{ program.name }} - Buyback Program</h4>
+
+{% if data %}
+    {{data}}
+{% endif %}
+
+<form class="form" action="{% url 'buybackprogram:program_calculate' program_pk=program.id %}" method="POST">
+    {% csrf_token %}
+    {{ form|bootstrap }}
+    <button type="submit" class="btn btn-primary">Calculate</button>
+  </form>
+{% endblock %}
+
+{% block extra_javascript %}
+<script type="text/javascript" src="{% static 'buybackprogram/js/notify.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block extra_script %}
+{% endblock %}

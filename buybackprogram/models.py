@@ -176,7 +176,7 @@ class ProgramItem(models.Model):
         default=0,
         null=True,
         help_text="How much tax do we add on top of the base tax for this item. Can also be negative.",
-        validators=[MaxValueValidator(100), MinValueValidator(1)],
+        validators=[MaxValueValidator(100), MinValueValidator(0)],
     )
 
     disallow_item = models.BooleanField(

@@ -7,12 +7,11 @@
 {% load number %}
 
 {% block body %}
-<h4>{{ program.name }} - Buyback Program</h4>
-
 {% if data %}
     {{data}}
 {% endif %}
 
+<h4>{{ program.location }}</h4>
 <form class="form" action="{% url 'buybackprogram:program_calculate' program_pk=program.id %}" method="POST">
     {% csrf_token %}
     {{ form|bootstrap }}

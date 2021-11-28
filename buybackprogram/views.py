@@ -12,8 +12,7 @@ from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from buybackprogram.forms import CalculatorForm, ProgramForm, ProgramItemForm
-from buybackprogram.helpers import evemarketer
-from buybackprogram.models import Location, Owner, Program, ProgramItem
+from buybackprogram.models import ItemPrices, Owner, Program, ProgramItem
 from buybackprogram.utils import messages_plus
 
 
@@ -180,22 +179,18 @@ def program_calculate(request, program_pk):
         if form.is_valid():
             items = form.cleaned_data["items"]
 
-            program_location = Location.objects.filter(
-                name=program,
-            ).first()
-
-            print(program_location)
-
             tax = program.tax
 
-            print(tax)
-
+            # For copy pasted items
             if "\t" in items:
 
+                # Split items by rows
                 for item in items.split("\n"):
 
                     parts = item.split("\t")
+                    notes = []
 
+                    # Get item name and quanity
                     if len(parts) >= 2:
                         name = parts[0]
 
@@ -206,37 +201,92 @@ def program_calculate(request, program_pk):
                             .replace("\xa0", "")
                         )
 
+                        # Get evetype data for the item
                         item_data = EveType.objects.filter(name=name).first()
 
                         # TODO: If no data found
 
+                        # Get special taxations
                         item_tax = ProgramItem.objects.filter(
                             program=program, item_type__name=name
-                        )
+                        ).first()
 
-                        print(item_tax)
+                        # Get item price
+                        item_price = ItemPrices.objects.filter(id=item_data.id).first()
 
-                        # TODO: Price store task to store them in database
+                        # If special taxation
+                        if item_tax:
+                            # If item is not allowed return no value and add a note
+                            if item_tax.disallow_item:
 
-                        market_data = evemarketer(item_data.id)
+                                taxes = tax + item_tax.item_tax
 
-                        # TODO: Tax calculations
+                                value = 0
+
+                                price_data = {
+                                    "buy": item_price.buy,
+                                    "sell": item_price.sell,
+                                    "tax": taxes,
+                                    "value": value,
+                                }
+
+                                note = {
+                                    "error": "Item not allowed at this location. Value set at {} ISK".format(
+                                        value
+                                    )
+                                }
+
+                                notes.append(note)
+
+                                total += value
+
+                            else:
+                                taxes = tax + item_tax.item_tax
+
+                                value = (100 - taxes) / 100 * quantity * item_price.buy
+
+                                price_data = {
+                                    "buy": item_price.buy,
+                                    "sell": item_price.sell,
+                                    "tax": taxes,
+                                    "value": value,
+                                }
+
+                                note = {
+                                    "warning": "This item has an additional {}% tax on it".format(
+                                        item_tax.item_tax
+                                    )
+                                }
+
+                                notes.append(note)
+
+                                total += value
+
+                        else:
+                            taxes = tax
+
+                            value = (100 - taxes) / 100 * quantity * item_price.buy
+
+                            price_data = {
+                                "buy": item_price.buy,
+                                "sell": item_price.sell,
+                                "tax": taxes,
+                                "value": value,
+                            }
+
+                            total += value
+
                         # TODO: Refining calculations
-                        # TODO: Allowed items check
 
                         buyback_item = {
                             "name": name,
                             "quantity": quantity,
                             "type_id": item_data.id,
-                            "market_data": market_data[item_data.id],
+                            "price": price_data,
+                            "notes": notes,
                         }
 
-                        total += buyback_item["market_data"]["buy"]
-
                         data.append(buyback_item)
-
-            print(data)
-            print(total)
 
     context = {
         "program": program,

@@ -37,18 +37,29 @@ def update_all_prices():
 
             items_fuzzwork = response_fuzzwork.json()
 
-            for i in items_fuzzwork.values():
-                objs = [
-                    ItemPrices.objects.create(
-                        buy=int(float(i["buy"]["max"])),
-                        sell=int(float(i["sell"]["min"])),
-                        updated=date.today(),
-                    ),
-                ]
+            for key, i in items_fuzzwork.items():
+
+                try:
+                    objs = [
+                        ItemPrices.objects.create(
+                            id=key,
+                            buy=int(float(i["buy"]["max"])),
+                            sell=int(float(i["sell"]["min"])),
+                            updated=date.today(),
+                        ),
+                    ]
+                except ():
+                    objs = [
+                        ItemPrices.objects.create(
+                            buy=int(float(i["buy"]["max"])),
+                            sell=int(float(i["sell"]["min"])),
+                            updated=date.today(),
+                        ),
+                    ]
 
             ItemPrices.objects.bulk_update(objs, ["buy", "sell", "updated"])
 
             i = 0
             type_ids.clear()
 
-    return "completed"
+    return "Updated prices for buybackprogram"

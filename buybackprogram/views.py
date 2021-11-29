@@ -1,3 +1,5 @@
+import pprint
+
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -10,10 +12,15 @@ from eveuniverse.models import EveType
 
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
+from allianceauth.services.hooks import get_extension_logger
 
+from buybackprogram.constants import REFINING_EVE_CATEGORIES
 from buybackprogram.forms import CalculatorForm, ProgramForm, ProgramItemForm
+from buybackprogram.helpers import get_price, get_refined_price
 from buybackprogram.models import ItemPrices, Owner, Program, ProgramItem
 from buybackprogram.utils import messages_plus
+
+logger = get_extension_logger(__name__)
 
 
 @login_required
@@ -179,8 +186,6 @@ def program_calculate(request, program_pk):
         if form.is_valid():
             items = form.cleaned_data["items"]
 
-            tax = program.tax
-
             # For copy pasted items
             if "\t" in items:
 
@@ -188,7 +193,6 @@ def program_calculate(request, program_pk):
                 for item in items.split("\n"):
 
                     parts = item.split("\t")
-                    notes = []
 
                     # Get item name and quanity
                     if len(parts) >= 2:
@@ -216,77 +220,63 @@ def program_calculate(request, program_pk):
 
                         # If special taxation
                         if item_tax:
-                            # If item is not allowed return no value and add a note
-                            if item_tax.disallow_item:
+                            disallowed_item = item_tax.disallow_item
 
-                                taxes = tax + item_tax.item_tax
+                            if (
+                                item_data.eve_group.eve_category.id
+                                in REFINING_EVE_CATEGORIES
+                                and program.use_refined_value
+                            ):
 
-                                value = 0
-
-                                price_data = {
-                                    "buy": item_price.buy,
-                                    "sell": item_price.sell,
-                                    "tax": taxes,
-                                    "value": value,
-                                }
-
-                                note = {
-                                    "error": "Item not allowed at this location. Value set at {} ISK".format(
-                                        value
-                                    )
-                                }
-
-                                notes.append(note)
-
-                                total += value
-
+                                materials = get_refined_price(
+                                    item_data.id,
+                                    program.tax + item_tax.item_tax,
+                                    program.refining_rate,
+                                    disallowed_item,
+                                )
                             else:
-                                taxes = tax + item_tax.item_tax
+                                materials = []
 
-                                value = (100 - taxes) / 100 * quantity * item_price.buy
+                            price_data = get_price(
+                                program.tax + item_tax.item_tax,
+                                quantity,
+                                item_price,
+                                disallowed_item,
+                            )
 
-                                price_data = {
-                                    "buy": item_price.buy,
-                                    "sell": item_price.sell,
-                                    "tax": taxes,
-                                    "value": value,
-                                }
-
-                                note = {
-                                    "warning": "This item has an additional {}% tax on it".format(
-                                        item_tax.item_tax
-                                    )
-                                }
-
-                                notes.append(note)
-
-                                total += value
-
+                        # If item has no special taxes
                         else:
-                            taxes = tax
+                            disallowed_item = False
+                            if (
+                                item_data.eve_group.eve_category.id
+                                in REFINING_EVE_CATEGORIES
+                                and program.use_refined_value
+                            ):
 
-                            value = (100 - taxes) / 100 * quantity * item_price.buy
+                                materials = get_refined_price(
+                                    item_data.id,
+                                    program.tax,
+                                    program.refining_rate,
+                                    disallowed_item,
+                                )
+                            else:
+                                materials = []
 
-                            price_data = {
-                                "buy": item_price.buy,
-                                "sell": item_price.sell,
-                                "tax": taxes,
-                                "value": value,
-                            }
-
-                            total += value
-
-                        # TODO: Refining calculations
+                            price_data = get_price(
+                                program.tax, quantity, item_price, disallowed_item
+                            )
 
                         buyback_item = {
                             "name": name,
                             "quantity": quantity,
+                            "material": materials,
                             "type_id": item_data.id,
-                            "price": price_data,
-                            "notes": notes,
+                            "type": price_data,
                         }
 
                         data.append(buyback_item)
+
+                        pprint.pprint(buyback_item)
 
     context = {
         "program": program,

@@ -28,5 +28,4 @@ class CalculatorForm(forms.Form):
         program = kwargs.pop("program", None)
         # TODO: remove this error
         print(program)
-
         super(CalculatorForm, self).__init__(*args, **kwargs)

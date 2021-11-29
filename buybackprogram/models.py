@@ -109,7 +109,7 @@ class Program(models.Model):
         blank=False,
         null=False,
         help_text="Default tax is applied on all items unless an item spesific tax is assigned",
-        validators=[MaxValueValidator(100), MinValueValidator(1)],
+        validators=[MaxValueValidator(100), MinValueValidator(0)],
     )
 
     hauling_fuel_cost = models.IntegerField(
@@ -132,7 +132,7 @@ class Program(models.Model):
         default=0,
         null=True,
         help_text="How much tax do we apply on the low isk dencity items.",
-        validators=[MaxValueValidator(100), MinValueValidator(1)],
+        validators=[MaxValueValidator(100), MinValueValidator(0)],
     )
 
     allow_all_items = models.BooleanField(
@@ -153,6 +153,13 @@ class Program(models.Model):
     use_raw_value = models.BooleanField(
         default=True,
         help_text="Take raw value into account when calculating prices for ore, ice and moon goo",
+    )
+
+    refining_rate = models.IntegerField(
+        default=0,
+        null=True,
+        help_text="Refining rate to be used if refined value is active",
+        validators=[MaxValueValidator(100), MinValueValidator(0)],
     )
 
     class Meta:

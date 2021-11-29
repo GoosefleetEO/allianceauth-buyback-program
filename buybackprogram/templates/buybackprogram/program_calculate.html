@@ -7,8 +7,20 @@
 {% load number %}
 
 {% block body %}
-{% if data %}
-    {{data}}
+{% if buyback_data %}
+    {{buyback_data}}
+    <table>
+        <tr>
+            <td>Name</td>
+        </tr>
+    {% for data in buyback_data%}
+
+        <tr>
+            <td>{{ data.type_data }}</td>
+        </tr>
+
+    {% endfor %}
+    </table>
 {% endif %}
 
 <h4>{{ program.location }}</h4>

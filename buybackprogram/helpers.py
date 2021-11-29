@@ -7,6 +7,48 @@ from buybackprogram.models import ItemPrices
 logger = get_extension_logger(__name__)
 
 
+def get_item_prices(item_type, name, quantity, program, program_item_settings):
+
+    # Get item raw price information
+    item_price = ItemPrices.objects.filter(id=item_type.id).first()
+
+    item_type_price = {
+        "id": item_type.id,
+        "quantity": quantity,
+        "buy": item_price.buy,
+        "sell": item_price.sell,
+    }
+
+    # Get refining materials for item
+    type_materials = EveTypeMaterial.objects.filter(
+        eve_type_id=item_type.id
+    ).prefetch_related("eve_type")
+
+    item_material_price = []
+
+    for material in type_materials:
+        material_price = ItemPrices.objects.filter(
+            id=material.material_eve_type.id
+        ).first()
+
+        material_type_prices = {
+            "id": material.material_eve_type.id,
+            "quantity": material.quantity,
+            "buy": material_price.buy,
+            "sell": material_price.sell,
+        }
+
+        item_material_price.append(material_type_prices)
+
+    prices = {
+        "materials": type_materials,
+        "type_prices": item_type_price,
+        "material_prices": item_material_price,
+    }
+
+    return prices
+
+
 def get_refined_price(type_id, tax, refining_rate, disallowed_item):
     # Get eve material types for id
     typematerial = EveTypeMaterial.objects.filter(eve_type_id=type_id).values()

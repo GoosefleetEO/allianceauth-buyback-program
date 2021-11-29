@@ -22,14 +22,6 @@ logger = get_extension_logger(__name__)
 
 
 @login_required
-@permission_required("buybackprogram.basic_access")
-def index(request):
-    context = {"programs": Program.objects.filter()}
-
-    return render(request, "buybackprogram/index.html", context)
-
-
-@login_required
 @permission_required("buybackprogram.setup_retriever")
 @token_required(
     scopes=[

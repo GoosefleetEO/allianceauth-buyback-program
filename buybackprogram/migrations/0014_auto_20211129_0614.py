@@ -7,28 +7,59 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('buybackprogram', '0013_auto_20211128_1420'),
+        ("buybackprogram", "0013_auto_20211128_1420"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='program',
-            name='refining_rate',
-            field=models.IntegerField(default=0, help_text='Refining rate to be used if refined value is active', null=True, validators=[django.core.validators.MaxValueValidator(100), django.core.validators.MinValueValidator(0)]),
+            model_name="program",
+            name="refining_rate",
+            field=models.IntegerField(
+                default=0,
+                help_text="Refining rate to be used if refined value is active",
+                null=True,
+                validators=[
+                    django.core.validators.MaxValueValidator(100),
+                    django.core.validators.MinValueValidator(0),
+                ],
+            ),
         ),
         migrations.AlterField(
-            model_name='program',
-            name='isk_cubic_tax',
-            field=models.IntegerField(default=0, help_text='How much tax do we apply on the low isk dencity items.', null=True, validators=[django.core.validators.MaxValueValidator(100), django.core.validators.MinValueValidator(0)]),
+            model_name="program",
+            name="isk_cubic_tax",
+            field=models.IntegerField(
+                default=0,
+                help_text="How much tax do we apply on the low isk dencity items.",
+                null=True,
+                validators=[
+                    django.core.validators.MaxValueValidator(100),
+                    django.core.validators.MinValueValidator(0),
+                ],
+            ),
         ),
         migrations.AlterField(
-            model_name='program',
-            name='tax',
-            field=models.IntegerField(default=0, help_text='Default tax is applied on all items unless an item spesific tax is assigned', validators=[django.core.validators.MaxValueValidator(100), django.core.validators.MinValueValidator(0)]),
+            model_name="program",
+            name="tax",
+            field=models.IntegerField(
+                default=0,
+                help_text="Default tax is applied on all items unless an item spesific tax is assigned",
+                validators=[
+                    django.core.validators.MaxValueValidator(100),
+                    django.core.validators.MinValueValidator(0),
+                ],
+            ),
         ),
         migrations.AlterField(
-            model_name='programitem',
-            name='item_tax',
-            field=models.IntegerField(default=0, help_text='How much tax do we add on top of the base tax for this item. Can also be negative.', null=True, validators=[django.core.validators.MaxValueValidator(100), django.core.validators.MinValueValidator(0)]),
+            model_name="programitem",
+            name="item_tax",
+            field=models.IntegerField(
+                default=0,
+                help_text="How much tax do we add on top of the base tax for this item. Can also be negative.",
+                null=True,
+                validators=[
+                    django.core.validators.MaxValueValidator(100),
+                    django.core.validators.MinValueValidator(0),
+                ],
+            ),
         ),
     ]

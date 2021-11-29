@@ -1,5 +1,3 @@
-import pprint
-
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -222,6 +220,7 @@ def program_calculate(request, program_pk):
                         if item_tax:
                             disallowed_item = item_tax.disallow_item
 
+                            # If refined price is used
                             if (
                                 item_data.eve_group.eve_category.id
                                 in REFINING_EVE_CATEGORIES
@@ -234,8 +233,10 @@ def program_calculate(request, program_pk):
                                     program.refining_rate,
                                     disallowed_item,
                                 )
+
+                            # No refined price is used aka. raw price
                             else:
-                                materials = []
+                                materials = False
 
                             price_data = get_price(
                                 program.tax + item_tax.item_tax,
@@ -247,6 +248,8 @@ def program_calculate(request, program_pk):
                         # If item has no special taxes
                         else:
                             disallowed_item = False
+
+                            # If refiend price is used
                             if (
                                 item_data.eve_group.eve_category.id
                                 in REFINING_EVE_CATEGORIES
@@ -259,8 +262,10 @@ def program_calculate(request, program_pk):
                                     program.refining_rate,
                                     disallowed_item,
                                 )
+
+                            # If refined price is not used aka. raw price
                             else:
-                                materials = []
+                                materials = False
 
                             price_data = get_price(
                                 program.tax, quantity, item_price, disallowed_item
@@ -275,8 +280,6 @@ def program_calculate(request, program_pk):
                         }
 
                         data.append(buyback_item)
-
-                        pprint.pprint(buyback_item)
 
     context = {
         "program": program,

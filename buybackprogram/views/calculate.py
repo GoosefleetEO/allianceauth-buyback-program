@@ -5,7 +5,7 @@ from eveuniverse.models import EveType
 from allianceauth.services.hooks import get_extension_logger
 
 from buybackprogram.forms import CalculatorForm
-from buybackprogram.helpers import get_item_prices, get_item_values
+from buybackprogram.helpers import get_item_buy_value, get_item_prices, get_item_values
 from buybackprogram.models import Program
 
 logger = get_extension_logger(__name__)
@@ -65,6 +65,7 @@ def program_calculate(request, program_pk):
                                 program,
                             )
 
+                            # Get item values with taxes
                             item_values = get_item_values(
                                 item_type, item_prices, program
                             )
@@ -92,11 +93,14 @@ def program_calculate(request, program_pk):
             else:
                 logger.debug("TODO: add tasks to process plain text imputs here.")
 
+    # Get item values after other expenses and the total value for the contract
+    contract_price_data = get_item_buy_value(buyback_data, program)
+
     context = {
         "program": program,
         "form": form,
         "buyback_data": buyback_data,
-        "total": "TODO: total",
+        "contract_price_data": contract_price_data,
     }
 
     return render(request, "buybackprogram/program_calculate.html", context)

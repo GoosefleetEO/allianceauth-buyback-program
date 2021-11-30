@@ -8,19 +8,9 @@
 
 {% block body %}
 {% if buyback_data %}
-    {{buyback_data}}
-    <table>
-        <tr>
-            <td>Name</td>
-        </tr>
-    {% for data in buyback_data%}
+    <div>{{buyback_data}}</div>
 
-        <tr>
-            <td>{{ data.type_data }}</td>
-        </tr>
-
-    {% endfor %}
-    </table>
+    <div>{{contract_price_data}}</div>
 {% endif %}
 
 <h4>{{ program.location }}</h4>

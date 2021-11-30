@@ -42,13 +42,14 @@ def update_all_prices():
                 try:
                     objs = [
                         ItemPrices.objects.create(
-                            item_type_id=key,
+                            eve_type_id=key,
                             buy=int(float(i["buy"]["max"])),
                             sell=int(float(i["sell"]["min"])),
                             updated=date.today(),
                         ),
                     ]
                 except ():
+                    # TODO: update prices that are found in database
                     objs = [
                         ItemPrices.objects.create(
                             buy=int(float(i["buy"]["max"])),

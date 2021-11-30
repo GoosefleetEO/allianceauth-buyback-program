@@ -1,4 +1,4 @@
-from eveuniverse.models import EveType, EveTypeMaterial
+from eveuniverse.models import EveTypeMaterial
 
 from allianceauth.services.hooks import get_extension_logger
 
@@ -64,7 +64,7 @@ def get_item_prices(item_type, name, quantity, program):
             ).prefetch_related("eve_type")
 
             # Get price details for the materials inside the item
-            logger.debug("Getting refined values for %s" % name)
+            logger.debug("Prices: Getting refined values for %s" % name)
             for material in type_materials:
                 material_price = ItemPrices.objects.filter(
                     eve_type_id=material.material_eve_type.id
@@ -86,7 +86,7 @@ def get_item_prices(item_type, name, quantity, program):
         else:
             item_material_price = False
             type_materials = False
-            logger.debug("No refined value used for %s" % name)
+            logger.debug("Prices: No refined value used for %s" % name)
 
         # Get compressed versions of the ores that are not yet compressed
         if (
@@ -98,7 +98,7 @@ def get_item_prices(item_type, name, quantity, program):
             compression_ratio = COMPRESSING_EVE_GROUPS[item_type.eve_group.id]
 
             logger.debug(
-                "Getting compression prices for %s based on original item %s"
+                "Prices: Getting compression prices for %s based on original item %s"
                 % (compresed_name, name)
             )
 
@@ -119,7 +119,7 @@ def get_item_prices(item_type, name, quantity, program):
 
         # If item can't or should not be compressed
         else:
-            logger.debug("No compression required/available for %s" % name)
+            logger.debug("Prices: No compression required/available for %s" % name)
             compressed_type_prices = False
 
         prices = {
@@ -154,12 +154,12 @@ def get_item_values(item_type, item_prices, program):
     # If we have an special taxation item, assign it to a variable
     if program_item_settings:
         item_tax = program_item_settings.item_tax
-        logger.debug("Found tax %s for %s" % (item_tax, item_type.id))
+        logger.debug("Values: Found tax %s for %s" % (item_tax, item_type))
 
     # If no special taxes are found we ensure our tax variable remains zero
     else:
         item_tax = 0
-        logger.debug("No item tax for %s" % item_type.id)
+        logger.debug("Values: No item tax for %s" % item_type)
 
     # Get values for the type prices (base prices) if we have any
     if item_prices["type_prices"]:
@@ -170,7 +170,7 @@ def get_item_values(item_type, item_prices, program):
         item_tax = item_tax
         tax_multiplier = (100 - (program_tax + item_tax)) / 100
 
-        logger.debug("Calculating type value for %s" % item_type.id)
+        logger.debug("Values: Calculating type value for %s" % item_type)
 
         type_value = (quantity * price) * tax_multiplier
 
@@ -207,7 +207,7 @@ def get_item_values(item_type, item_prices, program):
         item_tax = item_tax
         tax_multiplier = (100 - (program_tax + item_tax)) / 100
 
-        logger.debug("Calculating compression value for %s" % item_type.id)
+        logger.debug("Values: Calculating compression value for %s" % item_type.id)
 
         compression_value = (quantity * price) * tax_multiplier
 
@@ -217,92 +217,88 @@ def get_item_values(item_type, item_prices, program):
     # Get the highest value of the used pricing methods
     buy_value = max([type_value, material_value, compression_value])
 
+    logger.debug("Values: Best buy value for %s is %s ISK" % (item_type, buy_value))
+
+    # If price dencity tax should be applied
+    if program.price_dencity_modifier:
+
+        item_price_dencity_tax = False
+
+        item_isk_dencity = buy_value / item_type.volume
+
+        logger.debug("Values: Our item isk dencity is at %s ISK/m³" % item_isk_dencity)
+
+        if item_isk_dencity < program.price_dencity_treshold:
+            buy_value = buy_value * ((100 - program.price_dencity_tax) / 100)
+
+            item_price_dencity_tax = program.price_dencity_tax
+
+            logger.debug(
+                "Values: %s%s low price dencity tax applied on %s, buy value is now at %s"
+                % (program.price_dencity_tax, "%", item_type, buy_value)
+            )
+
+    # No price dencity tax used
+    else:
+        item_price_dencity_tax = False
+
     # Final values for this item
     values = {
         "type_value": type_value,
         "material_value": material_value,
         "compression_value": compression_value,
+        "price_dencity_tax": item_price_dencity_tax,
         "buy_value": buy_value,
     }
 
     return values
 
 
-def get_refined_price(type_id, tax, refining_rate, disallowed_item):
-    # Get eve material types for id
-    typematerial = EveTypeMaterial.objects.filter(eve_type_id=type_id).values()
+def get_item_buy_value(buyback_data, program):
 
-    # List for all materials
-    materials = []
+    total_all_items = 0
+    total_hauling_cost = 0
+    contract_net_total = 0
 
-    notes = []
+    # Get a grand total value of all buy prices
+    for item in buyback_data:
+        total_all_items += item["item_values"]["buy_value"]
 
-    # Process each material
-    for material in typematerial:
-        # Get material data
-        data = EveType.objects.filter(id=material["material_eve_type_id"]).first()
+    logger.debug(
+        "Final: Total buy value for all items before expenses is %s ISK"
+        % total_all_items
+    )
 
-        # Get material price
-        price = ItemPrices.objects.filter(id=data.id).first()
+    # Calculate hauling expenses
+    if program.hauling_fuel_cost > 0:
+        for item in buyback_data:
+            item_volume = item["type_data"].volume
+            hauling_cost = item_volume * program.hauling_fuel_cost
 
-        # Determine value for material
-        if disallowed_item:
-            value = 0
+            total_hauling_cost += hauling_cost
 
-            note = {"error": "Item not allowed at this location"}
-
-            notes.append(note)
-
-        else:
-            value = (
-                (100 - tax)
-                / 100
-                * material["quantity"]
-                * price.buy
-                * (refining_rate / 100)
+            logger.debug(
+                "Final: Hauling cost %s m³ of %s is %s ISK"
+                % (
+                    item["item_prices"]["type_prices"]["quantity"],
+                    item["type_data"],
+                    hauling_cost,
+                )
             )
 
-        # Build dictionary for material
-        material_data = {
-            "quantity": material["quantity"],
-            "type": data,
-            "price": price,
-            "value": value,
-            "note": notes,
-        }
-
-        # Add material to the materials list
-        materials.append(material_data)
-
-    return materials
-
-
-def get_price(taxes, quantity, item_price, disallowed_item):
-    notes = []
-
-    try:
-        if disallowed_item:
-            value = 0
-
-            note = {"error": "Item not accepted at this location"}
-
-            notes.append(note)
-
-        else:
-
-            value = (100 - taxes) / 100 * quantity * item_price.buy
-
-        item_data = {
-            "buy": item_price.buy,
-            "sell": item_price.sell,
-            "tax": taxes,
-            "value": value,
-            "note": notes,
-        }
-
-        return item_data
-
-    except AttributeError:
-        logger.error(
-            "No price data found in database. Did you remember to populate it?"
+        logger.debug(
+            "Final: Total hauling cost for whole contract is %s ISK"
+            % total_hauling_cost
         )
+
+    contract_net_total = total_all_items - total_hauling_cost
+
+    logger.debug("Final: Net total after expenses is %s ISK" % contract_net_total)
+
+    contract_net_prices = {
+        "total_all_items": total_all_items,
+        "total_hauling_cost": total_hauling_cost,
+        "contract_net_total": contract_net_total,
+    }
+
+    return contract_net_prices

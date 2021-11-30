@@ -6,17 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('buybackprogram', '0018_rename_item_type_itemprices_eve_type'),
+        ("buybackprogram", "0018_rename_item_type_itemprices_eve_type"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='program',
-            name='use_raw_value',
+            model_name="program",
+            name="use_raw_value",
         ),
         migrations.AddField(
-            model_name='program',
-            name='use_raw_ore_value',
-            field=models.BooleanField(default=True, help_text='Take raw ore value into account when calculating prices for ore, ice and moon goo'),
+            model_name="program",
+            name="use_raw_ore_value",
+            field=models.BooleanField(
+                default=True,
+                help_text="Take raw ore value into account when calculating prices for ore, ice and moon goo",
+            ),
         ),
     ]

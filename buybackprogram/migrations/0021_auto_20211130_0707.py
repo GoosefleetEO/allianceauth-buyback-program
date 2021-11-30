@@ -6,18 +6,18 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('buybackprogram', '0020_alter_program_allow_all_items'),
+        ("buybackprogram", "0020_alter_program_allow_all_items"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='program',
-            old_name='isk_cubic_tax',
-            new_name='price_dencity_tax',
+            model_name="program",
+            old_name="isk_cubic_tax",
+            new_name="price_dencity_tax",
         ),
         migrations.RenameField(
-            model_name='program',
-            old_name='isk_cubic_treshold',
-            new_name='price_dencity_treshold',
+            model_name="program",
+            old_name="isk_cubic_treshold",
+            new_name="price_dencity_treshold",
         ),
     ]

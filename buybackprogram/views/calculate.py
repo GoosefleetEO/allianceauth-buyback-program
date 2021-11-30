@@ -1,22 +1,12 @@
 from django.contrib.auth.decorators import login_required, permission_required
-from django.db import transaction
-from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
-from django.urls import reverse
-from django.utils.html import format_html
-from django.utils.translation import gettext_lazy
-from esi.decorators import token_required
 from eveuniverse.models import EveType
 
-from allianceauth.authentication.models import CharacterOwnership
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 
-from buybackprogram.constants import REFINING_EVE_CATEGORIES
-from buybackprogram.forms import CalculatorForm, ProgramForm, ProgramItemForm
-from buybackprogram.helpers import get_item_prices, get_price, get_refined_price
-from buybackprogram.models import ItemPrices, Owner, Program, ProgramItem
-from buybackprogram.utils import messages_plus
+from buybackprogram.forms import CalculatorForm
+from buybackprogram.helpers import get_item_prices, get_item_values
+from buybackprogram.models import Program
 
 logger = get_extension_logger(__name__)
 
@@ -67,24 +57,23 @@ def program_calculate(request, program_pk):
 
                         if item_type:
 
-                            # Get any special item taxes or limitations we might have added
-                            program_item_settings = ProgramItem.objects.filter(
-                                program=program, item_type__id=item_type.id
-                            ).first()
-
-                            # Get all item price datas
+                            # Get item material, compression and price information
                             item_prices = get_item_prices(
                                 item_type,
                                 name,
                                 quantity,
                                 program,
-                                program_item_settings,
+                            )
+
+                            item_values = get_item_values(
+                                item_type, item_prices, program
                             )
 
                             # Final form of the built buyback item that will be pushed to the item array
                             buyback_item = {
                                 "type_data": item_type,
                                 "item_prices": item_prices,
+                                "item_values": item_values,
                             }
 
                             # Append buyback item data to the total array

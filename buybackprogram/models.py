@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from eveuniverse.models import EveSolarSystem, EveType
@@ -114,21 +115,21 @@ class Program(models.Model):
 
     hauling_fuel_cost = models.IntegerField(
         default=0,
-        help_text="ISK per m³ that will be removed from the buy price ie. to cover jump freighet fuel costs",
+        help_text="ISK per m³ that will be removed from the buy price ie. to cover jump freighet fuel costs. <b>Should not be used with price dencity modifier</b>",
     )
 
     price_dencity_modifier = models.BooleanField(
         default=False,
-        help_text="Should we modify buy prices for items with high volume and low value ie. T1 industrial hulls",
+        help_text="Should we modify buy prices for items with high volume and low value ie. T1 industrial hulls. <b>Should not be used with hauling fuel cost</b>",
     )
 
-    isk_cubic_treshold = models.IntegerField(
+    price_dencity_treshold = models.IntegerField(
         default=0,
         null=True,
         help_text="At what ISK/m3 do we start to apply the low isk dencity tax. Tritanium is 500 ISK/m³ @ 5 ISK per unit price. PLEX is 14,5Trillion ISK/m³ @2.9M per unit price.",
     )
 
-    isk_cubic_tax = models.IntegerField(
+    price_dencity_tax = models.IntegerField(
         default=0,
         null=True,
         help_text="How much tax do we apply on the low isk dencity items.",
@@ -137,7 +138,7 @@ class Program(models.Model):
 
     allow_all_items = models.BooleanField(
         default=True,
-        help_text="If true all items are accepted in this program with the default tax unless an item tax is spesified. Blueprints are not included in all items.",
+        help_text="If true all items are accepted to the buyback program. You can set extra taxes or disallow individual items from the program item section. If set to false you need to add each accepted item into the program item section. Blueprints are not included in all items.",
     )
 
     use_refined_value = models.BooleanField(
@@ -150,9 +151,9 @@ class Program(models.Model):
         help_text="Take compressed value into account when calculating prices for ore, ice and moon goo",
     )
 
-    use_raw_value = models.BooleanField(
+    use_raw_ore_value = models.BooleanField(
         default=True,
-        help_text="Take raw value into account when calculating prices for ore, ice and moon goo",
+        help_text="Take raw ore value into account when calculating prices for ore, ice and moon goo",
     )
 
     refining_rate = models.IntegerField(
@@ -164,6 +165,30 @@ class Program(models.Model):
 
     class Meta:
         default_permissions = ()
+
+    def clean(self):
+        super().clean()
+        if (
+            self.allow_all_items
+            and not self.use_refined_value
+            and not self.use_compressed_value
+            and not self.use_raw_ore_value
+        ):
+            raise ValidationError(
+                "All items are allowed but not a single pricing method for ores is selected. Please use at least one pricing method for ores if all items is allowed."
+            )
+        if self.price_dencity_modifier and not self.price_dencity_tax:
+            raise ValidationError(
+                "Price dencity is used but value for price dencity tax is missing"
+            )
+        if self.price_dencity_modifier and not self.price_dencity_treshold:
+            raise ValidationError(
+                "Price dencity is used but value for price dencity treshold is missing"
+            )
+        if self.use_refined_value and not self.refining_rate:
+            raise ValidationError(
+                "Refined value is used for ore pricing method but no refining rate is provided. Provide a refining rate to used with this pricing model."
+            )
 
 
 class ProgramItem(models.Model):
@@ -202,6 +227,11 @@ class ProgramItem(models.Model):
 
 
 class ItemPrices(models.Model):
+    eve_type = models.OneToOneField(
+        EveType,
+        on_delete=models.deletion.CASCADE,
+        unique=True,
+    )
     buy = models.BigIntegerField()
     sell = models.BigIntegerField()
     updated = models.DateTimeField()

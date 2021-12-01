@@ -8,9 +8,44 @@
 
 {% block body %}
 {% if buyback_data %}
-    <div>{{buyback_data}}</div>
+{{buyback_data}}
+<div class="table-responsive" style="margin: 20px 0;">
+    <p class="text-muted">Based on the contents you have given us, we have calculated them to be of the following value.</p>
+    <p class="text-warning">Please click the <strong>Notify</strong> button to let us know you will be sending the contract.</p>
 
-    <div>{{contract_price_data}}</div>
+    <table id="value" style="margin: 20px auto;" class="table table-striped table-condensed">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th style="text-align: center;">Quantity</th>
+                <th style="text-align: center;">Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in buyback_data %}
+            <tr>
+                <td data-type-id="">{{ item.type_data.name }}</td>
+                <td style="text-align: right;">{{ item.item_prices.type_prices.quantity }}</td>
+                <td style="text-align: right;"> {{ item.item_values.buy_value|floatformat:2 }} ISK</td>
+            </tr>
+            {% if program.use_refined_value and item.item_prices.materials %}
+            	{% for material in item.item_prices.materials %}
+            		<tr>
+            			<td style="padding-left:20px">{{material.material_eve_type}}</td>
+            		</tr>
+
+            	{% endfor %}
+            {% endif %}
+            {% if program.use_compressed_value and item.item_prices.compression_prices %}
+            		<tr>
+            			<td style="padding-left:20px">{{item.item_prices.compression_prices.type}}</td>
+            		</tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 {% endif %}
 
 <h4>{{ program.location }}</h4>

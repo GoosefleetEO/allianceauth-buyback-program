@@ -1,3 +1,5 @@
+import pprint
+
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect, render
 from eveuniverse.models import EveType
@@ -95,6 +97,8 @@ def program_calculate(request, program_pk):
 
     # Get item values after other expenses and the total value for the contract
     contract_price_data = get_item_buy_value(buyback_data, program)
+
+    pprint.pprint(buyback_data)
 
     context = {
         "program": program,

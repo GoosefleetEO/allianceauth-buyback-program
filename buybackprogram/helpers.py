@@ -1,4 +1,4 @@
-from eveuniverse.models import EveTypeMaterial
+from eveuniverse.models import EveType, EveTypeMaterial
 
 from allianceauth.services.hooks import get_extension_logger
 
@@ -94,8 +94,11 @@ def get_item_prices(item_type, name, quantity, program):
             and "Compressed" not in name
             and program.use_compressed_value
         ):
+
             compresed_name = "Compressed " + name
             compression_ratio = COMPRESSING_EVE_GROUPS[item_type.eve_group.id]
+
+            type_compression = EveType.objects.filter(name=compresed_name)
 
             logger.debug(
                 "Prices: Getting compression prices for %s based on original item %s"
@@ -111,6 +114,7 @@ def get_item_prices(item_type, name, quantity, program):
             )
 
             compressed_type_prices = {
+                "type": type_compression,
                 "id": compression_price.eve_type_id,
                 "quantity": quantity / compression_ratio,
                 "buy": compression_price.buy,

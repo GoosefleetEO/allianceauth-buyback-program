@@ -3,6 +3,7 @@ from datetime import date
 import requests
 from celery import shared_task
 
+from django.db import Error
 from eveuniverse.models import EveType
 
 from allianceauth.services.hooks import get_extension_logger
@@ -39,28 +40,24 @@ def update_all_prices():
 
             for key, i in items_fuzzwork.items():
 
-                try:
-                    objs = [
-                        ItemPrices.objects.create(
-                            eve_type_id=key,
-                            buy=int(float(i["buy"]["max"])),
-                            sell=int(float(i["sell"]["min"])),
-                            updated=date.today(),
-                        ),
-                    ]
-                except ():
-                    # TODO: update prices that are found in database
-                    objs = [
-                        ItemPrices.objects.create(
-                            buy=int(float(i["buy"]["max"])),
-                            sell=int(float(i["sell"]["min"])),
-                            updated=date.today(),
-                        ),
-                    ]
+                objs = [
+                    ItemPrices(
+                        eve_type_id=key,
+                        buy=int(float(i["buy"]["max"])),
+                        sell=int(float(i["sell"]["min"])),
+                        updated=date.today(),
+                    )
+                ]
 
-            ItemPrices.objects.bulk_update(objs, ["buy", "sell", "updated"])
+            try:
+                ItemPrices.objects.bulk_create(objs)
+            except Error as e:
+                logger.debug("Error with bulk create: %s" % e)
 
             i = 0
             type_ids.clear()
 
     return "Updated prices for buybackprogram"
+
+
+# from buybackprogram.tasks import update_all_prices

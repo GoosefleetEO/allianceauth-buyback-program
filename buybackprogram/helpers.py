@@ -12,6 +12,20 @@ def getList(dict):
     return dict.keys()
 
 
+def get_price_dencity_tax(program, item_value, item_volume, item_quantity):
+    # If price dencity tax should be applied
+    if program.price_dencity_modifier:
+
+        item_isk_dencity = item_value / (item_volume * item_quantity)
+
+        logger.debug("Values: Our item isk dencity is at %s ISK/m³" % item_isk_dencity)
+
+        if item_isk_dencity < program.price_dencity_treshold:
+            return program.price_dencity_tax
+        else:
+            return False
+
+
 # This method will get the price information for the item. It will not calculate the values as in price including taxes.
 def get_item_prices(item_type, name, quantity, program):
 
@@ -98,8 +112,6 @@ def get_item_prices(item_type, name, quantity, program):
             compresed_name = "Compressed " + name
             compression_ratio = COMPRESSING_EVE_GROUPS[item_type.eve_group.id]
 
-            type_compression = EveType.objects.filter(name=compresed_name)
-
             logger.debug(
                 "Prices: Getting compression prices for %s based on original item %s"
                 % (compresed_name, name)
@@ -114,7 +126,6 @@ def get_item_prices(item_type, name, quantity, program):
             )
 
             compressed_type_prices = {
-                "type": type_compression,
                 "id": compression_price.eve_type_id,
                 "quantity": quantity / compression_ratio,
                 "buy": compression_price.buy,
@@ -127,7 +138,6 @@ def get_item_prices(item_type, name, quantity, program):
             compressed_type_prices = False
 
         prices = {
-            "materials": type_materials,
             "type_prices": item_type_price,
             "material_prices": item_material_price,
             "compression_prices": compressed_type_prices,
@@ -150,6 +160,11 @@ def get_item_prices(item_type, name, quantity, program):
 
 def get_item_values(item_type, item_prices, program):
 
+    type_value = False
+    material_value = False
+    compression_value = False
+    item_tax = False
+
     # Get special taxes and see if our item belongs to this table
     program_item_settings = ProgramItem.objects.filter(
         program=program, item_type__id=item_type.id
@@ -161,99 +176,140 @@ def get_item_values(item_type, item_prices, program):
         logger.debug("Values: Found tax %s for %s" % (item_tax, item_type))
 
     # If no special taxes are found we ensure our tax variable remains zero
-    else:
-        item_tax = 0
-        logger.debug("Values: No item tax for %s" % item_type)
 
     # Get values for the type prices (base prices) if we have any
     if item_prices["type_prices"]:
 
-        price = item_prices["type_prices"]["buy"]
+        types = EveType.objects.filter(id=item_prices["type_prices"]["id"]).first()
+
         quantity = item_prices["type_prices"]["quantity"]
+        sell = item_prices["type_prices"]["sell"]
+        buy = item_prices["type_prices"]["buy"]
+        price = buy
+        price_dencity = price / types.volume
+        price_dencity_tax = get_price_dencity_tax(
+            program, price, types.volume, quantity
+        )
         program_tax = program.tax
         item_tax = item_tax
-        tax_multiplier = (100 - (program_tax + item_tax)) / 100
+        tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
         logger.debug("Values: Calculating type value for %s" % item_type)
 
         type_value = (quantity * price) * tax_multiplier
 
-    # If ther eis no type price the value is also false
-    else:
-        type_value = False
+        raw_item = {
+            "id": types.id,
+            "name": types.name,
+            "quantity": quantity,
+            "buy": buy,
+            "sell": sell,
+            "program_tax": program_tax,
+            "item_tax": item_tax,
+            "price_dencity_tax": price_dencity_tax,
+            "total_tax": program_tax + item_tax + price_dencity_tax,
+            "price_dencity": price_dencity,
+            "value": type_value,
+        }
 
     # Get values for item materials
     if item_prices["material_prices"]:
+
+        refined = []
 
         material_value = 0
 
         for material in item_prices["material_prices"]:
 
-            price = material["buy"]
+            materials = EveType.objects.filter(id=material["id"]).first()
+
             quantity = material["quantity"]
+            sell = material["sell"]
+            buy = material["buy"]
+            price = buy
+            price_dencity = price / materials.volume
+            price_dencity_tax = get_price_dencity_tax(
+                program, price, materials.volume, quantity
+            )
             program_tax = program.tax
             item_tax = item_tax
             refining_rate = program.refining_rate / 100
-            tax_multiplier = (100 - (program_tax + item_tax)) / 100
+            tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
             value = (quantity * refining_rate * price) * tax_multiplier
 
-            material_value += value
+            r = {
+                "id": material["id"],
+                "name": materials.name,
+                "quantity": quantity,
+                "buy": buy,
+                "sell": sell,
+                "program_tax": program_tax,
+                "item_tax": item_tax,
+                "price_dencity_tax": price_dencity_tax,
+                "total_tax": program_tax + item_tax + price_dencity_tax,
+                "price_dencity": price_dencity,
+                "value": value,
+            }
 
-    else:
-        material_value = False
+            refined.append(r)
+
+            material_value += value
 
     # Calculate values for compressed variant
     if item_prices["compression_prices"]:
-        price = item_prices["compression_prices"]["buy"]
+
+        compressed_version = EveType.objects.filter(
+            id=item_prices["compression_prices"]["id"]
+        ).first()
+
         quantity = item_prices["compression_prices"]["quantity"]
+        buy = item_prices["compression_prices"]["buy"]
+        sell = item_prices["compression_prices"]["sell"]
+        price = buy
+        price_dencity = price / compressed_version.volume
+        price_dencity_tax = get_price_dencity_tax(
+            program, price, compressed_version.volume, quantity
+        )
         program_tax = program.tax
         item_tax = item_tax
-        tax_multiplier = (100 - (program_tax + item_tax)) / 100
+        tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
         logger.debug("Values: Calculating compression value for %s" % item_type.id)
 
         compression_value = (quantity * price) * tax_multiplier
 
-    else:
-        compression_value = False
+        compressed = {
+            "id": compressed_version.id,
+            "name": compressed_version.name,
+            "quantity": quantity,
+            "buy": buy,
+            "sell": sell,
+            "program_tax": program_tax,
+            "item_tax": item_tax,
+            "price_dencity_tax": price_dencity_tax,
+            "total_tax": program_tax + item_tax + price_dencity_tax,
+            "price_dencity": price_dencity,
+            "value": compression_value,
+        }
 
     # Get the highest value of the used pricing methods
     buy_value = max([type_value, material_value, compression_value])
 
     logger.debug("Values: Best buy value for %s is %s ISK" % (item_type, buy_value))
 
-    # If price dencity tax should be applied
-    if program.price_dencity_modifier:
-
-        item_price_dencity_tax = False
-
-        item_isk_dencity = buy_value / item_type.volume
-
-        logger.debug("Values: Our item isk dencity is at %s ISK/m³" % item_isk_dencity)
-
-        if item_isk_dencity < program.price_dencity_treshold:
-            buy_value = buy_value * ((100 - program.price_dencity_tax) / 100)
-
-            item_price_dencity_tax = program.price_dencity_tax
-
-            logger.debug(
-                "Values: %s%s low price dencity tax applied on %s, buy value is now at %s"
-                % (program.price_dencity_tax, "%", item_type, buy_value)
-            )
-
-    # No price dencity tax used
-    else:
-        item_price_dencity_tax = False
-
     # Final values for this item
     values = {
+        "normal": raw_item,
+        "refined": refined,
+        "compressed": compressed,
         "type_value": type_value,
         "material_value": material_value,
         "compression_value": compression_value,
-        "price_dencity_tax": item_price_dencity_tax,
         "buy_value": buy_value,
     }
+
+    print()
 
     return values
 
@@ -277,7 +333,8 @@ def get_item_buy_value(buyback_data, program):
     if program.hauling_fuel_cost > 0:
         for item in buyback_data:
             item_volume = item["type_data"].volume
-            hauling_cost = item_volume * program.hauling_fuel_cost
+            quantity = item["item_values"]["normal"]["quantity"]
+            hauling_cost = item_volume * program.hauling_fuel_cost * quantity
 
             total_hauling_cost += hauling_cost
 

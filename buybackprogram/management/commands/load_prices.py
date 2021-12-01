@@ -1,11 +1,8 @@
-from django.core.management.base import BaseCommand
-from eveuniverse.models import EveMarketGroup
-from datetime import date
-from django.db import IntegrityError, Error
-
 import requests
-from celery import shared_task
 
+from django.core.management.base import BaseCommand
+from django.db import IntegrityError
+from django.utils import timezone
 from eveuniverse.models import EveType
 
 from allianceauth.services.hooks import get_extension_logger
@@ -14,72 +11,85 @@ from buybackprogram.models import ItemPrices
 
 logger = get_extension_logger(__name__)
 
+
 class Command(BaseCommand):
-	help = "Preloads data required for the buyback program from ESI"
+    help = "Preloads data required for the buyback program from ESI"
 
-	def handle(self, *args, **options):
-		i = 0
-		type_ids = []
-		market_data = []
+    def handle(self, *args, **options):
+        i = 0
+        item_count = 0
+        type_ids = []
+        market_data = []
 
-		# Get all type ids 
-		typeids = EveType.objects.values_list("id", flat=True).filter(published=True)[:1]
+        # Get all type ids
+        typeids = EveType.objects.values_list("id", flat=True).filter(published=True)
 
-		# Build suitable bulks to fetch prices from API
-		for item in typeids:
-			type_ids.append(item)
+        print(
+            "Price update starting for %s items, this may take up to 30 seconds..."
+            % len(typeids)
+        )
 
-			i += 1
+        # Build suitable bulks to fetch prices from API
+        for item in typeids:
+            type_ids.append(item)
 
-			if i == 1000:
+            i += 1
 
-				response_fuzzwork = requests.get(
-					"https://market.fuzzwork.co.uk/aggregates/",
-					params={
-						"types": ",".join([str(x) for x in type_ids]),
-						"station": 60003760,
-					},
-				)
+            if i == 1000:
 
-				items_fuzzwork = response_fuzzwork.json()
-				market_data.append(items_fuzzwork)
+                response_fuzzwork = requests.get(
+                    "https://market.fuzzwork.co.uk/aggregates/",
+                    params={
+                        "types": ",".join([str(x) for x in type_ids]),
+                        "station": 60003760,
+                    },
+                )
 
-				i = 0
-				type_ids.clear()
+                items_fuzzwork = response_fuzzwork.json()
+                market_data.append(items_fuzzwork)
 
-		# Get leftover data from the bulk
-		response_fuzzwork = requests.get(
-			"https://market.fuzzwork.co.uk/aggregates/",
-				params={
-					"types": ",".join([str(x) for x in type_ids]),
-					"station": 60003760,
-				},
-			)
+                i = 0
+                type_ids.clear()
 
-		items_fuzzwork = response_fuzzwork.json()
-		market_data.append(items_fuzzwork)
+        # Get leftover data from the bulk
+        response_fuzzwork = requests.get(
+            "https://market.fuzzwork.co.uk/aggregates/",
+            params={
+                "types": ",".join([str(x) for x in type_ids]),
+                "station": 60003760,
+            },
+        )
 
-		for objects in market_data:
-			for key, value in objects.items():
-				objs = [
-					ItemPrices(
-						eve_type_id=key,
-						buy=int(float(value["buy"]["max"])),
-						sell=int(float(value["sell"]["min"])),
-						updated=date.today(),
-					)
-				]
+        items_fuzzwork = response_fuzzwork.json()
+        market_data.append(items_fuzzwork)
 
-				logger.debug('Building objs for %s' % key)
+        for objects in market_data:
+            for key, value in objects.items():
+                item_count += 1
 
-		try:
-			ItemPrices.objects.bulk_create(objs)
-		except IntegrityError as e:
-			return 'Error: Prices already loaded into database, use price update task instead'
-			logger.error('Prices already loaded into database, use price update task instead')
+                objs = [
+                    ItemPrices(
+                        eve_type_id=key,
+                        buy=int(float(value["buy"]["max"])),
+                        sell=int(float(value["sell"]["min"])),
+                        updated=timezone.now(),
+                    )
+                ]
+        try:
+            ItemPrices.objects.bulk_create(objs)
+            return "Succesfully updated %s prices." % item_count
+        except IntegrityError:
+            print(
+                "Error: Prices already loaded into database, did you mean to run task.update_all_prices instead?"
+            )
 
-				
+            delete_arg = input("Would you like to delete current prices? (y/n): ")
 
-		return "Updated prices for buybackprogram"
+            if delete_arg == "y":
+                ItemPrices.objects.all().delete()
+                return "All price data removed from database. Run the command again to populate the price data."
+            else:
+                return "No changes done to price table."
+
 
 # from buybackprogram.tasks import update_all_prices

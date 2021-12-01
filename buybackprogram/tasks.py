@@ -42,6 +42,7 @@ def update_all_prices():
 
                 objs = [
                     ItemPrices(
+                        id=key,
                         eve_type_id=key,
                         buy=int(float(i["buy"]["max"])),
                         sell=int(float(i["sell"]["min"])),
@@ -50,7 +51,9 @@ def update_all_prices():
                 ]
 
             try:
-                ItemPrices.objects.bulk_create(objs)
+                ItemPrices.objects.bulk_update(
+                    objs, ["buy", "sell", "updated", "eve_type_id"]
+                )
             except Error as e:
                 logger.debug("Error with bulk create: %s" % e)
 

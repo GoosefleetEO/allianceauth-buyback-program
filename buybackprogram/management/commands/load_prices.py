@@ -13,7 +13,9 @@ logger = get_extension_logger(__name__)
 
 
 class Command(BaseCommand):
-    help = "Preloads data required for the buyback program from ESI"
+    help = (
+        "Preloads price data required for the buyback program from fuzzwork market API"
+    )
 
     def handle(self, *args, **options):
         i = 0
@@ -25,7 +27,7 @@ class Command(BaseCommand):
         typeids = EveType.objects.values_list("id", flat=True).filter(published=True)
 
         print(
-            "Price update starting for %s items, this may take up to 30 seconds..."
+            "Price setup starting for %s items from Fuzzworks API, this may take up to 30 seconds..."
             % len(typeids)
         )
 
@@ -63,21 +65,23 @@ class Command(BaseCommand):
         items_fuzzwork = response_fuzzwork.json()
         market_data.append(items_fuzzwork)
 
+        objs = []
+
         for objects in market_data:
             for key, value in objects.items():
                 item_count += 1
 
-                objs = [
-                    ItemPrices(
-                        eve_type_id=key,
-                        buy=int(float(value["buy"]["max"])),
-                        sell=int(float(value["sell"]["min"])),
-                        updated=timezone.now(),
-                    )
-                ]
+                item = ItemPrices(
+                    eve_type_id=key,
+                    buy=int(float(value["buy"]["max"])),
+                    sell=int(float(value["sell"]["min"])),
+                    updated=timezone.now(),
+                )
+
+                objs.append(item)
         try:
             ItemPrices.objects.bulk_create(objs)
-            return "Succesfully updated %s prices." % item_count
+            return "Succesfully setup %s prices." % item_count
         except IntegrityError:
             print(
                 "Error: Prices already loaded into database, did you mean to run task.update_all_prices instead?"

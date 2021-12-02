@@ -164,6 +164,8 @@ def get_item_values(item_type, item_prices, program):
     material_value = False
     compression_value = False
     item_tax = False
+    refined = []
+    compressed = False
 
     # Get special taxes and see if our item belongs to this table
     program_item_settings = ProgramItem.objects.filter(
@@ -214,8 +216,6 @@ def get_item_values(item_type, item_prices, program):
 
     # Get values for item materials
     if item_prices["material_prices"]:
-
-        refined = []
 
         material_value = 0
 

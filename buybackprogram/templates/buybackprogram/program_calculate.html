@@ -26,7 +26,13 @@
         </tr>
         <tr>
             <th>I will receive:</th>
-            <td>{{contract_price_data.contract_net_total|intcomma }}</td>
+            {% if contract_price_data.contract_net_total >= 0%}
+                <td>{{contract_price_data.contract_net_total|intcomma }}</td>
+            {% else %}
+                <td>0 ISK <i><s>{{contract_price_data.contract_net_total|intcomma }} ISK</s></i><td>
+            {% endif %}
+
+
         </tr>
         <tr>
             <th>Expiration:</th>
@@ -45,24 +51,33 @@
     <table id="contract" style="margin: 20px auto;" class="table table-striped table-condensed">
         <tr>
             <th>Price before expenses</th>
-            <td>TODO: PRICE WITHOUT TAX</td>
+            <td>{{contract_price_data.total_all_items_raw|floatformat:0|intcomma}} ISK</td>
         </tr>
         <tr>
             <th>Program taxes</th>
-            <td>TODO: TOTAL TAX AMOUNT</td>
+          <td>{{contract_price_data.total_tax_amount|floatformat:0|intcomma}} ISK</td>
         </tr>
-        <tr>
-            <th>Price after taxes</th>
-            <td>TODO: TOTAL TAX AMOUNT</td>
-        </tr>
+        {% if program.hauling_fuel_cost > 0 %}
         <tr>
             <th>Hauling cost</th>
             <td>{{contract_price_data.total_hauling_cost|floatformat:0|intcomma}} ISK</td>
         </tr>
+        {% endif %}
+        {% if contract_price_data.total_donation_amount %}
+        <tr>
+            <th>Donation amount</th>
+            <td>{{contract_price_data.total_donation_amount|floatformat:0|intcomma}} ISK <i>({{donation}} %)</i></td>
+        </tr>
+        {% endif %}
         <tr>
             <th style="border-top:2px dotted black;">Net price</th>
-            <td style="border-top:2px dotted black;">{{contract_price_data.contract_net_total|floatformat:0|intcomma}} ISK</td>
+            {% if contract_price_data.contract_net_total >= 0%}
+                <td style="border-top:2px dotted black;">{{contract_price_data.contract_net_total|intcomma }}</td>
+            {% else %}
+                <td style="border-top:2px dotted black;">0 ISK <i><s>{{contract_price_data.contract_net_total|intcomma }} ISK</s></i><td>
+            {% endif %}
         </tr>
+
     </table>
 </div>
 

@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from buybackprogram.models import Program, ProgramItem
 
@@ -22,6 +23,12 @@ class CalculatorForm(forms.Form):
         widget=forms.Textarea,
         label="Items",
         help_text="Copy and paste the item data from your inventory. Item types not in this buyback program will be ignored",
+    )
+    donation = forms.IntegerField(
+        label="Donation %",
+        initial=0,
+        help_text="You can set a optional donation percentage on your contract",
+        validators=[MaxValueValidator(100), MinValueValidator(0)],
     )
 
     def __init__(self, *args, items=None, **kwargs):

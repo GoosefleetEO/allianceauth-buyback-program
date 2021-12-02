@@ -166,6 +166,9 @@ def get_item_values(item_type, item_prices, program):
     item_tax = False
     refined = []
     compressed = False
+    type_raw_value = False
+    material_raw_value = False
+    compression_raw_value = False
 
     # Get special taxes and see if our item belongs to this table
     program_item_settings = ProgramItem.objects.filter(
@@ -198,7 +201,8 @@ def get_item_values(item_type, item_prices, program):
 
         logger.debug("Values: Calculating type value for %s" % item_type)
 
-        type_value = (quantity * price) * tax_multiplier
+        type_raw_value = quantity * price
+        type_value = type_raw_value * tax_multiplier
 
         raw_item = {
             "id": types.id,
@@ -211,6 +215,7 @@ def get_item_values(item_type, item_prices, program):
             "price_dencity_tax": price_dencity_tax,
             "total_tax": program_tax + item_tax + price_dencity_tax,
             "price_dencity": price_dencity,
+            "raw_value": type_raw_value,
             "value": type_value,
         }
 
@@ -218,6 +223,7 @@ def get_item_values(item_type, item_prices, program):
     if item_prices["material_prices"]:
 
         material_value = 0
+        material_raw_value = 0
 
         for material in item_prices["material_prices"]:
 
@@ -236,7 +242,8 @@ def get_item_values(item_type, item_prices, program):
             refining_rate = program.refining_rate / 100
             tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
-            value = (quantity * refining_rate * price) * tax_multiplier
+            raw_value = quantity * refining_rate * price
+            value = raw_value * tax_multiplier
 
             r = {
                 "id": material["id"],
@@ -249,12 +256,14 @@ def get_item_values(item_type, item_prices, program):
                 "price_dencity_tax": price_dencity_tax,
                 "total_tax": program_tax + item_tax + price_dencity_tax,
                 "price_dencity": price_dencity,
+                "raw_value": raw_value,
                 "value": value,
             }
 
             refined.append(r)
 
             material_value += value
+            material_raw_value += raw_value
 
     # Calculate values for compressed variant
     if item_prices["compression_prices"]:
@@ -277,7 +286,8 @@ def get_item_values(item_type, item_prices, program):
 
         logger.debug("Values: Calculating compression value for %s" % item_type.id)
 
-        compression_value = (quantity * price) * tax_multiplier
+        compression_raw_value = quantity * price
+        compression_value = raw_value * tax_multiplier
 
         compressed = {
             "id": compressed_version.id,
@@ -290,10 +300,13 @@ def get_item_values(item_type, item_prices, program):
             "price_dencity_tax": price_dencity_tax,
             "total_tax": program_tax + item_tax + price_dencity_tax,
             "price_dencity": price_dencity,
+            "raw_value": raw_value,
             "value": compression_value,
         }
 
     # Get the highest value of the used pricing methods
+    raw_value = max([type_raw_value, material_raw_value, compression_raw_value])
+
     buy_value = max([type_value, material_value, compression_value])
 
     logger.debug("Values: Best buy value for %s is %s ISK" % (item_type, buy_value))
@@ -306,28 +319,38 @@ def get_item_values(item_type, item_prices, program):
         "type_value": type_value,
         "material_value": material_value,
         "compression_value": compression_value,
+        "raw_value": raw_value,
         "buy_value": buy_value,
     }
-
-    print()
 
     return values
 
 
-def get_item_buy_value(buyback_data, program):
+def get_item_buy_value(buyback_data, program, donation):
 
     total_all_items = 0
     total_hauling_cost = 0
-    contract_net_total = 0
+    contract_net_total = False
+    total_donation = False
+    tota_all_items_raw = 0
 
     # Get a grand total value of all buy prices
     for item in buyback_data:
+        tota_all_items_raw += item["item_values"]["raw_value"]
         total_all_items += item["item_values"]["buy_value"]
 
     logger.debug(
         "Final: Total buy value for all items before expenses is %s ISK"
         % total_all_items
     )
+
+    if donation > 0:
+
+        total_donation = total_all_items * (donation / 100)
+
+        logger.debug(
+            "Seller will donate %s a total of %s ISK" % (donation, total_donation)
+        )
 
     # Calculate hauling expenses
     if program.hauling_fuel_cost > 0:
@@ -352,12 +375,15 @@ def get_item_buy_value(buyback_data, program):
             % total_hauling_cost
         )
 
-    contract_net_total = total_all_items - total_hauling_cost
+    contract_net_total = total_all_items - total_hauling_cost - total_donation
 
     logger.debug("Final: Net total after expenses is %s ISK" % contract_net_total)
 
     contract_net_prices = {
+        "total_all_items_raw": tota_all_items_raw,
         "total_all_items": total_all_items,
+        "total_tax_amount": tota_all_items_raw - total_all_items,
+        "total_donation_amount": total_donation,
         "total_hauling_cost": total_hauling_cost,
         "contract_net_total": contract_net_total,
     }

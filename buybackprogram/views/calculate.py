@@ -31,6 +31,7 @@ def program_calculate(request, program_pk):
 
         if form.is_valid():
             form_items = form.cleaned_data["items"]
+            form_donation = form.cleaned_data["donation"]
 
             # If we have an ingame copy paste
             if "\t" in form_items:
@@ -94,11 +95,12 @@ def program_calculate(request, program_pk):
                 logger.debug("TODO: add tasks to process plain text imputs here.")
 
     # Get item values after other expenses and the total value for the contract
-    contract_price_data = get_item_buy_value(buyback_data, program)
+    contract_price_data = get_item_buy_value(buyback_data, program, form_donation)
 
     context = {
         "program": program,
         "form": form,
+        "donation": form_donation,
         "buyback_data": buyback_data,
         "contract_price_data": contract_price_data,
     }

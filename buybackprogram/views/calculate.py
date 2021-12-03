@@ -19,6 +19,8 @@ def program_calculate(request, program_pk):
 
     buyback_data = []
 
+    form_donation = False
+
     if program is None:
         return redirect("buybackprogram:index")
 

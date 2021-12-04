@@ -87,10 +87,10 @@
             <tr>
                 <th>Name</th>
                 <th>Quantity</th>
-                <th>Jita sell ISK</th>
-                <th>Jita buy ISK</th>
-                <th>Tax %</th>
-                <th>Row value ISK</th>
+                <th>Jita sell</th>
+                <th>Jita buy</th>
+                <th>Tax</th>
+                <th>Row value</th>
             </tr>
         </thead>
         <tbody>
@@ -98,16 +98,43 @@
             <tr>
                 <td>{{ item.item_values.normal.name }}</td>
                 <td>{{ item.item_values.normal.quantity }}</td>
-                <td>{{ item.item_values.normal.sell|floatformat:0|intcomma }}</td>
-                <td>{{ item.item_values.normal.buy|floatformat:0|intcomma }}</td>
+                <td>{{ item.item_values.normal.sell|floatformat:0|intcomma }} ISK</td>
+                <td>{{ item.item_values.normal.buy|floatformat:0|intcomma }} ISK</td>
                 <td>{{ item.item_values.normal.total_tax }} %</td>
-                <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.value|floatformat:0|intcomma }}</td>
+                <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.value|floatformat:0|intcomma }} ISK</td>
             </tr>
             {% if item.item_values.compressed.value %}
-                <tr>
+                <tr data-toggle="collapse" data-target="#{{ item.item_values.normal.id }}-compressed" class="accordion-toggle">
                     <td colspan="5" style="padding-left:20px;"><i>Compressed</i> <i style="padding-left: 10px;" class="fas fa-angle-down"></i></td>
                     <td class="buy-value-{{item.item_values.compressed.is_buy_value}}">{{ item.item_values.compression_value|floatformat:0|intcomma}}</td>
                 </tr>
+                 <tr>
+                    <td style="padding-left:20px;">
+                <div class="collapse" id="{{ item.item_values.normal.id }}-compressed">
+                    <table class="table">
+                     <thead>
+            <tr>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th>Jita sell</th>
+                <th>Jita buy</th>
+                <th>Tax</th>
+                <th>Row value</th>
+            </tr>
+        </thead>
+
+                <tr>
+                    <td>{{item.item_values.compressed.name}}</td>
+                    <td>{{item.item_values.compressed.quantity}}</td>
+                    <td>{{item.item_values.compressed.sell|floatformat:0|intcomma}} ISK</td>
+                    <td>{{item.item_values.compressed.buy|floatformat:0|intcomma}} ISK</td>
+                    <td>{{item.item_values.compressed.total_tax}} %</td>
+                    <td>{{item.item_values.compressed.value|floatformat:0|intcomma}} ISK</td>
+                </tr>
+                </div>
+            </table>
+            </td>
+            </tr>
             {% endif %}
 
 
@@ -124,10 +151,11 @@
             <tr>
                 <th>Name</th>
                 <th>Quantity</th>
-                <th>Jita sell ISK</th>
-                <th>Jita buy ISK</th>
-                <th>Tax %</th>
-                <th>Row value ISK</th>
+                <th>Jita sell</th>
+                <th>Jita buy</th>
+                <th>Tax</th>
+                <th>Refining rate</th>
+                <th>Row value</th>
             </tr>
         </thead>
                 {% for material in item.item_values.refined.materials %}
@@ -135,10 +163,11 @@
                 <tr>
                     <td>{{material.name}}</td>
                     <td>{{material.quantity}}</td>
-                    <td>{{material.sell|floatformat:0|intcomma}}</td>
-                    <td>{{material.buy|floatformat:0|intcomma}}</td>
+                    <td>{{material.sell|floatformat:0|intcomma}} ISK</td>
+                    <td>{{material.buy|floatformat:0|intcomma}} ISK</td>
                     <td>{{material.total_tax}} %</td>
-                    <td>{{material.value|floatformat:0|intcomma}}</td>
+                    <td>{{program.refining_rate}} %</td>
+                    <td>{{material.value|floatformat:0|intcomma}} ISK</td>
                 </tr>
                 {% endfor %}
                 </div>

@@ -161,13 +161,11 @@ def get_item_prices(item_type, name, quantity, program):
 def get_item_values(item_type, item_prices, program):
 
     type_value = False
-    material_value = False
     compression_value = False
     item_tax = False
     refined = []
     compressed = False
     type_raw_value = False
-    material_raw_value = False
     compression_raw_value = False
 
     # Get special taxes and see if our item belongs to this table
@@ -217,13 +215,23 @@ def get_item_values(item_type, item_prices, program):
             "price_dencity": price_dencity,
             "raw_value": type_raw_value,
             "value": type_value,
+            "is_buy_value": False,
+        }
+    else:
+        raw_item = {
+            "value": False,
+            "raw_value": False,
         }
 
     # Get values for item materials
     if item_prices["material_prices"]:
 
-        material_value = 0
-        material_raw_value = 0
+        refined = {
+            "materials": [],
+            "raw_value": False,
+            "value": False,
+            "is_buy_value": False,
+        }
 
         for material in item_prices["material_prices"]:
 
@@ -260,10 +268,16 @@ def get_item_values(item_type, item_prices, program):
                 "value": value,
             }
 
-            refined.append(r)
+            refined["materials"].append(r)
 
-            material_value += value
-            material_raw_value += raw_value
+            refined["value"] += value
+            refined["raw_value"] += raw_value
+    else:
+        refined = {
+            "value": False,
+            "raw_value": False,
+            "raw_value": False,
+        }
 
     # Calculate values for compressed variant
     if item_prices["compression_prices"]:
@@ -287,7 +301,7 @@ def get_item_values(item_type, item_prices, program):
         logger.debug("Values: Calculating compression value for %s" % item_type.id)
 
         compression_raw_value = quantity * price
-        compression_value = raw_value * tax_multiplier
+        compression_value = compression_raw_value * tax_multiplier
 
         compressed = {
             "id": compressed_version.id,
@@ -300,14 +314,28 @@ def get_item_values(item_type, item_prices, program):
             "price_dencity_tax": price_dencity_tax,
             "total_tax": program_tax + item_tax + price_dencity_tax,
             "price_dencity": price_dencity,
-            "raw_value": raw_value,
+            "raw_value": compression_raw_value,
             "value": compression_value,
+            "is_buy_value": False,
+        }
+    else:
+        compressed = {
+            "value": False,
+            "raw_value": False,
         }
 
     # Get the highest value of the used pricing methods
-    raw_value = max([type_raw_value, material_raw_value, compression_raw_value])
+    buy_value = max([raw_item["value"], refined["value"], compressed["value"]])
 
-    buy_value = max([type_value, material_value, compression_value])
+    raw_value = max([raw_item["raw_value"], refined["raw_value"], compressed["value"]])
+
+    # Determine what value we will use for buy value
+    if buy_value == raw_item["value"]:
+        raw_item["is_buy_value"] = True
+    elif buy_value == refined["value"]:
+        refined["is_buy_value"] = True
+    elif buy_value == compressed["value"]:
+        compressed["is_buy_value"] = True
 
     logger.debug("Values: Best buy value for %s is %s ISK" % (item_type, buy_value))
 
@@ -316,9 +344,9 @@ def get_item_values(item_type, item_prices, program):
         "normal": raw_item,
         "refined": refined,
         "compressed": compressed,
-        "type_value": type_value,
-        "material_value": material_value,
-        "compression_value": compression_value,
+        "type_value": raw_item["value"],
+        "material_value": refined["value"],
+        "compression_value": compressed["value"],
         "raw_value": raw_value,
         "buy_value": buy_value,
     }

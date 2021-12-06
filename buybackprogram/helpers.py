@@ -12,6 +12,17 @@ def getList(dict):
     return dict.keys()
 
 
+def has_buy_price(item):
+    if (
+        not item["type_prices"]
+        and not item["material_prices"]
+        and not item["compression_prices"]
+    ):
+        return False
+    else:
+        return True
+
+
 def get_price_dencity_tax(program, item_value, item_volume, item_quantity):
     # If price dencity tax should be applied
     if program.price_dencity_modifier:
@@ -24,6 +35,8 @@ def get_price_dencity_tax(program, item_value, item_volume, item_quantity):
             return program.price_dencity_tax
         else:
             return False
+    else:
+        return False
 
 
 # This method will get the price information for the item. It will not calculate the values as in price including taxes.
@@ -53,8 +66,10 @@ def get_item_prices(item_type, name, quantity, program):
         item_price = ItemPrices.objects.filter(eve_type_id=item_type.id).first()
 
         # If raw ore value should not be taken into account
-        if not program.use_raw_ore_value and item_type.eve_group.id in getList(
-            REFINING_EVE_GROUPS
+        if (
+            not program.use_raw_ore_value
+            and item_type.eve_group.id in getList(REFINING_EVE_GROUPS)
+            and "Compressed" not in item_type.name
         ):
             item_type_price = False
 
@@ -84,7 +99,7 @@ def get_item_prices(item_type, name, quantity, program):
                     eve_type_id=material.material_eve_type.id
                 ).first()
 
-                refining_ratio = REFINING_EVE_GROUPS[item_type.eve_group.id]
+                refining_ratio = item_type.portion_size
 
                 # Quantity of refined materials
                 material_quantity = (material.quantity * quantity) / refining_ratio
@@ -110,7 +125,7 @@ def get_item_prices(item_type, name, quantity, program):
         ):
 
             compresed_name = "Compressed " + name
-            compression_ratio = COMPRESSING_EVE_GROUPS[item_type.eve_group.id]
+            compression_ratio = item_type.portion_size
 
             logger.debug(
                 "Prices: Getting compression prices for %s based on original item %s"
@@ -138,17 +153,18 @@ def get_item_prices(item_type, name, quantity, program):
             compressed_type_prices = False
 
         prices = {
+            "quantity": quantity,
             "type_prices": item_type_price,
             "material_prices": item_material_price,
             "compression_prices": compressed_type_prices,
         }
     else:
 
-        note = {"error": "%s is not allowed at location %s" % (name, program.location)}
+        note = "%s is not allowed at location %s" % (name, program.location)
         notes.append(note)
 
         prices = {
-            "materials": False,
+            "quantity": quantity,
             "type_prices": False,
             "material_prices": False,
             "compression_prices": False,
@@ -167,6 +183,7 @@ def get_item_values(item_type, item_prices, program):
     compressed = False
     type_raw_value = False
     compression_raw_value = False
+    notes = []
 
     # Get special taxes and see if our item belongs to this table
     program_item_settings = ProgramItem.objects.filter(
@@ -242,13 +259,10 @@ def get_item_values(item_type, item_prices, program):
             buy = material["buy"]
             price = buy
             price_dencity = price / materials.volume
-            price_dencity_tax = get_price_dencity_tax(
-                program, price, materials.volume, quantity
-            )
             program_tax = program.tax
             item_tax = item_tax
             refining_rate = program.refining_rate / 100
-            tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
+            tax_multiplier = (100 - (program_tax + item_tax)) / 100
 
             raw_value = quantity * refining_rate * price
             value = raw_value * tax_multiplier
@@ -261,8 +275,8 @@ def get_item_values(item_type, item_prices, program):
                 "sell": sell,
                 "program_tax": program_tax,
                 "item_tax": item_tax,
-                "price_dencity_tax": price_dencity_tax,
-                "total_tax": program_tax + item_tax + price_dencity_tax,
+                "price_dencity_tax": 0,
+                "total_tax": program_tax + item_tax,
                 "price_dencity": price_dencity,
                 "raw_value": raw_value,
                 "value": value,
@@ -324,6 +338,30 @@ def get_item_values(item_type, item_prices, program):
             "raw_value": False,
         }
 
+    if not has_buy_price(item_prices):
+
+        types = EveType.objects.filter(id=item_type.id).first()
+
+        note = "Item not accepted in this program"
+        notes.append(note)
+
+        raw_item = {
+            "id": types.id,
+            "name": types.name,
+            "quantity": item_prices["quantity"],
+            "buy": False,
+            "sell": False,
+            "program_tax": False,
+            "item_tax": False,
+            "price_dencity_tax": False,
+            "total_tax": False,
+            "price_dencity": False,
+            "raw_value": False,
+            "value": False,
+            "is_buy_value": False,
+            "notes": notes,
+        }
+
     # Get the highest value of the used pricing methods
     buy_value = max([raw_item["value"], refined["value"], compressed["value"]])
 
@@ -341,6 +379,8 @@ def get_item_values(item_type, item_prices, program):
 
     # Final values for this item
     values = {
+        "name": item_type,
+        "quantity": item_prices["quantity"],
         "normal": raw_item,
         "refined": refined,
         "compressed": compressed,
@@ -383,20 +423,21 @@ def get_item_buy_value(buyback_data, program, donation):
     # Calculate hauling expenses
     if program.hauling_fuel_cost > 0:
         for item in buyback_data:
-            item_volume = item["type_data"].volume
-            quantity = item["item_values"]["normal"]["quantity"]
-            hauling_cost = item_volume * program.hauling_fuel_cost * quantity
+            if has_buy_price(item["item_prices"]):
+                item_volume = item["type_data"].volume
+                quantity = item["item_values"]["quantity"]
+                hauling_cost = item_volume * program.hauling_fuel_cost * quantity
 
-            total_hauling_cost += hauling_cost
+                total_hauling_cost += hauling_cost
 
-            logger.debug(
-                "Final: Hauling cost %s m³ of %s is %s ISK"
-                % (
-                    item["item_prices"]["type_prices"]["quantity"],
-                    item["type_data"],
-                    hauling_cost,
+                logger.debug(
+                    "Final: Hauling cost %s m³ of %s is %s ISK"
+                    % (
+                        item["item_values"]["quantity"],
+                        item["type_data"],
+                        hauling_cost,
+                    )
                 )
-            )
 
         logger.debug(
             "Final: Total hauling cost for whole contract is %s ISK"

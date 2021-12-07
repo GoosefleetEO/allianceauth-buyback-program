@@ -71,7 +71,12 @@ def get_item_prices(item_type, name, quantity, program):
             and item_type.eve_group.id in getList(REFINING_EVE_GROUPS)
             and "Compressed" not in item_type.name
         ):
-            item_type_price = False
+            item_type_price = {
+                "id": item_type.id,
+                "quantity": quantity,
+                "buy": False,
+                "sell": False,
+            }
 
         else:
             item_type_price = {
@@ -230,12 +235,14 @@ def get_item_values(item_type, item_prices, program):
             "price_dencity_tax": price_dencity_tax,
             "total_tax": program_tax + item_tax + price_dencity_tax,
             "price_dencity": price_dencity,
+            "unit_value": price * tax_multiplier,
             "raw_value": type_raw_value,
             "value": type_value,
             "is_buy_value": False,
         }
     else:
         raw_item = {
+            "unite_value": False,
             "value": False,
             "raw_value": False,
         }
@@ -245,6 +252,7 @@ def get_item_values(item_type, item_prices, program):
 
         refined = {
             "materials": [],
+            "unit_value": False,
             "raw_value": False,
             "value": False,
             "is_buy_value": False,
@@ -278,6 +286,7 @@ def get_item_values(item_type, item_prices, program):
                 "price_dencity_tax": 0,
                 "total_tax": program_tax + item_tax,
                 "price_dencity": price_dencity,
+                "unit_value": price * tax_multiplier,
                 "raw_value": raw_value,
                 "value": value,
             }
@@ -286,11 +295,12 @@ def get_item_values(item_type, item_prices, program):
 
             refined["value"] += value
             refined["raw_value"] += raw_value
+            refined["unit_value"] += value / quantity
     else:
         refined = {
             "value": False,
             "raw_value": False,
-            "raw_value": False,
+            "unit_value": False,
         }
 
     # Calculate values for compressed variant
@@ -328,6 +338,7 @@ def get_item_values(item_type, item_prices, program):
             "price_dencity_tax": price_dencity_tax,
             "total_tax": program_tax + item_tax + price_dencity_tax,
             "price_dencity": price_dencity,
+            "unit_value": price * tax_multiplier / item_type.portion_size,
             "raw_value": compression_raw_value,
             "value": compression_value,
             "is_buy_value": False,
@@ -336,6 +347,7 @@ def get_item_values(item_type, item_prices, program):
         compressed = {
             "value": False,
             "raw_value": False,
+            "unit_value": False,
         }
 
     if not has_buy_price(item_prices):
@@ -356,6 +368,7 @@ def get_item_values(item_type, item_prices, program):
             "price_dencity_tax": False,
             "total_tax": False,
             "price_dencity": False,
+            "unit_value": False,
             "raw_value": False,
             "value": False,
             "is_buy_value": False,
@@ -365,7 +378,13 @@ def get_item_values(item_type, item_prices, program):
     # Get the highest value of the used pricing methods
     buy_value = max([raw_item["value"], refined["value"], compressed["value"]])
 
-    raw_value = max([raw_item["raw_value"], refined["raw_value"], compressed["value"]])
+    raw_value = max(
+        [raw_item["raw_value"], refined["raw_value"], compressed["raw_value"]]
+    )
+
+    unit_value = max(
+        [raw_item["unit_value"], refined["unit_value"], compressed["unit_value"]]
+    )
 
     # Determine what value we will use for buy value
     if buy_value == raw_item["value"]:
@@ -387,6 +406,7 @@ def get_item_values(item_type, item_prices, program):
         "type_value": raw_item["value"],
         "material_value": refined["value"],
         "compression_value": compressed["value"],
+        "unit_value": unit_value,
         "raw_value": raw_value,
         "buy_value": buy_value,
     }

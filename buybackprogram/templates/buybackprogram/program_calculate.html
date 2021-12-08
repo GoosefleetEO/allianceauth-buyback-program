@@ -100,24 +100,22 @@
         </thead>
         <tbody>
             {% for item in buyback_data %}
-            <tr>
-                <td>
                     <tr>
                         <td><b>{{ item.item_values.name }}</b></td>
                         <td>{{ item.item_values.quantity }}</td>
-                        <td>{{ item.item_values.normal.sell|floatformat:0|intcomma|price }}</td>
-                        <td>{{ item.item_values.normal.buy|floatformat:0|intcomma|price }}</td>
+                        <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
+                        <td>{{ item.item_prices.type_prices.buy|floatformat:0|intcomma|price }}</td>
                         <td>{{ item.item_values.normal.total_tax|tax }}</td>
                         <td>{{ item.item_values.unit_value|floatformat:0|intcomma|price }}</td>
-                        <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.value|floatformat:0|intcomma|price }}</td>
+                        <td>{{ item.item_values.normal.value|floatformat:0|intcomma|price }}</td>
                         <td>
-                            {% for note in item.item_values.normal.notes%}
-                                {{note}}
+                            {% for note in item.item_prices.notes%}
+                                <div>{{note}}</div>
                             {% endfor %}
                         </td>
                     </tr>
 
-                    {% if item.item_values.normal.value %}
+                    {% if item.item_values.normal.value and item.item_prices.has_price_variants %}
                         <tr>
                             <td colspan="6" data-toggle="collapse" data-target="#{{ item.item_values.normal.id }}-raw" class="accordion-toggle">
                                 <i style="padding-left: 10px;" class="fas fa-angle-down"> Raw</i>
@@ -125,13 +123,13 @@
                         </tr>
 
                         <tr class="collapse" id="{{ item.item_values.normal.id }}-raw">
-                            <td style="padding-left: 30px;">{{item.item_values.compressed.name}}</td>
-                            <td>{{item.item_values.compressed.quantity}}</td>
-                            <td>{{item.item_values.compressed.sell|floatformat:0|intcomma|price}}</td>
-                            <td>{{item.item_values.compressed.buy|floatformat:0|intcomma|price}}</td>
-                            <td>{{item.item_values.compressed.total_tax|tax}}</td>
-                            <td>{{item.item_values.compressed.unit_value|floatformat:0|intcomma|price}}</td>
-                            <td>{{item.item_values.compressed.value|floatformat:0|intcomma|price}}</td>
+                            <td style="padding-left: 30px;">{{ item.item_values.name }}</td>
+                            <td>{{ item.item_values.quantity }}</td>
+                            <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
+                            <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
+                            <td>{{ item.item_values.normal.total_tax|tax }}</td>
+                            <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.unit_value|floatformat:0|intcomma|price }}</td>
+                            <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.value|floatformat:0|intcomma|price }}</td>
                             <td></td>
                         </tr>
                     {% endif %}
@@ -149,8 +147,8 @@
                             <td>{{item.item_values.compressed.sell|floatformat:0|intcomma|price}}</td>
                             <td>{{item.item_values.compressed.buy|floatformat:0|intcomma|price}}</td>
                             <td>{{item.item_values.compressed.total_tax|tax}}</td>
-                            <td>{{item.item_values.compressed.unit_value|floatformat:0|intcomma|price}}</td>
-                            <td>{{item.item_values.compressed.value|floatformat:0|intcomma|price}}</td>
+                            <td class="buy-value-{{item.item_values.compressed.is_buy_value}}">{{item.item_values.compressed.unit_value|floatformat:0|intcomma|price}}</td>
+                            <td class="buy-value-{{item.item_values.compressed.is_buy_value}}">{{item.item_values.compressed.value|floatformat:0|intcomma|price}}</td>
                             <td></td>
                         </tr>
                     {% endif %}
@@ -169,18 +167,16 @@
                                 <td>{{material.sell|floatformat:0|intcomma|price}}</td>
                                 <td>{{material.buy|floatformat:0|intcomma|price}}</td>
                                 <td>{{material.total_tax|tax}}</td>
-                                <td>{{material.unit_value|floatformat:0|intcomma|price}}</td>
-                                <td>{{material.value|floatformat:0|intcomma|price}}</td>
+                                <td class="buy-value-{{item.item_values.refined.is_buy_value}}">{{material.unit_value|floatformat:0|intcomma|price}}</td>
+                                <td class="buy-value-{{item.item_values.refined.is_buy_value}}">{{material.value|floatformat:0|intcomma|price}}</td>
                                 <td></td>
                             </tr>
                         {% endfor %}
                     {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <td style="border-top:1px solid black" colspan="7
-                "></td>
-            </tr>
+                    <tr>
+                        <td colspan="7"></td>
+                    </tr>
+
             {% endfor %}
         </tbody>
     </table>

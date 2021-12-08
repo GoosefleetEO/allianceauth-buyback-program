@@ -2,7 +2,7 @@ from eveuniverse.models import EveType, EveTypeMaterial
 
 from allianceauth.services.hooks import get_extension_logger
 
-from buybackprogram.constants import COMPRESSING_EVE_GROUPS, REFINING_EVE_GROUPS
+from buybackprogram.constants import ORE_EVE_GROUPS
 from buybackprogram.models import ItemPrices, ProgramItem
 
 logger = get_extension_logger(__name__)
@@ -12,9 +12,16 @@ def getList(dict):
     return dict.keys()
 
 
+def is_ore(item_id):
+    if item_id in ORE_EVE_GROUPS:
+        return True
+    else:
+        return False
+
+
 def has_buy_price(item):
     if (
-        not item["type_prices"]
+        not item["raw_prices"]
         and not item["material_prices"]
         and not item["compression_prices"]
     ):
@@ -43,11 +50,15 @@ def get_price_dencity_tax(program, item_value, item_volume, item_quantity):
 def get_item_prices(item_type, name, quantity, program):
 
     notes = []
+    has_price_variants = False
 
     # Get special taxes and see if our item belongs to this table
     program_item_settings = ProgramItem.objects.filter(
         program=program, item_type__id=item_type.id
     ).first()
+
+    # Get item raw price information
+    item_price = ItemPrices.objects.filter(eve_type_id=item_type.id).first()
 
     # Check what items are allowed
     if program.allow_all_items:
@@ -62,16 +73,14 @@ def get_item_prices(item_type, name, quantity, program):
             item_disallowed = True
 
     if not item_disallowed:
-        # Get item raw price information
-        item_price = ItemPrices.objects.filter(eve_type_id=item_type.id).first()
 
         # If raw ore value should not be taken into account
         if (
             not program.use_raw_ore_value
-            and item_type.eve_group.id in getList(REFINING_EVE_GROUPS)
+            and is_ore(item_type.eve_group.id)
             and "Compressed" not in item_type.name
         ):
-            item_type_price = {
+            item_raw_price = {
                 "id": item_type.id,
                 "quantity": quantity,
                 "buy": False,
@@ -79,7 +88,7 @@ def get_item_prices(item_type, name, quantity, program):
             }
 
         else:
-            item_type_price = {
+            item_raw_price = {
                 "id": item_type.id,
                 "quantity": quantity,
                 "buy": item_price.buy,
@@ -87,10 +96,7 @@ def get_item_prices(item_type, name, quantity, program):
             }
 
         # Check if we should get refined value for the item
-        if (
-            item_type.eve_group.id in getList(REFINING_EVE_GROUPS)
-            and program.use_refined_value
-        ):
+        if is_ore(item_type.eve_group.id) and program.use_refined_value:
             item_material_price = []
             # Get all refining materials for item
             type_materials = EveTypeMaterial.objects.filter(
@@ -117,6 +123,9 @@ def get_item_prices(item_type, name, quantity, program):
                 }
 
                 item_material_price.append(material_type_prices)
+
+            has_price_variants = True
+
         else:
             item_material_price = False
             type_materials = False
@@ -124,7 +133,7 @@ def get_item_prices(item_type, name, quantity, program):
 
         # Get compressed versions of the ores that are not yet compressed
         if (
-            item_type.eve_group.id in getList(COMPRESSING_EVE_GROUPS)
+            is_ore(item_type.eve_group.id)
             and "Compressed" not in name
             and program.use_compressed_value
         ):
@@ -152,6 +161,8 @@ def get_item_prices(item_type, name, quantity, program):
                 "sell": compression_price.sell,
             }
 
+            has_price_variants = True
+
         # If item can't or should not be compressed
         else:
             logger.debug("Prices: No compression required/available for %s" % name)
@@ -159,9 +170,12 @@ def get_item_prices(item_type, name, quantity, program):
 
         prices = {
             "quantity": quantity,
-            "type_prices": item_type_price,
+            "type_prices": item_price,
+            "raw_prices": item_raw_price,
             "material_prices": item_material_price,
             "compression_prices": compressed_type_prices,
+            "has_price_variants": has_price_variants,
+            "notes": notes,
         }
     else:
 
@@ -170,10 +184,12 @@ def get_item_prices(item_type, name, quantity, program):
 
         prices = {
             "quantity": quantity,
-            "type_prices": False,
+            "type_prices": item_price,
+            "raw_prices": False,
             "material_prices": False,
             "compression_prices": False,
-            "note": notes,
+            "has_price_variants": has_price_variants,
+            "notes": notes,
         }
 
     return prices
@@ -188,7 +204,6 @@ def get_item_values(item_type, item_prices, program):
     compressed = False
     type_raw_value = False
     compression_raw_value = False
-    notes = []
 
     # Get special taxes and see if our item belongs to this table
     program_item_settings = ProgramItem.objects.filter(
@@ -198,18 +213,19 @@ def get_item_values(item_type, item_prices, program):
     # If we have an special taxation item, assign it to a variable
     if program_item_settings:
         item_tax = program_item_settings.item_tax
+
         logger.debug("Values: Found tax %s for %s" % (item_tax, item_type))
 
     # If no special taxes are found we ensure our tax variable remains zero
 
     # Get values for the type prices (base prices) if we have any
-    if item_prices["type_prices"]:
+    if item_prices["raw_prices"]:
 
-        types = EveType.objects.filter(id=item_prices["type_prices"]["id"]).first()
+        types = EveType.objects.filter(id=item_prices["raw_prices"]["id"]).first()
 
-        quantity = item_prices["type_prices"]["quantity"]
-        sell = item_prices["type_prices"]["sell"]
-        buy = item_prices["type_prices"]["buy"]
+        quantity = item_prices["raw_prices"]["quantity"]
+        sell = item_prices["raw_prices"]["sell"]
+        buy = item_prices["raw_prices"]["buy"]
         price = buy
         price_dencity = price / types.volume
         price_dencity_tax = get_price_dencity_tax(
@@ -240,6 +256,14 @@ def get_item_values(item_type, item_prices, program):
             "value": type_value,
             "is_buy_value": False,
         }
+
+        if price_dencity_tax:
+            note = "%s has low price dencity, %s %s extra tax applied" % (
+                raw_item["name"],
+                price_dencity_tax,
+                "%",
+            )
+            item_prices["notes"].append(note)
     else:
         raw_item = {
             "unite_value": False,
@@ -354,8 +378,8 @@ def get_item_values(item_type, item_prices, program):
 
         types = EveType.objects.filter(id=item_type.id).first()
 
-        note = "Item not accepted in this program"
-        notes.append(note)
+        note = "%s not accepted in this program" % types.name
+        item_prices["notes"].append(note)
 
         raw_item = {
             "id": types.id,
@@ -372,8 +396,16 @@ def get_item_values(item_type, item_prices, program):
             "raw_value": False,
             "value": False,
             "is_buy_value": False,
-            "notes": notes,
         }
+
+    # Add notes for extr taxes
+    if item_tax > 0:
+        note = "%s has special taxation bracket, %s %s extra tax applied" % (
+            raw_item["name"],
+            item_tax,
+            "%",
+        )
+        item_prices["notes"].append(note)
 
     # Get the highest value of the used pricing methods
     buy_value = max([raw_item["value"], refined["value"], compressed["value"]])
@@ -391,8 +423,12 @@ def get_item_values(item_type, item_prices, program):
         raw_item["is_buy_value"] = True
     elif buy_value == refined["value"]:
         refined["is_buy_value"] = True
+        note = "Best price: Using refined price for %s" % raw_item["name"]
+        item_prices["notes"].append(note)
     elif buy_value == compressed["value"]:
         compressed["is_buy_value"] = True
+        note = "Best price: Using compressed price for %s" % raw_item["name"]
+        item_prices["notes"].append(note)
 
     logger.debug("Values: Best buy value for %s is %s ISK" % (item_type, buy_value))
 

@@ -101,11 +101,17 @@ class Owner(models.Model):
 
             for item in contract_items:
 
+                cont = Contract.objects.get(contract_id=contract["contract_id"])
+                itm = EveType.objects.get(pk=item["type_id"])
+                logger.debug(
+                    "Item type is: %s evetype is %s" % (item["type_id"], itm.id)
+                )
+
                 obj, created = ContractItem.objects.update_or_create(
-                    contract=contract["contract_id"],
-                    eve_type=item["type_id"],
+                    contract=cont,
+                    eve_type=itm,
                     quantity=item["quantity"],
-                    defaults={"contract": contract["contract_id"]},
+                    defaults={"contract": cont},
                 )
 
             logger.debug("Updated items for contract %s" % contract["contract_id"])

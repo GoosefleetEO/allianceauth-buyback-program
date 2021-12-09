@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('buybackprogram', '0023_contract_contractitem'),
+        ("buybackprogram", "0023_contract_contractitem"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='contract',
-            name='date_completed',
+            model_name="contract",
+            name="date_completed",
             field=models.DateTimeField(null=True),
         ),
         migrations.AlterField(
-            model_name='contract',
-            name='date_expired',
+            model_name="contract",
+            name="date_expired",
             field=models.DateTimeField(null=True),
         ),
     ]

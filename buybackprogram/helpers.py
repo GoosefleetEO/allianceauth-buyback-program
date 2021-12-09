@@ -514,3 +514,22 @@ def get_item_buy_value(buyback_data, program, donation):
     }
 
     return contract_net_prices
+
+
+def item_missing(item_name, quantity):
+
+    values = {
+        "name": item_name,
+        "quantity": quantity,
+        "normal": False,
+        "refined": False,
+        "compressed": False,
+        "type_value": False,
+        "material_value": False,
+        "compression_value": False,
+        "unit_value": False,
+        "raw_value": False,
+        "buy_value": False,
+    }
+
+    return values

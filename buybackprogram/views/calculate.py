@@ -5,7 +5,12 @@ from eveuniverse.models import EveType
 from allianceauth.services.hooks import get_extension_logger
 
 from buybackprogram.forms import CalculatorForm
-from buybackprogram.helpers import get_item_buy_value, get_item_prices, get_item_values
+from buybackprogram.helpers import (
+    get_item_buy_value,
+    get_item_prices,
+    get_item_values,
+    item_missing,
+)
 from buybackprogram.models import Program
 
 logger = get_extension_logger(__name__)
@@ -84,10 +89,22 @@ def program_calculate(request, program_pk):
                             buyback_data.append(buyback_item)
 
                         else:
-                            logger.debug(
-                                "TODO: Error handling when item has no typedata (new or missing items)"
-                            )
+                            item_values = item_missing(name, quantity)
 
+                            buyback_item = {
+                                "type_data": False,
+                                "item_prices": {
+                                    "notes": ["%s missing from database" % name],
+                                    "raw_prices": False,
+                                    "material_prices": False,
+                                    "compression_prices": False,
+                                },
+                                "item_values": item_values,
+                            }
+
+                            buyback_data.append(buyback_item)
+
+                    # If item is missing a quantity, aka unpacked items
                     else:
                         logger.debug(
                             "TODO: process items when there are items without quantities"

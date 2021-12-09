@@ -22,9 +22,7 @@ logger = get_extension_logger(__name__)
 @permission_required("buybackprogram.setup_retriever")
 @token_required(
     scopes=[
-        "esi-universe.read_structures.v1",
-        "esi-assets.read_corporation_assets.v1",
-        "esi-contracts.read_corporation_contracts.v1",
+        "esi-contracts.read_character_contracts.v1",
     ]
 )
 def setup(request, token):

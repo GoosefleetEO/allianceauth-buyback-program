@@ -1,12 +1,22 @@
+from typing import Tuple
+
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from esi.errors import TokenExpiredError, TokenInvalidError
+from esi.models import Token
 from eveuniverse.models import EveSolarSystem, EveType
 
 from allianceauth.authentication.models import CharacterOwnership
 
 # Create your models here.
 from allianceauth.eveonline.models import EveCorporationInfo
+from allianceauth.services.hooks import get_extension_logger
+
+from .decorators import fetch_token_for_owner
+from .providers import esi
+
+logger = get_extension_logger(__name__)
 
 
 class General(models.Model):
@@ -52,6 +62,80 @@ class Owner(models.Model):
 
     class Meta:
         default_permissions = ()
+
+    @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
+    def update_contracts_esi(self, token):
+
+        logger.debug("Starting to fetch contracts for %s" % self.character)
+
+        contracts = self._fetch_contracts()
+
+        logger.debug("Got contracts from esi: %s" % contracts)
+
+    @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
+    def _fetch_contracts(self, token) -> list:
+
+        character_id = self.character.character.character_id
+
+        contracts = esi.client.Contracts.get_characters_character_id_contracts(
+            character_id=character_id,
+            token=token.valid_access_token(),
+        ).results()
+
+        return contracts
+
+    def token(self, scopes=None) -> Tuple[Token, int]:
+        """returns a valid Token for the owner"""
+        token = None
+        error = None
+
+        # abort if character is not configured
+        if self.character is None:
+            logger.error("%s: No character configured to sync", self)
+            error = self.ERROR_NO_CHARACTER
+
+        # abort if character does not have sufficient permissions
+        elif self.corporation and not self.character.user.has_perm(
+            "opcalendar.setup_owner"
+        ):
+            logger.error(
+                "%s: This character does not have sufficient permission to sync contracts",
+                self,
+            )
+            error = self.ERROR_INSUFFICIENT_PERMISSIONS
+
+        # abort if character does not have sufficient permissions
+        elif not self.character.user.has_perm("opcalendar.setup_owner"):
+            logger.error(
+                "%s: This character does not have sufficient permission to sync contracts",
+                self,
+            )
+            error = self.ERROR_INSUFFICIENT_PERMISSIONS
+
+        else:
+            try:
+                # get token
+                token = (
+                    Token.objects.filter(
+                        user=self.character.user,
+                        character_id=self.character.character.character_id,
+                    )
+                    .require_scopes(scopes)
+                    .require_valid()
+                    .first()
+                )
+            except TokenInvalidError:
+                logger.error("%s: Invalid token for fetching calendars", self)
+                error = self.ERROR_TOKEN_INVALID
+            except TokenExpiredError:
+                logger.error("%s: Token expired for fetching calendars", self)
+                error = self.ERROR_TOKEN_EXPIRED
+            else:
+                if not token:
+                    logger.error("%s: No token found with sufficient scopes", self)
+                    error = self.ERROR_TOKEN_INVALID
+
+        return token, error
 
     def __str__(self):
         return (
@@ -235,3 +319,37 @@ class ItemPrices(models.Model):
     buy = models.BigIntegerField()
     sell = models.BigIntegerField()
     updated = models.DateTimeField()
+
+
+class Contract(models.Model):
+
+    assignee_id = models.IntegerField()
+    availability = models.CharField(max_length=20)
+    contract_id = models.IntegerField()
+    date_completed = models.DateTimeField()
+    date_expired = models.DateTimeField()
+    date_issued = models.DateTimeField()
+    for_corporation = models.BooleanField()
+    issuer_corporation_id = models.IntegerField()
+    issuer_id = models.IntegerField()
+    price = models.BigIntegerField()
+    status = models.CharField(max_length=30)
+    title = models.CharField(max_length=128)
+    volume = models.BigIntegerField()
+
+
+class ContractItem(models.Model):
+
+    contract = models.ForeignKey(
+        Contract,
+        on_delete=models.deletion.CASCADE,
+        help_text="What contract do these items belong to",
+    )
+
+    eve_type = models.ForeignKey(
+        EveType,
+        on_delete=models.deletion.CASCADE,
+        help_text="Item type information",
+    )
+
+    quantity = models.IntegerField()

@@ -1,14 +1,40 @@
 import requests
+from bravado.exception import HTTPBadGateway, HTTPGatewayTimeout, HTTPServiceUnavailable
 from celery import shared_task
 
 from django.db import Error
 from django.utils import timezone
 
 from allianceauth.services.hooks import get_extension_logger
+from allianceauth.services.tasks import QueueOnce
 
-from buybackprogram.models import ItemPrices
+from buybackprogram.models import ItemPrices, Owner
+
+from .app_settings import BUYBACKPROGRAM_TASKS_TIME_LIMIT
 
 logger = get_extension_logger(__name__)
+
+DEFAULT_TASK_PRIORITY = 6
+
+# Create your tasks here
+TASK_DEFAULT_KWARGS = {
+    "time_limit": BUYBACKPROGRAM_TASKS_TIME_LIMIT,
+}
+
+TASK_ESI_KWARGS = {
+    **TASK_DEFAULT_KWARGS,
+    **{
+        "bind": True,
+        "autoretry_for": (
+            OSError,
+            HTTPBadGateway,
+            HTTPGatewayTimeout,
+            HTTPServiceUnavailable,
+        ),
+        "retry_kwargs": {"max_retries": 3},
+        "retry_backoff": 30,
+    },
+}
 
 
 @shared_task
@@ -74,4 +100,38 @@ def update_all_prices():
         logger.errro("Error updating prices: %s" % e)
 
 
-# from buybackprogram.tasks import update_all_prices
+@shared_task(
+    **{
+        **TASK_ESI_KWARGS,
+        **{
+            "base": QueueOnce,
+            "once": {"keys": ["owner_pk"], "graceful": True},
+            "max_retries": None,
+        },
+    }
+)
+def update_contracts_for_owner(self, owner_pk):
+    """fetches all contracts for owner from ESI"""
+
+    return _get_owner(owner_pk).update_contracts_esi()
+
+
+@shared_task(**TASK_DEFAULT_KWARGS)
+def update_all_contracts():
+    logger.debug("Starting all contract updates")
+    for owner in Owner.objects.all():
+        update_contracts_for_owner.apply_async(
+            kwargs={"owner_pk": owner.pk},
+            priority=DEFAULT_TASK_PRIORITY,
+        )
+
+
+def _get_owner(owner_pk: int) -> Owner:
+    """returns the owner or raises exception"""
+    try:
+        owner = Owner.objects.get(pk=owner_pk)
+    except Owner.DoesNotExist:
+        raise Owner.DoesNotExist(
+            "Requested owner with pk {} does not exist".format(owner_pk)
+        )
+    return owner

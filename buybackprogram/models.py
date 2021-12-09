@@ -66,11 +66,49 @@ class Owner(models.Model):
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
     def update_contracts_esi(self, token):
 
-        logger.debug("Starting to fetch contracts for %s" % self.character)
+        logger.debug("Fetching contracts for %s" % self.character)
 
         contracts = self._fetch_contracts()
 
-        logger.debug("Got contracts from esi: %s" % contracts)
+        for contract in contracts:
+
+            obj, created = Contract.objects.update_or_create(
+                assignee_id=contract["assignee_id"],
+                availability=contract["availability"],
+                contract_id=contract["contract_id"],
+                date_completed=contract["date_completed"],
+                date_expired=contract["date_expired"],
+                date_issued=contract["date_issued"],
+                for_corporation=contract["for_corporation"],
+                issuer_corporation_id=contract["issuer_corporation_id"],
+                issuer_id=contract["issuer_id"],
+                price=contract["price"],
+                status=contract["status"],
+                title=contract["title"],
+                volume=contract["volume"],
+                defaults={"contract_id": contract["contract_id"]},
+            )
+
+            logger.debug("Contract %s updated/created" % contract["contract_id"])
+
+            character_id = self.character.character.character_id
+
+            contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
+                character_id=character_id,
+                contract_id=contract["contract_id"],
+                token=token.valid_access_token(),
+            ).results()
+
+            for item in contract_items:
+
+                obj, created = ContractItem.objects.update_or_create(
+                    contract=contract["contract_id"],
+                    eve_type=item["type_id"],
+                    quantity=item["quantity"],
+                    defaults={"contract": contract["contract_id"]},
+                )
+
+            logger.debug("Updated items for contract %s" % contract["contract_id"])
 
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
     def _fetch_contracts(self, token) -> list:
@@ -326,8 +364,8 @@ class Contract(models.Model):
     assignee_id = models.IntegerField()
     availability = models.CharField(max_length=20)
     contract_id = models.IntegerField()
-    date_completed = models.DateTimeField()
-    date_expired = models.DateTimeField()
+    date_completed = models.DateTimeField(null=True)
+    date_expired = models.DateTimeField(null=True)
     date_issued = models.DateTimeField()
     for_corporation = models.BooleanField()
     issuer_corporation_id = models.IntegerField()

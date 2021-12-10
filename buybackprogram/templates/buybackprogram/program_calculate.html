@@ -110,7 +110,7 @@
                         <td>{{ item.item_values.normal.value|floatformat:0|intcomma|price }}</td>
                         <td>
                             {% for note in item.item_prices.notes%}
-                                <div>{{note}}</div>
+                                <i class="fas fa-exclamation-circle" title="{{note}}"></i>
                             {% endfor %}
                         </td>
                     </tr>

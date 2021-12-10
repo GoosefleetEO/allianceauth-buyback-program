@@ -34,11 +34,14 @@ def get_price_dencity_tax(program, item_value, item_volume, item_quantity):
     # If price dencity tax should be applied
     if program.price_dencity_modifier:
 
-        item_isk_dencity = item_value / (item_volume * item_quantity)
+        if not item_volume <= 0:
+            item_isk_dencity = item_value / (item_volume * item_quantity)
+        else:
+            item_isk_dencity = False
 
         logger.debug("Values: Our item isk dencity is at %s ISK/m³" % item_isk_dencity)
 
-        if item_isk_dencity < program.price_dencity_treshold:
+        if item_isk_dencity < program.price_dencity_treshold and item_isk_dencity:
             return program.price_dencity_tax
         else:
             return False
@@ -71,6 +74,10 @@ def get_item_prices(item_type, name, quantity, program):
             item_disallowed = program_item_settings.disallow_item
         else:
             item_disallowed = True
+
+    # If item is somehow not published (expired items etc.)
+    if not item_type.published:
+        item_disallowed = True
 
     if not item_disallowed:
 
@@ -227,7 +234,11 @@ def get_item_values(item_type, item_prices, program):
         sell = item_prices["raw_prices"]["sell"]
         buy = item_prices["raw_prices"]["buy"]
         price = buy
-        price_dencity = price / types.volume
+
+        if not types.volume <= 0:
+            price_dencity = price / types.volume
+        else:
+            price_dencity = False
         price_dencity_tax = get_price_dencity_tax(
             program, price, types.volume, quantity
         )

@@ -284,6 +284,11 @@ class Program(models.Model):
         help_text="Take raw ore value into account when calculating prices for ore, ice and moon goo",
     )
 
+    allow_unpacked_items = models.BooleanField(
+        default=False,
+        help_text="Do you want to allow unpacked items in this program such as assembled ship hulls?",
+    )
+
     refining_rate = models.IntegerField(
         default=0,
         null=True,

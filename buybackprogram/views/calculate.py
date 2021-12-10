@@ -67,15 +67,21 @@ def program_calculate(request, program_pk):
                         if item_category.name == "Blueprint":
                             item_accepted = False
                             note = {
-                                "icon": "fa-exclamation-circle",
-                                "color": "red",
-                                "message": "Blueprints are not accepted in buyback",
+                                "icon": "fa-print",
+                                "color": "orange",
+                                "message": "%s belongs to category %s. Blueprints are not accepted."
+                                % (name, item_category),
                             }
                             notes.append(note)
                     else:
                         item_category = False
                         item_accepted = False
-                        note = "%s not found from database." % name
+                        note = {
+                            "icon": "fa-skull-crossbones",
+                            "color": "red",
+                            "message": "%s not found from database. It is most likely a new item still not added to database."
+                            % name,
+                        }
                         notes.append(note)
 
                     # Icons view
@@ -100,14 +106,16 @@ def program_calculate(request, program_pk):
                             quantity = 1
                             item_accepted = False
 
-                            note = (
-                                "Unpacked items are now allowed at this location. Repack %s to get a price for it"
-                                % name
-                            )
+                            note = {
+                                "icon": "fa-box-open",
+                                "color": "orange",
+                                "message": "Unpacked items are now allowed at this location. Repack %s to get a price for it"
+                                % name,
+                            }
 
                             notes.append(note)
 
-                    # Detail    view
+                    # Detail view
                     elif len(parts) == 7:
                         # Get item quantity.
                         if parts[1]:
@@ -128,6 +136,26 @@ def program_calculate(request, program_pk):
 
                             quantity = 1
                             item_accepted = False
+
+                    # Anything else
+                    else:
+                        if program.allow_unpacked_items:
+
+                            quantity = 1
+
+                        else:
+
+                            quantity = 1
+                            item_accepted = False
+
+                            note = {
+                                "icon": "fa-box-open",
+                                "color": "orange",
+                                "message": "Unpacked items are now allowed at this location. Repack %s to get a price for it"
+                                % name,
+                            }
+
+                            notes.append(note)
 
                     # Get details for the item
                     if item_accepted:

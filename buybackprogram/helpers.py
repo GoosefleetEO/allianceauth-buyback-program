@@ -186,7 +186,12 @@ def get_item_prices(item_type, name, quantity, program):
         }
     else:
 
-        note = "%s is not allowed at location %s" % (name, program.location)
+        note = {
+            "icon": "fa-hand-paper",
+            "color": "red",
+            "message": "%s is not allowed in this program" % name,
+        }
+
         notes.append(note)
 
         prices = {
@@ -269,11 +274,13 @@ def get_item_values(item_type, item_prices, program):
         }
 
         if price_dencity_tax:
-            note = "%s has low price dencity, %s %s extra tax applied" % (
-                raw_item["name"],
-                price_dencity_tax,
-                "%",
-            )
+            note = {
+                "icon": "fa-weight-hanging",
+                "color": "orange",
+                "message": "%s has low price dencity, %s %s extra tax applied"
+                % (raw_item["name"], price_dencity_tax, "%"),
+            }
+
             item_prices["notes"].append(note)
     else:
         raw_item = {
@@ -389,7 +396,11 @@ def get_item_values(item_type, item_prices, program):
 
         types = EveType.objects.filter(id=item_type.id).first()
 
-        note = "%s not accepted in this program" % types.name
+        note = {
+            "icon": "fa-hand-paper",
+            "color": "red",
+            "message": "%s has no accepted pricing models" % types.name,
+        }
         item_prices["notes"].append(note)
 
         raw_item = {
@@ -411,11 +422,17 @@ def get_item_values(item_type, item_prices, program):
 
     # Add notes for extr taxes
     if item_tax > 0:
-        note = "%s has special taxation bracket, %s %s extra tax applied" % (
-            raw_item["name"],
-            item_tax,
-            "%",
-        )
+
+        note = {
+            "icon": "fa-plus",
+            "color": "orange",
+            "message": "%s has special taxation bracket, %s %s extra tax applied"
+            % (
+                raw_item["name"],
+                item_tax,
+                "%",
+            ),
+        }
         item_prices["notes"].append(note)
 
     # Get the highest value of the used pricing methods
@@ -434,11 +451,23 @@ def get_item_values(item_type, item_prices, program):
         raw_item["is_buy_value"] = True
     elif buy_value == refined["value"]:
         refined["is_buy_value"] = True
-        note = "Best price: Using refined price for %s" % raw_item["name"]
+
+        note = {
+            "icon": "fa-exchange-alt",
+            "color": "blue",
+            "message": "Best price: Using refined price for %s" % raw_item["name"],
+        }
+
         item_prices["notes"].append(note)
     elif buy_value == compressed["value"]:
         compressed["is_buy_value"] = True
-        note = "Best price: Using compressed price for %s" % raw_item["name"]
+
+        note = {
+            "icon": "fa-exchange-alt",
+            "color": "blue",
+            "message": "Best price: Using compressed price for %s" % raw_item["name"],
+        }
+
         item_prices["notes"].append(note)
 
     logger.debug("Values: Best buy value for %s is %s ISK" % (item_type, buy_value))

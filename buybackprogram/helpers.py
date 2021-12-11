@@ -67,17 +67,52 @@ def get_item_prices(item_type, name, quantity, program):
     if program.allow_all_items:
         if program_item_settings:
             item_disallowed = program_item_settings.disallow_item
+
+            if item_disallowed:
+                note = {
+                    "icon": "fa-hand-paper",
+                    "color": "red",
+                    "message": "%s is disallowed in this program" % name,
+                }
+
+                notes.append(note)
         else:
             item_disallowed = False
     else:
         if program_item_settings:
             item_disallowed = program_item_settings.disallow_item
+
+            if item_disallowed:
+                note = {
+                    "icon": "fa-hand-paper",
+                    "color": "red",
+                    "message": "%s is disallowed in this program" % name,
+                }
+
+                notes.append(note)
         else:
             item_disallowed = True
+
+            note = {
+                "icn": "fa-hand-paper",
+                "color": "red",
+                "message": "%s is disallowed in this program" % name,
+            }
+
+            notes.append(note)
 
     # If item is somehow not published (expired items etc.)
     if not item_type.published:
         item_disallowed = True
+
+        note = {
+            "icon": "fa-hand-paper",
+            "color": "red",
+            "message": "%s is not a published item. Special commondite or expired item?"
+            % name,
+        }
+
+        notes.append(note)
 
     if not item_disallowed:
 
@@ -185,15 +220,6 @@ def get_item_prices(item_type, name, quantity, program):
             "notes": notes,
         }
     else:
-
-        note = {
-            "icon": "fa-hand-paper",
-            "color": "red",
-            "message": "%s is not allowed in this program" % name,
-        }
-
-        notes.append(note)
-
         prices = {
             "quantity": quantity,
             "type_prices": item_price,
@@ -277,8 +303,8 @@ def get_item_values(item_type, item_prices, program):
             note = {
                 "icon": "fa-weight-hanging",
                 "color": "orange",
-                "message": "%s has low price dencity, %s %s extra tax applied"
-                % (raw_item["name"], price_dencity_tax, "%"),
+                "message": "%s has price dencity of %s isk/m³, %s %s low price dencity tax applied"
+                % (raw_item["name"], price_dencity, price_dencity_tax, "%"),
             }
 
             item_prices["notes"].append(note)
@@ -397,9 +423,9 @@ def get_item_values(item_type, item_prices, program):
         types = EveType.objects.filter(id=item_type.id).first()
 
         note = {
-            "icon": "fa-hand-paper",
+            "icon": "fa-question",
             "color": "red",
-            "message": "%s has no accepted pricing models" % types.name,
+            "message": "%s has no price data" % types.name,
         }
         item_prices["notes"].append(note)
 
@@ -424,7 +450,7 @@ def get_item_values(item_type, item_prices, program):
     if item_tax > 0:
 
         note = {
-            "icon": "fa-plus",
+            "icon": "fa-percentage",
             "color": "orange",
             "message": "%s has special taxation bracket, %s %s extra tax applied"
             % (

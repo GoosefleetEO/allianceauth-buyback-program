@@ -7,8 +7,6 @@
 
 {% block body %}
 {% if buyback_data %}
-
-{{buyback_data}}
 <div class="table-responsive" style="margin: 20px 0;">
     <p class="text-success">Based on the items we have calculated a contract for you. Please use the following settings when creating a buyback contract:</p>
     <h4>Contract settings</h4>
@@ -28,9 +26,9 @@
         <tr>
             <th>I will receive:</th>
             {% if contract_price_data.contract_net_total >= 0%}
-                <td>{{contract_price_data.contract_net_total|intcomma}} ISK</td>
+                <td>{{contract_price_data.contract_net_total|floatformat:0|intcomma}} ISK</td>
             {% else %}
-                <td>0 ISK <i><s>{{contract_price_data.contract_net_total|intcomma}} ISK</s></i><td>
+                <td>0 ISK <i><s>{{contract_price_data.contract_net_total|floatformat:0|intcomma}} ISK</s></i><td>
             {% endif %}
 
 
@@ -73,9 +71,9 @@
         <tr>
             <th style="border-top:2px dotted black;">Net price</th>
             {% if contract_price_data.contract_net_total >= 0%}
-                <td style="border-top:2px dotted black;">{{contract_price_data.contract_net_total|intcomma }} ISK</td>
+                <td style="border-top:2px dotted black;">{{contract_price_data.contract_net_total|floatformat:0|intcomma }} ISK</td>
             {% else %}
-                <td style="border-top:2px dotted black;">0 ISK <i><s>{{contract_price_data.contract_net_total|intcomma }} ISK</s></i><td>
+                <td style="border-top:2px dotted black;">0 ISK <i><s>{{contract_price_data.contract_net_total|floatformat:0|intcomma }} ISK</s></i><td>
             {% endif %}
         </tr>
 

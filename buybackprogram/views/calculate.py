@@ -108,7 +108,7 @@ def program_calculate(request, program_pk):
 
                             note = {
                                 "icon": "fa-box-open",
-                                "color": "orange",
+                                "color": "red",
                                 "message": "Unpacked items are now allowed at this location. Repack %s to get a price for it"
                                 % name,
                             }
@@ -150,7 +150,7 @@ def program_calculate(request, program_pk):
 
                             note = {
                                 "icon": "fa-box-open",
-                                "color": "orange",
+                                "color": "red",
                                 "message": "Unpacked items are now allowed at this location. Repack %s to get a price for it"
                                 % name,
                             }

@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from django.urls import path
 
-from buybackprogram.views import calculate, common, programs
+from buybackprogram.views import calculate, common, programs, stats
 
 app_name = "buybackprogram"
 
@@ -24,4 +24,5 @@ urlpatterns = [
         calculate.program_calculate,
         name="program_calculate",
     ),
+    path("my_stats", stats.my_stats, name="my_stats"),
 ]

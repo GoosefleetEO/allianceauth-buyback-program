@@ -11,5 +11,6 @@ def get_swagger_spec_path() -> str:
 
 
 esi = EsiClientProvider(
-    spec_file=get_swagger_spec_path(), app_info_text=f"aa-opcalendar v{__version__}"
+    spec_file=get_swagger_spec_path(),
+    app_info_text=f"aa-buyback-program v{__version__}",
 )

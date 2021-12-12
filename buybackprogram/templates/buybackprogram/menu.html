@@ -15,6 +15,13 @@
         </div>
 
         <div class="collapse navbar-collapse" id="bs-buybackprogram-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li class="{% navactive request 'buybackprogram:my_stats' %}">
+                    <a href="{% url 'buybackprogram:my_stats' %}">
+                        My Statistics
+                    </a>
+                </li>
+            </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if perms.buybackprogram.manage_programs %}
                     <a class="btn btn-default navbar-btn" href="{% url 'buybackprogram:program_add' %}">

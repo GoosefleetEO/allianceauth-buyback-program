@@ -11,6 +11,7 @@ from buybackprogram.helpers import (
     get_item_buy_value,
     get_item_prices,
     get_item_values,
+    get_tracking_number,
     item_missing,
 )
 from buybackprogram.models import Program
@@ -213,12 +214,18 @@ def program_calculate(request, program_pk):
     # Get item values after other expenses and the total value for the contract
     contract_price_data = get_item_buy_value(buyback_data, program, form_donation)
 
+    # Get item values after other expenses and the total value for the contract
+    tracking = get_tracking_number(
+        request.user, program, form_donation, buyback_data, contract_price_data
+    )
+
     context = {
         "program": program,
         "form": form,
         "donation": form_donation,
         "buyback_data": buyback_data,
         "contract_price_data": contract_price_data,
+        "tracking_number": tracking,
     }
 
     return render(request, "buybackprogram/program_calculate.html", context)

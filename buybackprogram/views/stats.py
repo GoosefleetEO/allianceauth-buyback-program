@@ -3,7 +3,7 @@ from django.shortcuts import render
 
 from allianceauth.authentication.models import CharacterOwnership
 
-from ..models import Contract
+from ..models import Contract, Tracking
 
 
 @login_required
@@ -19,9 +19,12 @@ def my_stats(request):
         "character__character_id"
     )
 
+    tracking_numbers = Tracking.objects.all().values_list("tracking_number")
+
     contracts = Contract.objects.filter(
         issuer_id__in=characters,
-    ).exclude(title__exact="")
+        title__in=tracking_numbers,
+    )
 
     for contract in contracts:
         if contract.status == "outstanding":

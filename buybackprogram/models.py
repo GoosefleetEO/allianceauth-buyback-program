@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -368,6 +369,44 @@ class ItemPrices(models.Model):
     buy = models.BigIntegerField()
     sell = models.BigIntegerField()
     updated = models.DateTimeField()
+
+
+class Tracking(models.Model):
+    program = models.ForeignKey(
+        Program,
+        on_delete=models.deletion.CASCADE,
+        related_name="+",
+    )
+    issuer_user = models.ForeignKey(
+        User,
+        on_delete=models.deletion.CASCADE,
+        related_name="+",
+    )
+    value = models.BigIntegerField(null=False)
+    taxes = models.BigIntegerField(null=False)
+    hauling_cost = models.BigIntegerField(null=False)
+    donation = models.BigIntegerField(null=True, blank=True)
+    net_price = models.BigIntegerField(null=False)
+    tracking_number = models.CharField(max_length=20)
+
+
+class TrackingItem(models.Model):
+
+    tracking = models.ForeignKey(
+        Tracking,
+        on_delete=models.deletion.CASCADE,
+        help_text="What tracking do these items belong to",
+    )
+
+    eve_type = models.ForeignKey(
+        EveType,
+        on_delete=models.deletion.CASCADE,
+        help_text="Item type information",
+    )
+
+    buy_value = models.BigIntegerField(null=False)
+
+    quantity = models.IntegerField()
 
 
 class Contract(models.Model):

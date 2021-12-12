@@ -1,9 +1,12 @@
+import uuid
+
 from eveuniverse.models import EveType, EveTypeMaterial
 
 from allianceauth.services.hooks import get_extension_logger
 
+from buybackprogram.app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
 from buybackprogram.constants import ORE_EVE_GROUPS
-from buybackprogram.models import ItemPrices, ProgramItem
+from buybackprogram.models import ItemPrices, ProgramItem, Tracking
 
 logger = get_extension_logger(__name__)
 
@@ -599,3 +602,27 @@ def item_missing(item_name, quantity):
     }
 
     return values
+
+
+def get_tracking_number(
+    user, program, form_donation, buyback_data, contract_price_data
+):
+
+    tracking_number = (
+        BUYBACKPROGRAM_TRACKING_PREFILL + "-" + uuid.uuid4().hex[:6].upper()
+    )
+
+    tracking = Tracking(
+        program=program,
+        issuer_user=user,
+        value=contract_price_data["total_all_items_raw"],
+        taxes=contract_price_data["total_tax_amount"],
+        hauling_cost=contract_price_data["total_hauling_cost"],
+        donation=contract_price_data["total_donation_amount"],
+        net_price=contract_price_data["contract_net_total"],
+        tracking_number=tracking_number,
+    )
+
+    tracking.save()
+
+    return tracking_number

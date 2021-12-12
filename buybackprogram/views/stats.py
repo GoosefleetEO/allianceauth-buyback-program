@@ -19,7 +19,9 @@ def my_stats(request):
         "character__character_id"
     )
 
-    tracking_numbers = Tracking.objects.all().values_list("tracking_number")
+    tracking = Tracking.objects.all()
+
+    tracking_numbers = tracking.values_list("tracking_number")
 
     contracts = Contract.objects.filter(
         issuer_id__in=characters,
@@ -27,12 +29,24 @@ def my_stats(request):
     )
 
     for contract in contracts:
+
         if contract.status == "outstanding":
             values["outstanding"] += contract.price
         if contract.status == "finished":
             values["finished"] += contract.price
 
         contract.items = ContractItem.objects.filter(contract=contract)
+
+        contract_tracking = tracking.filter(tracking_number=contract.title).first()
+
+        if contract_tracking.net_price != contract.price:
+            note = {
+                "icon": "fa-skull-crossbones",
+                "color": "red",
+                "message": "Tracked price does not match contract price. You have either made an mistake in the tracking number or the contract price copy paste. Please remake contract.",
+            }
+
+            contract.note = note
 
     context = {
         "contracts": contracts,

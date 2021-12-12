@@ -30,6 +30,7 @@
                 <th >{% trans "Status" %}</th>
                 <th >{% trans "Tracking #" %}</th>
                 <th >{% trans "Price" %}</th>
+                <th>{% trans "Notes" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -41,6 +42,11 @@
                         <td>{{contract.status}}</td>
                         <td>{{contract.title}}</td>
                         <td>{{contract.price|floatformat:0|intcomma|price}}</td>
+
+                        <td>
+                            <i style="color: {{contract.note.color}};" class="fas {{contract.note.icon}}" title="{{contract.note.message}}"></i>
+                        </td>
+
                         <td><a class="btn btn-info btn-sm" href="{% url 'buybackprogram:contract_details' contract_title=contract.title %}">
                         Details
                     </a></td>

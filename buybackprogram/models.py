@@ -14,6 +14,8 @@ from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 
+from buybackprogram.app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
+
 from .decorators import fetch_token_for_owner
 from .providers import esi
 
@@ -73,49 +75,53 @@ class Owner(models.Model):
 
         for contract in contracts:
 
-            obj, created = Contract.objects.update_or_create(
-                assignee_id=contract["assignee_id"],
-                availability=contract["availability"],
-                contract_id=contract["contract_id"],
-                date_completed=contract["date_completed"],
-                date_expired=contract["date_expired"],
-                date_issued=contract["date_issued"],
-                for_corporation=contract["for_corporation"],
-                issuer_corporation_id=contract["issuer_corporation_id"],
-                issuer_id=contract["issuer_id"],
-                price=contract["price"],
-                status=contract["status"],
-                title=contract["title"],
-                volume=contract["volume"],
-                defaults={"contract_id": contract["contract_id"]},
-            )
-
-            logger.debug("Contract %s updated/created" % contract["contract_id"])
-
-            character_id = self.character.character.character_id
-
-            contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
-                character_id=character_id,
-                contract_id=contract["contract_id"],
-                token=token.valid_access_token(),
-            ).results()
-
-            for item in contract_items:
-
-                cont = Contract.objects.get(contract_id=contract["contract_id"])
-                itm = EveType.objects.get(pk=item["type_id"])
-                logger.debug(
-                    "Item type is: %s evetype is %s" % (item["type_id"], itm.id)
+            # Only get contracts with the correct prefill ticker
+            if BUYBACKPROGRAM_TRACKING_PREFILL in contract["title"]:
+                obj, created = Contract.objects.update_or_create(
+                    assignee_id=contract["assignee_id"],
+                    availability=contract["availability"],
+                    contract_id=contract["contract_id"],
+                    date_completed=contract["date_completed"],
+                    date_expired=contract["date_expired"],
+                    date_issued=contract["date_issued"],
+                    for_corporation=contract["for_corporation"],
+                    issuer_corporation_id=contract["issuer_corporation_id"],
+                    issuer_id=contract["issuer_id"],
+                    price=contract["price"],
+                    status=contract["status"],
+                    title=contract["title"],
+                    volume=contract["volume"],
+                    defaults={"contract_id": contract["contract_id"]},
                 )
 
-                obj, created = ContractItem.objects.update_or_create(
-                    contract=cont,
-                    eve_type=itm,
-                    quantity=item["quantity"],
-                    defaults={"contract": cont},
-                )
+                logger.debug("Contract %s updated/created" % contract["contract_id"])
 
-            logger.debug("Updated items for contract %s" % contract["contract_id"])
+                character_id = self.character.character.character_id
+
+                # If we created an new contract
+                if created:
+                    contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
+                        character_id=character_id,
+                        contract_id=contract["contract_id"],
+                        token=token.valid_access_token(),
+                    ).results()
+
+                    for item in contract_items:
+
+                        cont = Contract.objects.get(contract_id=contract["contract_id"])
+                        itm = EveType.objects.get(pk=item["type_id"])
+                        logger.debug(
+                            "Item type is: %s evetype is %s" % (item["type_id"], itm.id)
+                        )
+
+                        obj, created = ContractItem.objects.update_or_create(
+                            contract=cont,
+                            eve_type=itm,
+                            quantity=item["quantity"],
+                            defaults={"contract": cont},
+                        )
+
+                logger.debug("Updated items for contract %s" % contract["contract_id"])
 
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
     def _fetch_contracts(self, token) -> list:

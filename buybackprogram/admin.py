@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Location, Owner, Program, ProgramItem
+from .models import Contract, Location, Owner, Program, ProgramItem
 
 # Register your models here.
 
@@ -23,3 +23,6 @@ class ProgramItemAdmin(admin.ModelAdmin):
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
     list_display = ("name", "eve_solar_system")
+
+
+admin.site.register(Contract)

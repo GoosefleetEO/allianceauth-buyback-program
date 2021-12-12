@@ -25,4 +25,9 @@ urlpatterns = [
         name="program_calculate",
     ),
     path("my_stats", stats.my_stats, name="my_stats"),
+    path(
+        "my_stats/<str:contract_title>/details/",
+        stats.contract_details,
+        name="contract_details",
+    ),
 ]

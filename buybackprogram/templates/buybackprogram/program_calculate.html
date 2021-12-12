@@ -7,7 +7,6 @@
 
 {% block body %}
 {% if buyback_data %}
-{{tracking_number}}
 <div class="table-responsive" style="margin: 20px 0;">
     <p class="text-success">Based on the items we have calculated a contract for you. Please use the following settings when creating a buyback contract:</p>
     <h4>Contract settings</h4>
@@ -101,7 +100,7 @@
             {% for item in buyback_data %}
                     <tr>
                         <td><b>{{ item.item_values.name }}</b></td>
-                        <td>{{ item.item_values.quantity }}</td>
+                        <td>{{ item.item_values.quantity|intcomma }}</td>
                         <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
                         <td>{{ item.item_prices.type_prices.buy|floatformat:0|intcomma|price }}</td>
                         <td>{{ item.item_values.normal.total_tax|tax }}</td>
@@ -123,7 +122,7 @@
 
                         <tr class="collapse" id="{{ item.item_values.normal.id }}-raw">
                             <td style="padding-left: 30px;">{{ item.item_values.name }}</td>
-                            <td>{{ item.item_values.quantity }}</td>
+                            <td>{{ item.item_values.quantity|intcomma }}</td>
                             <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
                             <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
                             <td>{{ item.item_values.normal.total_tax|tax }}</td>
@@ -142,7 +141,7 @@
 
                         <tr class="collapse" id="{{ item.item_values.normal.id }}-compressed">
                             <td style="padding-left: 30px;">{{item.item_values.compressed.name}}</td>
-                            <td>{{item.item_values.compressed.quantity}}</td>
+                            <td>{{item.item_values.compressed.quantity|intcomma}}</td>
                             <td>{{item.item_values.compressed.sell|floatformat:0|intcomma|price}}</td>
                             <td>{{item.item_values.compressed.buy|floatformat:0|intcomma|price}}</td>
                             <td>{{item.item_values.compressed.total_tax|tax}}</td>
@@ -162,7 +161,7 @@
                         {% for material in item.item_values.refined.materials %}
                             <tr class="collapse" id="{{ item.item_values.normal.id }}-refined{{ forloop.counter }}">
                                 <td style="padding-left: 30px;">{{material.name}}</td>
-                                <td>{{material.quantity}}</td>
+                                <td>{{material.quantity|intcomma}}</td>
                                 <td>{{material.sell|floatformat:0|intcomma|price}}</td>
                                 <td>{{material.buy|floatformat:0|intcomma|price}}</td>
                                 <td>{{material.total_tax|tax}}</td>

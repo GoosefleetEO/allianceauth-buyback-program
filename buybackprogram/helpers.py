@@ -6,7 +6,7 @@ from allianceauth.services.hooks import get_extension_logger
 
 from buybackprogram.app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
 from buybackprogram.constants import ORE_EVE_GROUPS
-from buybackprogram.models import ItemPrices, ProgramItem, Tracking
+from buybackprogram.models import ItemPrices, ProgramItem, Tracking, TrackingItem
 
 logger = get_extension_logger(__name__)
 
@@ -624,5 +624,16 @@ def get_tracking_number(
     )
 
     tracking.save()
+
+    for item in buyback_data:
+
+        tracking_item = TrackingItem(
+            tracking=tracking,
+            eve_type=item["type_data"],
+            buy_value=item["item_values"]["unit_value"],
+            quantity=item["item_values"]["quantity"],
+        )
+
+        tracking_item.save()
 
     return tracking_number

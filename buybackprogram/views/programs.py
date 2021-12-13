@@ -92,44 +92,18 @@ def program_add(request):
 
     if request.POST and form.is_valid():
 
-        owner = Owner.objects.get(user=request.user)
-        is_corporation = form.cleaned_data["is_corporation"]
-        location = form.cleaned_data["location"]
-        tax = form.cleaned_data["tax"]
-        hauling_fuel_cost = form.cleaned_data["hauling_fuel_cost"]
-        price_dencity_modifier = form.cleaned_data["price_dencity_modifier"]
-        price_dencity_treshold = form.cleaned_data["price_dencity_treshold"]
-        price_dencity_tax = form.cleaned_data["price_dencity_tax"]
-        allow_all_items = form.cleaned_data["allow_all_items"]
-        use_refined_value = form.cleaned_data["use_refined_value"]
-        use_compressed_value = form.cleaned_data["use_compressed_value"]
-        use_raw_ore_value = form.cleaned_data["use_raw_ore_value"]
-        allow_unpacked_items = form.cleaned_data["allow_unpacked_items"]
-        refining_rate = form.cleaned_data["refining_rate"]
+        form = ProgramForm(request.POST)
 
-        Program.objects.create(
-            owner=owner,
-            is_corporation=is_corporation,
-            location=location,
-            tax=tax,
-            hauling_fuel_cost=hauling_fuel_cost,
-            price_dencity_modifier=price_dencity_modifier,
-            price_dencity_treshold=price_dencity_treshold,
-            price_dencity_tax=price_dencity_tax,
-            allow_all_items=allow_all_items,
-            use_refined_value=use_refined_value,
-            use_compressed_value=use_compressed_value,
-            use_raw_ore_value=use_raw_ore_value,
-            allow_unpacked_items=allow_unpacked_items,
-            refining_rate=refining_rate,
-        )
+        new_program = form.save()
 
         messages_plus.success(
             request,
             format_html(
                 gettext_lazy("New program created at %(location)s")
                 % {
-                    "location": format_html("<strong>{}</strong>", location),
+                    "location": format_html(
+                        "<strong>{}</strong>", new_program.location
+                    ),
                 }
             ),
         )
@@ -167,6 +141,8 @@ def program_edit(request, program_pk):
             program.use_raw_ore_value = form.cleaned_data["use_raw_ore_value"]
             program.allow_unpacked_items = form.cleaned_data["allow_unpacked_items"]
             program.refining_rate = form.cleaned_data["refining_rate"]
+            program.restricted_to_group = form.cleaned_data["restricted_to_group"]
+            program.restricted_to_state = form.cleaned_data["restricted_to_state"]
 
             program.save()
 
@@ -188,6 +164,8 @@ def program_edit(request, program_pk):
             "use_raw_ore_value": program.use_raw_ore_value,
             "allow_unpacked_items": program.allow_unpacked_items,
             "refining_rate": program.refining_rate,
+            "restricted_to_group": program.restricted_to_group,
+            "restricted_to_state": program.restricted_to_state,
         }
 
         form = ProgramForm(initial=data)

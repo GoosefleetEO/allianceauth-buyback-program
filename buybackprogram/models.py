@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -8,7 +8,7 @@ from esi.errors import TokenExpiredError, TokenInvalidError
 from esi.models import Token
 from eveuniverse.models import EveSolarSystem, EveType
 
-from allianceauth.authentication.models import CharacterOwnership
+from allianceauth.authentication.models import CharacterOwnership, State
 
 # Create your models here.
 from allianceauth.eveonline.models import EveCorporationInfo
@@ -308,6 +308,19 @@ class Program(models.Model):
         null=True,
         help_text="Refining rate to be used if refined value is active",
         validators=[MaxValueValidator(100), MinValueValidator(0)],
+    )
+
+    restricted_to_group = models.ManyToManyField(
+        Group,
+        blank=True,
+        related_name="buybackprogram_require_groups",
+        help_text="The group(s) that will be able to see this buyback program. If none is selected program is open for all.",
+    )
+    restricted_to_state = models.ManyToManyField(
+        State,
+        blank=True,
+        related_name="buybackprogram_require_states",
+        help_text="The state(s) that will be able to see this buyback program. If none is selected program is open for all.",
     )
 
     class Meta:

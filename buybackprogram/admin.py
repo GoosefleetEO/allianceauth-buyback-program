@@ -4,25 +4,12 @@ from .models import Contract, Location, Owner, Program, ProgramItem
 
 # Register your models here.
 
+admin.site.register(Program)
 
-@admin.register(Program)
-class ProgramAdmin(admin.ModelAdmin):
-    list_display = ("owner", "is_corporation")
+admin.site.register(Owner)
 
+admin.site.register(ProgramItem)
 
-@admin.register(Owner)
-class OwnerAdmin(admin.ModelAdmin):
-    list_display = ("corporation", "character")
-
-
-@admin.register(ProgramItem)
-class ProgramItemAdmin(admin.ModelAdmin):
-    list_display = ("program", "item_type")
-
-
-@admin.register(Location)
-class LocationAdmin(admin.ModelAdmin):
-    list_display = ("name", "eve_solar_system")
-
+admin.site.register(Location)
 
 admin.site.register(Contract)

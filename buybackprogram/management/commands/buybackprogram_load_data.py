@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from eveuniverse.models import EveType, EveSolarSystem
+from eveuniverse.models import EveSolarSystem, EveType
 
 
 class Command(BaseCommand):

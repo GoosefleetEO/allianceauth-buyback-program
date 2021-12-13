@@ -8,10 +8,11 @@
     <table style="width: 100%; margin: auto;" class="table table-striped table-condensed">
         <thead>
             <tr>
-                <th style="width: 20%;">{% trans "System" %}</th>
-                <th style="width: 20%;">{% trans "Station" %}</th>
-                <th style="width: 20%;">{% trans "Manager" %}</th>
-                <th class="text-center" style="width: 40%;">{% trans "Actions" %}</th>
+                <th>{% trans "System" %}</th>
+                <th>{% trans "Structure" %}</th>
+                <th>{% trans "Manager" %}</th>
+                <th>{% trans "Settings" %}</th>
+                <th class="text-center" >{% trans "Actions" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -26,18 +27,19 @@
                 {% else %}
                     <td style="line-height: 35px;">{{ program.owner.character.character }}</td>
                 {% endif %}
+                <td></td>
+
 
                 <td class="text-center">
                     <a class="btn btn-success btn-sm" href="{% url 'buybackprogram:program_calculate' program_pk=program.id %}">
                         Use
                     </a>
-                    <a class="btn btn-success btn-sm"></a>
-                    {% if perms.buybackprogram.manage_programs %}
-                    <a class="btn btn-sm btn-success" href="{% url 'buybackprogram:program_edit_item' program_pk=program.id %}">
-    Modify item
-  </a>
-                    <a class="btn btn-success btn-sm" href="{% url 'buybackprogram:program_edit' program_pk=program.id %}">Edit program</a>
-                    <a class="btn btn-success btn-sm"></a>
+                    {% if perms.buybackprogram.manage_programs and program.owner.user == request.user %}
+                        <a class="btn btn-sm btn-warning" href="{% url 'buybackprogram:program_edit_item' program_pk=program.id %}">Modify item</a>
+                        <a class="btn btn-sm btn-warning" href="{% url 'buybackprogram:program_edit' program_pk=program.id %}">Edit program</a>
+                        <a class="btn btn-danger btn-sm" href="{% url 'buybackprogram:program_remove' program_pk=program.id %}">
+                        Delete
+                    </a>
                     {% endif %}
                 </td>
             </tr>

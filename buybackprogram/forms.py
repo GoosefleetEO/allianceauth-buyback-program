@@ -8,7 +8,7 @@ class ProgramForm(forms.ModelForm):
     # specify the name of model to use
     class Meta:
         model = Program
-        fields = "__all__"
+        exclude = ["owner"]
 
 
 class ProgramItemForm(forms.ModelForm):

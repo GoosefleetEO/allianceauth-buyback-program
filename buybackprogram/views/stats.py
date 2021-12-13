@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect, render
+from eveuniverse.models import EveEntity
 
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.services.hooks import get_extension_logger
@@ -38,6 +39,8 @@ def my_stats(request):
         if contract.status == "finished":
             values["finished"] += contract.price
 
+        contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+
         contract.items = ContractItem.objects.filter(contract=contract)
 
         contract_tracking = tracking.filter(tracking_number=contract.title).first()
@@ -46,7 +49,7 @@ def my_stats(request):
             note = {
                 "icon": "fa-skull-crossbones",
                 "color": "red",
-                "message": "Tracked price does not match contract price. You have either made an mistake in the tracking number or the contract price copy paste. Please remake contract.",
+                "message": "Tracked price does not match contract price. Either a mistake in the copy pasted values or seller has changed contracted items after calculating the price",
             }
 
             contract.note = note
@@ -93,6 +96,28 @@ def program_stats(request):
         if contract.status == "finished":
             values["finished"] += contract.price
 
+        contract.notes = []
+
+        try:
+            issuer_character = CharacterOwnership.objects.get(
+                character__character_id=contract.issuer_id
+            )
+            logger.debug("Got issuer character from auth: %s" % issuer_character.user)
+
+        except CharacterOwnership.DoesNotExist:
+            issuer_character = False
+            logger.debug("Contract issuer not registered on AUTH")
+
+            note = {
+                "icon": "fa-question",
+                "color": "orange",
+                "message": "Issuer not registered on AUTH. Possibly an unregistered alt.",
+            }
+
+            contract.notes.append(note)
+
+        contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+
         contract.items = ContractItem.objects.filter(contract=contract)
 
         contract_tracking = tracking.filter(tracking_number=contract.title).first()
@@ -101,10 +126,11 @@ def program_stats(request):
             note = {
                 "icon": "fa-skull-crossbones",
                 "color": "red",
-                "message": "Tracked price does not match contract price. You have either made an mistake in the tracking number or the contract price copy paste. Please remake contract.",
+                "message": "Tracked price for %s does not match contract price. See details for more information"
+                % contract_tracking.tracking_number,
             }
 
-            contract.note = note
+            contract.notes.append(note)
 
     context = {
         "contracts": contracts,

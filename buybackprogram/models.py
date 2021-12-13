@@ -63,6 +63,13 @@ class Owner(models.Model):
         related_name="+",
     )
 
+    user = models.ForeignKey(
+        User,
+        help_text="User that manages the program",
+        on_delete=models.deletion.PROTECT,
+        related_name="+",
+    )
+
     class Meta:
         default_permissions = ()
 

@@ -13,20 +13,24 @@
     <table id="contract" style="margin: 20px auto;" class="table table-striped table-condensed">
         <tr>
             <th>Contract type:</th>
-            <td>Item Exhange</td>
+            <td colspan="2">Item Exhange</td>
+
         </tr>
         <tr>
             <th>Availability:</th>
             {% if program.corporation %}
-                <td>{{program.owner.corporation}}</td>
+                <td data-type="copy_value">{{program.owner.corporation}}</td>
+                <td><button data-type="copy"><i class="fas fa-copy"></i></button></td>
             {% else %}
-                <td>{{program.owner}}</td>
+                <td data-type="copy_value">{{program.owner.character.character}}</td>
+                <td><button data-type="copy"><i class="fas fa-copy"></i></button></td>
             {% endif %}
         </tr>
         <tr>
             <th>I will receive:</th>
             {% if contract_price_data.contract_net_total >= 0%}
-                <td>{{contract_price_data.contract_net_total|floatformat:0|intcomma}} ISK</td>
+                <td data-type="copy_value">{{contract_price_data.contract_net_total|floatformat:0|intcomma}}</td>
+                <td><button data-type="copy"><i class="fas fa-copy"></i></button></td>
             {% else %}
                 <td>0 ISK <i><s>{{contract_price_data.contract_net_total|floatformat:0|intcomma}} ISK</s></i><td>
             {% endif %}
@@ -35,11 +39,12 @@
         </tr>
         <tr>
             <th>Expiration:</th>
-            <td>1 week</td>
+            <td colspan="2">1 week</td>
         </tr>
         <tr>
             <th>Description:</th>
-            <td>{{tracking_number}}</td>
+            <td data-type="copy_value">{{tracking_number}}</td>
+            <td><button data-type="copy"><i class="fas fa-copy"></i></button></td>
         </tr>
     </table>
 </div>
@@ -191,6 +196,28 @@
 {% endblock %}
 
 {% block extra_javascript %}
+<script>
+document.querySelectorAll('button[data-type="copy"]')
+  .forEach(function(button){
+      button.addEventListener('click', function(){
+      let email = this.parentNode.parentNode
+        .querySelector('td[data-type="copy_value"]')
+        .innerText;
+
+      let tmp = document.createElement('textarea');
+          tmp.value = email;
+          tmp.setAttribute('readonly', '');
+          tmp.style.position = 'absolute';
+          tmp.style.left = '-9999px';
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand('copy');
+          document.body.removeChild(tmp);
+          console.log(`${email} copied.`);
+    });
+});
+</script>
+
 <script type="text/javascript" src="{% static 'buybackprogram/js/notify.js' %}"></script>
 {% endblock %}
 

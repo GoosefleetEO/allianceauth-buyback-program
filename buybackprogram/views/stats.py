@@ -2,8 +2,11 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect, render
 
 from allianceauth.authentication.models import CharacterOwnership
+from allianceauth.services.hooks import get_extension_logger
 
 from ..models import Contract, ContractItem, Tracking, TrackingItem
+
+logger = get_extension_logger(__name__)
 
 
 @login_required
@@ -59,14 +62,54 @@ def my_stats(request):
 
 @login_required
 @permission_required("buybacks.basic_access")
-def program_stats(request, program_pk):
-    contracts = Contract.objects.filter(
-        program__pk=program_pk,
+def program_stats(request):
+
+    values = {
+        "outstanding": 0,
+        "finished": 0,
+    }
+
+    characters = CharacterOwnership.objects.filter(user=request.user).values_list(
+        "character__character_id"
     )
+
+    logger.debug("Got characters for manager: %s" % characters)
+
+    tracking = Tracking.objects.all()
+
+    tracking_numbers = tracking.values_list("tracking_number")
+
+    contracts = Contract.objects.filter(
+        assignee_id__in=characters,
+        title__in=tracking_numbers,
+    )
+
+    logger.debug("Got contracts for manager: %s" % contracts)
+
+    for contract in contracts:
+
+        if contract.status == "outstanding":
+            values["outstanding"] += contract.price
+        if contract.status == "finished":
+            values["finished"] += contract.price
+
+        contract.items = ContractItem.objects.filter(contract=contract)
+
+        contract_tracking = tracking.filter(tracking_number=contract.title).first()
+
+        if contract_tracking.net_price != contract.price:
+            note = {
+                "icon": "fa-skull-crossbones",
+                "color": "red",
+                "message": "Tracked price does not match contract price. You have either made an mistake in the tracking number or the contract price copy paste. Please remake contract.",
+            }
+
+            contract.note = note
 
     context = {
         "contracts": contracts,
-        "mine": False,
+        "values": values,
+        "mine": True,
     }
 
     return render(request, "buybackprogram/program_stats.html", context)

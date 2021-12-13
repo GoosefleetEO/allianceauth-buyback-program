@@ -30,4 +30,5 @@ urlpatterns = [
         stats.contract_details,
         name="contract_details",
     ),
+    path("program_stats", stats.program_stats, name="program_stats"),
 ]

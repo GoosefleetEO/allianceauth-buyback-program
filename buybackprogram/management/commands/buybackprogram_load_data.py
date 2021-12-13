@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from eveuniverse.models import EveType
+from eveuniverse.models import EveType, EveSolarSystem
 
 
 class Command(BaseCommand):
@@ -7,5 +7,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         EveType.objects.update_or_create_all_esi(
+            include_children=False, wait_for_children=False
+        )
+
+        EveSolarSystem.objects.update_or_create_all_esi(
             include_children=False, wait_for_children=False
         )

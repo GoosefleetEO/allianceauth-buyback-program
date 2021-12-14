@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db import transaction
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy
@@ -115,7 +115,7 @@ def program_add(request):
 
 def program_edit(request, program_pk):
 
-    program = get_object_or_404(Program, pk=program_pk)
+    instance = Program.objects.get(pk=program_pk)
 
     if request.method == "POST":
         form = ProgramForm(request.POST)
@@ -127,51 +127,30 @@ def program_edit(request, program_pk):
 
         if form.is_valid():
 
-            program.owner = Owner.objects.get(user=request.user)
-            program.is_corporation = form.cleaned_data["is_corporation"]
-            program.location = form.cleaned_data["location"]
-            program.tax = form.cleaned_data["tax"]
-            program.hauling_fuel_cost = form.cleaned_data["hauling_fuel_cost"]
-            program.price_dencity_modifier = form.cleaned_data["price_dencity_modifier"]
-            program.price_dencity_treshold = form.cleaned_data["price_dencity_treshold"]
-            program.price_dencity_tax = form.cleaned_data["price_dencity_tax"]
-            program.allow_all_items = form.cleaned_data["allow_all_items"]
-            program.use_refined_value = form.cleaned_data["use_refined_value"]
-            program.use_compressed_value = form.cleaned_data["use_compressed_value"]
-            program.use_raw_ore_value = form.cleaned_data["use_raw_ore_value"]
-            program.allow_unpacked_items = form.cleaned_data["allow_unpacked_items"]
-            program.refining_rate = form.cleaned_data["refining_rate"]
-            program.restricted_to_group = form.cleaned_data["restricted_to_group"]
-            program.restricted_to_state = form.cleaned_data["restricted_to_state"]
+            form = ProgramForm(request.POST, instance=instance)
 
-            program.save()
+            updated_program = form.save()
+
+            messages_plus.success(
+                request,
+                format_html(
+                    gettext_lazy("Program updated at %(location)s")
+                    % {
+                        "location": format_html(
+                            "<strong>{}</strong>", updated_program.location
+                        ),
+                    }
+                ),
+            )
 
             return HttpResponseRedirect(reverse("buybackprogram:index"))
 
     else:
 
-        data = {
-            "is_corporation": program.is_corporation,
-            "location": program.location,
-            "tax": program.tax,
-            "hauling_fuel_cost": program.hauling_fuel_cost,
-            "price_dencity_modifier": program.price_dencity_modifier,
-            "price_dencity_treshold": program.price_dencity_treshold,
-            "price_dencity_tax": program.price_dencity_tax,
-            "allow_all_items": program.allow_all_items,
-            "use_refined_value": program.use_refined_value,
-            "use_compressed_value": program.use_compressed_value,
-            "use_raw_ore_value": program.use_raw_ore_value,
-            "allow_unpacked_items": program.allow_unpacked_items,
-            "refining_rate": program.refining_rate,
-            "restricted_to_group": program.restricted_to_group,
-            "restricted_to_state": program.restricted_to_state,
-        }
-
-        form = ProgramForm(initial=data)
+        form = ProgramForm(instance=instance)
 
     context = {
-        "program": program,
+        "program": instance,
         "form": form,
     }
 

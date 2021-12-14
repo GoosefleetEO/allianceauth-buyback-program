@@ -12,7 +12,7 @@ from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 
 from buybackprogram.forms import ProgramForm, ProgramItemForm
-from buybackprogram.models import Owner, Program
+from buybackprogram.models import Owner, Program, ProgramItem
 from buybackprogram.utils import messages_plus
 
 logger = get_extension_logger(__name__)
@@ -157,18 +157,34 @@ def program_edit(request, program_pk):
     return render(request, "buybackprogram/program_edit.html", context)
 
 
+@login_required
+@permission_required("buybackprogram.manage_programs")
 def program_edit_item(request, program_pk):
     program = Program.objects.get(pk=program_pk)
 
-    # create object of form
-    form = ProgramItemForm(request.POST or None)
+    if request.method != "POST":
+        form = ProgramItemForm()
+    else:
+        form = ProgramItemForm(
+            request.POST,
+            value=int(request.POST["item_type"]),
+        )
 
-    # check if form data is valid
-    if request.POST and form.is_valid():
-        # save the form data to model
-        form.save()
+        if form.is_valid():
+            item_type = form.cleaned_data["item_type"]
+            item_tax = form.cleaned_data["item_tax"]
+            disallow_item = form.cleaned_data["disallow_item"]
 
-        return HttpResponseRedirect(reverse("buybackprogram:index"))
+            _, created = ProgramItem.objects.update_or_create(
+                item_type=item_type,
+                program=program,
+                defaults={
+                    "item_tax": item_tax,
+                    "disallow_item": disallow_item,
+                },
+            )
+
+            return redirect("buybackprogram:index")
 
     context = {
         "program": program,

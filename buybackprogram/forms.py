@@ -1,7 +1,8 @@
 from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
+from eveuniverse.models import EveType
 
-from buybackprogram.models import Owner, Program, ProgramItem
+from buybackprogram.models import Owner, Program
 
 
 class ProgramForm(forms.ModelForm):
@@ -17,10 +18,34 @@ class ProgramForm(forms.ModelForm):
         self.fields["owner"].queryset = Owner.objects.filter(user=self.user)
 
 
-class ProgramItemForm(forms.ModelForm):
-    class Meta:
-        model = ProgramItem
-        fields = "__all__"
+class ProgramItemForm(forms.Form):
+    item_type = forms.ModelChoiceField(
+        queryset=EveType.objects.none(),
+        label="Item type",
+        help_text="Add the name of item which you want to determine an tax on. Once you start typing, we offer suggestions",
+        empty_label=None,
+    )
+    item_tax = forms.IntegerField(
+        label="Tax amount",
+        validators=[MaxValueValidator(100), MinValueValidator(0)],
+        help_text="Set an tax on the item. If program default tax is defined this tax will be added on top of the program tax. If program does not allow all items this tax is used to calculate the tax for the product.",
+    )
+    disallow_item = forms.BooleanField(
+        label="Disallow item in this program",
+        help_text="If you want to prevent any prices to be given for this item in this program you can check this box.",
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        value = kwargs.pop("value", None)
+
+        super(ProgramItemForm, self).__init__(*args, **kwargs)
+
+        if value is not None:
+            self.fields["item_type"].queryset = EveType.objects.filter(
+                pk=value,
+                published=True,
+            )
 
 
 class CalculatorForm(forms.Form):

@@ -88,7 +88,7 @@ def setup(request, token):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def program_add(request):
-    form = ProgramForm(request.POST or None)
+    form = ProgramForm(request.POST or None, user=request.user)
 
     if request.POST and form.is_valid():
 
@@ -147,7 +147,7 @@ def program_edit(request, program_pk):
 
     else:
 
-        form = ProgramForm(instance=instance)
+        form = ProgramForm(instance=instance, user=request.user)
 
     context = {
         "program": instance,

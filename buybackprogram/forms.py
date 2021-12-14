@@ -1,7 +1,7 @@
 from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-from buybackprogram.models import Program, ProgramItem
+from buybackprogram.models import Owner, Program, ProgramItem
 
 
 class ProgramForm(forms.ModelForm):
@@ -9,6 +9,12 @@ class ProgramForm(forms.ModelForm):
     class Meta:
         model = Program
         fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+
+        super(ProgramForm, self).__init__(*args, **kwargs)
+        self.fields["owner"].queryset = Owner.objects.filter(user=self.user)
 
 
 class ProgramItemForm(forms.ModelForm):

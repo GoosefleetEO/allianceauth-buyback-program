@@ -25,6 +25,11 @@ urlpatterns = [
         name="program_remove",
     ),
     url(
+        r"^program_item/(?P<item_pk>[0-9]+)/remove$",
+        programs.program_item_remove,
+        name="program_item_remove",
+    ),
+    url(
         r"^program/(?P<program_pk>[0-9]+)/calculate$",
         calculate.program_calculate,
         name="program_calculate",

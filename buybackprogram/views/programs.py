@@ -162,6 +162,8 @@ def program_edit(request, program_pk):
 def program_edit_item(request, program_pk):
     program = Program.objects.get(pk=program_pk)
 
+    program_items = ProgramItem.objects.filter(program=program)
+
     if request.method != "POST":
         form = ProgramItemForm()
     else:
@@ -175,7 +177,7 @@ def program_edit_item(request, program_pk):
             item_tax = form.cleaned_data["item_tax"]
             disallow_item = form.cleaned_data["disallow_item"]
 
-            _, created = ProgramItem.objects.update_or_create(
+            ProgramItem.objects.update_or_create(
                 item_type=item_type,
                 program=program,
                 defaults={
@@ -184,10 +186,11 @@ def program_edit_item(request, program_pk):
                 },
             )
 
-            return redirect("buybackprogram:index")
+            return HttpResponseRedirect(request.path_info)
 
     context = {
         "program": program,
+        "program_items": program_items,
         "form": form,
     }
 
@@ -203,7 +206,7 @@ def program_remove(request, program_pk):
     if program.owner.user == request.user:
         program.delete()
 
-        messages_plus.danger(
+        messages_plus.warning(
             request,
             format_html(
                 gettext_lazy("Deleted program for %(location)s")
@@ -222,5 +225,21 @@ def program_remove(request, program_pk):
                 )
             ),
         )
+
+    return redirect("buybackprogram:index")
+
+
+@login_required
+@permission_required("buybackprogram.manage_programs")
+def program_item_remove(request, item_pk):
+
+    program_item = ProgramItem.objects.get(item_type=item_pk)
+
+    program_item.delete()
+
+    messages_plus.warning(
+        request,
+        format_html(gettext_lazy("Deleted item from program")),
+    )
 
     return redirect("buybackprogram:index")

@@ -1,6 +1,7 @@
 {% extends 'buybackprogram/base.html' %}
 {% load i18n %}
 {% load humanize %}
+{% load program_settings %}
 
 {% block details %}
 
@@ -10,6 +11,7 @@
             <tr>
                 <th>{% trans "System" %}</th>
                 <th>{% trans "Structure" %}</th>
+                <th>{% trans "Tax" %}</th>
                 <th>{% trans "Manager" %}</th>
                 <th>{% trans "Settings" %}</th>
                 <th class="text-center" >{% trans "Actions" %}</th>
@@ -18,16 +20,23 @@
         <tbody>
             {% for program in programs %}
             <tr>
-                <td style="line-height: 35px;">{{ program.location.eve_solar_system }} </td>
+                <td>{{ program.location.eve_solar_system }} </td>
 
-                <td style="line-height: 35px;">{{ program.location.name }} </td>
+                <td>{{ program.location.name }} </td>
+
+                <td>{{ program.tax }} %</td>
 
                 {% if program.is_corporation %}
-                    <td style="line-height: 35px;">Corp: {{ program.owner.corporation }}</td>
+                    <td >Corp: {{ program.owner.corporation }}</td>
                 {% else %}
-                    <td style="line-height: 35px;">{{ program.owner.character.character }}</td>
+                    <td >{{ program.owner.character.character }}</td>
                 {% endif %}
-                <td></td>
+                <td>
+                    {% for setting in program|program_setting %}
+                        <i style="color: {{setting.color}};" class="fas {{setting.icon}}" title="{{setting.message}}"></i>
+                    {% endfor %}
+
+                </td>
 
 
                 <td class="text-center">

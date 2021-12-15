@@ -50,6 +50,18 @@ def setting_icons(option, program):
             "color": False,
             "message": "This program has individual items with adjusted taxes or items that are not allowed in the program.",
         },
+        "restricted_to_group": {
+            "icon": "fa-user",
+            "color": False,
+            "message": "Only users in the following groups can access this program: %s"
+            % [v.name for v in program.restricted_to_group.all()],
+        },
+        "restricted_to_state": {
+            "icon": "fa-users",
+            "color": False,
+            "message": "Only users in the following states can access this program: %s"
+            % program.restricted_to_state.all(),
+        },
     }
 
     return icons[option]
@@ -69,7 +81,6 @@ def program_setting(program):
 
     if program.hauling_fuel_cost:
         setting = setting_icons("fuel_cost", program)
-
         settings.append(setting)
 
     if program.price_dencity_modifier:
@@ -99,6 +110,16 @@ def program_setting(program):
 
     if program_items:
         setting = setting_icons("special_items", program)
+
+        settings.append(setting)
+
+    if program.restricted_to_group.all():
+        setting = setting_icons("restricted_to_group", program)
+
+        settings.append(setting)
+
+    if program.restricted_to_state.all():
+        setting = setting_icons("restricted_to_state", program)
 
         settings.append(setting)
 

@@ -11,7 +11,7 @@ logger = get_extension_logger(__name__)
 
 
 @login_required
-@permission_required("buybacks.basic_access")
+@permission_required("buybackprogram.basic_access")
 def my_stats(request):
 
     values = {
@@ -64,7 +64,7 @@ def my_stats(request):
 
 
 @login_required
-@permission_required("buybacks.basic_access")
+@permission_required("buybackprogram.manage_programs")
 def program_stats(request):
 
     values = {
@@ -141,8 +141,9 @@ def program_stats(request):
     return render(request, "buybackprogram/program_stats.html", context)
 
 
+@login_required
+@permission_required("buybackprogram.basic_access")
 def contract_details(request, contract_title):
-
     try:
 
         notes = []

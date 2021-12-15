@@ -21,7 +21,7 @@ logger = get_extension_logger(__name__)
 
 
 @login_required
-@permission_required("buybacks.basic_access")
+@permission_required("buybackprogram.basic_access")
 def program_calculate(request, program_pk):
 
     program = Program.objects.filter(pk=program_pk).first()

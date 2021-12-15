@@ -29,9 +29,9 @@ class General(models.Model):
         managed = False
         default_permissions = ()
         permissions = (
-            ("basic_access", "Can access this app"),
-            ("setup_owner", "Can setup program owner"),
-            ("manage_programs", "Can manage buyback programs"),
+            ("basic_access", "Can access this app."),
+            ("manage_programs", "Can manage own buyback programs"),
+            ("manage_all_programs", "Can manage all buyback programs"),
         )
 
 
@@ -154,7 +154,7 @@ class Owner(models.Model):
 
         # abort if character does not have sufficient permissions
         elif self.corporation and not self.character.user.has_perm(
-            "opcalendar.setup_owner"
+            "buybackprogram.manage_programs"
         ):
             logger.error(
                 "%s: This character does not have sufficient permission to sync contracts",
@@ -163,7 +163,7 @@ class Owner(models.Model):
             error = self.ERROR_INSUFFICIENT_PERMISSIONS
 
         # abort if character does not have sufficient permissions
-        elif not self.character.user.has_perm("opcalendar.setup_owner"):
+        elif not self.character.user.has_perm("buybackprogram.manage_programs"):
             logger.error(
                 "%s: This character does not have sufficient permission to sync contracts",
                 self,
@@ -348,6 +348,10 @@ class Program(models.Model):
         if self.use_refined_value and not self.refining_rate:
             raise ValidationError(
                 "Refined value is used for ore pricing method but no refining rate is provided. Provide a refining rate to used with this pricing model."
+            )
+        if self.restricted_to_group and self.restricted_to_state:
+            raise ValidationError(
+                "You can either restrict the program to multiple states or multiple groups per program. Do not cross restrict states and groups."
             )
 
 

@@ -19,7 +19,7 @@ logger = get_extension_logger(__name__)
 
 
 @login_required
-@permission_required("buybackprogram.setup_owner")
+@permission_required("buybackprogram.manage_programs")
 @token_required(
     scopes=[
         "esi-contracts.read_character_contracts.v1",
@@ -113,12 +113,14 @@ def program_add(request):
     return render(request, "buybackprogram/program_add.html", {"form": form})
 
 
+@login_required
+@permission_required("buybackprogram.manage_programs")
 def program_edit(request, program_pk):
 
     instance = Program.objects.get(pk=program_pk)
 
     if request.method == "POST":
-        form = ProgramForm(request.POST)
+        form = ProgramForm(request.POST, user=request.user)
 
         logger.debug(
             "Received POST request containing update program form, is valid: %s"
@@ -127,7 +129,7 @@ def program_edit(request, program_pk):
 
         if form.is_valid():
 
-            form = ProgramForm(request.POST, instance=instance)
+            form = ProgramForm(request.POST, instance=instance, user=request.user)
 
             updated_program = form.save()
 

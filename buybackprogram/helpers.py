@@ -64,7 +64,7 @@ def get_item_prices(item_type, name, quantity, program):
     ).first()
 
     # Get item raw price information
-    item_price = ItemPrices.objects.filter(eve_type_id=item_type.id).first()
+    item_price = ItemPrices.objects.get(eve_type_id=item_type.id)
 
     # Check what items are allowed
     if program.allow_all_items:

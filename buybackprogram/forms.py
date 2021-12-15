@@ -1,6 +1,6 @@
 from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
-from eveuniverse.models import EveType
+from eveuniverse.models import EveSolarSystem, EveType
 
 from buybackprogram.models import Owner, Program
 
@@ -45,6 +45,29 @@ class ProgramItemForm(forms.Form):
             self.fields["item_type"].queryset = EveType.objects.filter(
                 pk=value,
                 published=True,
+            )
+
+
+class LocationForm(forms.Form):
+    eve_solar_system = forms.ModelChoiceField(
+        queryset=EveSolarSystem.objects.none(),
+        label="Solar system",
+        help_text="Select solar system name. Start typing and we will give you suggestions.",
+        empty_label=None,
+    )
+    name = forms.CharField(
+        label="Structure/station name",
+        help_text="A name or identification tag of the structure where the items should be contracted at.",
+    )
+
+    def __init__(self, *args, **kwargs):
+        value = kwargs.pop("value", None)
+
+        super(LocationForm, self).__init__(*args, **kwargs)
+
+        if value is not None:
+            self.fields["eve_solar_system"].queryset = EveSolarSystem.objects.filter(
+                pk=value,
             )
 
 

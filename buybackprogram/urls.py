@@ -9,6 +9,7 @@ urlpatterns = [
     path("", common.index, name="index"),
     path("setup", programs.setup, name="setup"),
     path("program_add", programs.program_add, name="program_add"),
+    path("location_add", programs.location_add, name="location_add"),
     url(
         r"^program/(?P<program_pk>[0-9]+)/edit_item$",
         programs.program_edit_item,
@@ -45,5 +46,10 @@ urlpatterns = [
         r"^item_autocomplete/$",
         common.item_autocomplete,
         name="item_autocomplete",
+    ),
+    url(
+        r"^solarsystem_autocomplete/$",
+        common.solarsystem_autocomplete,
+        name="solarsystem_autocomplete",
     ),
 ]

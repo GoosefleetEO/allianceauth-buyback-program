@@ -29,6 +29,9 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if perms.buybackprogram.manage_programs %}
+                    <a class="btn btn-default navbar-btn" href="{% url 'buybackprogram:location_add' %}">
+                        Add location
+                    </a>
                     <a class="btn btn-default navbar-btn" href="{% url 'buybackprogram:program_add' %}">
                         Create Program
                     </a>

@@ -11,15 +11,15 @@ from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 
-from buybackprogram.forms import ProgramForm, ProgramItemForm
-from buybackprogram.models import Owner, Program, ProgramItem
+from buybackprogram.forms import LocationForm, ProgramForm, ProgramItemForm
+from buybackprogram.models import Location, Owner, Program, ProgramItem
 from buybackprogram.utils import messages_plus
 
 logger = get_extension_logger(__name__)
 
 
 @login_required
-@permission_required("buybackprogram.setup_retriever")
+@permission_required("buybackprogram.setup_owner")
 @token_required(
     scopes=[
         "esi-contracts.read_character_contracts.v1",
@@ -92,7 +92,7 @@ def program_add(request):
 
     if request.POST and form.is_valid():
 
-        form = ProgramForm(request.POST)
+        form = ProgramForm(request.POST, user=request.user)
 
         new_program = form.save()
 
@@ -155,6 +155,46 @@ def program_edit(request, program_pk):
     }
 
     return render(request, "buybackprogram/program_edit.html", context)
+
+
+@login_required
+@permission_required("buybackprogram.manage_programs")
+def location_add(request):
+
+    if request.method != "POST":
+        form = LocationForm()
+    else:
+        form = LocationForm(
+            request.POST,
+            value=int(request.POST["eve_solar_system"]),
+        )
+
+        if form.is_valid():
+            eve_solar_system = form.cleaned_data["eve_solar_system"]
+            name = form.cleaned_data["name"]
+
+            created = Location.objects.update_or_create(
+                eve_solar_system=eve_solar_system,
+                name=name,
+                defaults={
+                    "eve_solar_system": eve_solar_system,
+                    "name": name,
+                },
+            )
+
+            if created:
+                messages_plus.success(
+                    request,
+                    format_html(
+                        "Added location for <strong>{}</strong> in system <strong>{}</strong>",
+                        name,
+                        eve_solar_system,
+                    ),
+                )
+
+            return HttpResponseRedirect(request.path_info)
+
+    return render(request, "buybackprogram/location_add.html", {"form": form})
 
 
 @login_required

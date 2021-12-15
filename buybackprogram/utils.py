@@ -66,26 +66,11 @@ class messages_plus:
     Careful: Use with safe strings only
     """
 
-    _glyph_map = {
-        DEBUG: "eye-open",
-        INFO: "info-sign",
-        SUCCESS: "ok-sign",
-        WARNING: "exclamation-sign",
-        ERROR: "alert",
-    }
-
     @classmethod
     def _add_messages_icon(cls, level: int, message: str) -> str:
-        """Adds an level based icon to standard Django messages"""
-        if level not in cls._glyph_map:
-            raise ValueError("glyph for level not defined")
-        else:
-            glyph = cls._glyph_map[level]
 
         return format_html(
-            '<span class="glyphicon glyphicon-{}" '
-            'aria-hidden="true"></span>&nbsp;&nbsp;{}',
-            glyph,
+            "{}",
             message,
         )
 

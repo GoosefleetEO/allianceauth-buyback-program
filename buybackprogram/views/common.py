@@ -22,7 +22,9 @@ def index(request):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def item_autocomplete(request):
-    items = EveType.objects.all()
+    items = EveType.objects.filter(published=True).exclude(
+        eve_group__eve_category__id=9
+    )
 
     q = request.GET.get("q", None)
 

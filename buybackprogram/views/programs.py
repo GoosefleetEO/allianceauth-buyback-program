@@ -161,6 +161,8 @@ def program_edit(request, program_pk):
 @permission_required("buybackprogram.manage_programs")
 def location_add(request):
 
+    locations = Location.objects.all()
+
     if request.method != "POST":
         form = LocationForm()
     else:
@@ -194,7 +196,12 @@ def location_add(request):
 
             return HttpResponseRedirect(request.path_info)
 
-    return render(request, "buybackprogram/location_add.html", {"form": form})
+    context = {
+        "locations": locations,
+        "form": form,
+    }
+
+    return render(request, "buybackprogram/location_add.html", context)
 
 
 @login_required

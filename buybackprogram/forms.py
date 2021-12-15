@@ -45,7 +45,7 @@ class ProgramItemForm(forms.Form):
             self.fields["item_type"].queryset = EveType.objects.filter(
                 pk=value,
                 published=True,
-            )
+            ).exclude(eve_group__eve_category__id=9)
 
 
 class LocationForm(forms.Form):

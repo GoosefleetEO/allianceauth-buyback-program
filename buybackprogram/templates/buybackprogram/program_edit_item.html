@@ -31,7 +31,7 @@
           {% else %}
             <td style="text-align: center;"><i class="fas fa-times" style="color:red;"></i></td>
           {% endif %}
-          <td style="text-align: center;"><a class="btn btn-danger btn-sm" href="{% url 'buybackprogram:program_item_remove' item_pk=item.item_type.id %}">
+          <td style="text-align: center;"><a class="btn btn-danger btn-sm" href="{% url 'buybackprogram:program_item_remove' item_pk=item.item_type.id program_pk=program.id %}">
                         Delete
                     </a></td>
         </tr>

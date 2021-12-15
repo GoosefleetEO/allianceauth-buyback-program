@@ -177,7 +177,7 @@ def program_edit_item(request, program_pk):
             item_tax = form.cleaned_data["item_tax"]
             disallow_item = form.cleaned_data["disallow_item"]
 
-            ProgramItem.objects.update_or_create(
+            created = ProgramItem.objects.update_or_create(
                 item_type=item_type,
                 program=program,
                 defaults={
@@ -185,6 +185,16 @@ def program_edit_item(request, program_pk):
                     "disallow_item": disallow_item,
                 },
             )
+
+            if created:
+                messages_plus.success(
+                    request,
+                    format_html(
+                        "Added <strong>{}</strong> to program with <strong>{}</strong> % tax",
+                        item_type,
+                        item_tax,
+                    ),
+                )
 
             return HttpResponseRedirect(request.path_info)
 
@@ -231,15 +241,20 @@ def program_remove(request, program_pk):
 
 @login_required
 @permission_required("buybackprogram.manage_programs")
-def program_item_remove(request, item_pk):
+def program_item_remove(request, item_pk, program_pk):
 
     program_item = ProgramItem.objects.get(item_type=item_pk)
+
+    name = program_item.item_type
 
     program_item.delete()
 
     messages_plus.warning(
         request,
-        format_html(gettext_lazy("Deleted item from program")),
+        format_html(
+            "Deleted <strong>{}</strong> from program",
+            name,
+        ),
     )
 
-    return redirect("buybackprogram:index")
+    return redirect("buybackprogram:program_edit_item", program_pk)

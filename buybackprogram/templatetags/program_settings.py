@@ -6,6 +6,9 @@ register = template.Library()
 
 
 def setting_icons(option, program):
+    restriction_groups = [v.name for v in program.restricted_to_group.all()]
+    restriction_states = [v.name for v in program.restricted_to_state.all()]
+
     icons = {
         "all_items": {
             "icon": "fa-globe-europe",
@@ -54,16 +57,17 @@ def setting_icons(option, program):
             "icon": "fa-user",
             "color": False,
             "message": "Only users in the following groups can access this program: %s"
-            % [v.name for v in program.restricted_to_group.all()],
+            % ", ".join(restriction_groups),
         },
         "restricted_to_state": {
             "icon": "fa-users",
             "color": False,
             "message": "Only users in the following states can access this program: %s"
-            % program.restricted_to_state.all(),
+            % ", ".join(restriction_states),
         },
     }
 
+    print(restriction_groups)
     return icons[option]
 
 

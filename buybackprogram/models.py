@@ -349,10 +349,6 @@ class Program(models.Model):
             raise ValidationError(
                 "Refined value is used for ore pricing method but no refining rate is provided. Provide a refining rate to used with this pricing model."
             )
-        if self.restricted_to_group and self.restricted_to_state:
-            raise ValidationError(
-                "You can either restrict the program to multiple states or multiple groups per program. Do not cross restrict states and groups."
-            )
 
 
 class ProgramItem(models.Model):

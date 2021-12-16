@@ -35,10 +35,10 @@ def program_calculate(request, program_pk):
 
     if request.method != "POST":
 
-        form = CalculatorForm(program=program)
+        form = CalculatorForm()
 
     else:
-        form = CalculatorForm(request.POST, program=program)
+        form = CalculatorForm(request.POST)
 
         if form.is_valid():
             form_items = form.cleaned_data["items"]
@@ -213,6 +213,11 @@ def program_calculate(request, program_pk):
 
     # Get item values after other expenses and the total value for the contract
     contract_price_data = get_item_buy_value(buyback_data, program, form_donation)
+
+    logger.debug(
+        "Calculated contract net total is %s"
+        % contract_price_data["contract_net_total"]
+    )
 
     # Get item values after other expenses and the total value for the contract
     tracking = get_tracking_number(

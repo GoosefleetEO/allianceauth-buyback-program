@@ -67,7 +67,6 @@ def setting_icons(option, program):
         },
     }
 
-    print(restriction_groups)
     return icons[option]
 
 

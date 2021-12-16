@@ -73,7 +73,12 @@ class Owner(models.Model):
     class Meta:
         default_permissions = ()
 
-    @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
+    @fetch_token_for_owner(
+        [
+            "esi-contracts.read_character_contracts.v1",
+            "esi-contracts.read_corporation_contracts.v1",
+        ]
+    )
     def update_contracts_esi(self, token):
 
         logger.debug("Fetching contracts for %s" % self.character)
@@ -101,12 +106,15 @@ class Owner(models.Model):
                     defaults={"contract_id": contract["contract_id"]},
                 )
 
-                logger.debug("Contract %s updated/created" % contract["contract_id"])
-
-                character_id = self.character.character.character_id
-
                 # If we created an new contract
                 if created:
+                    logger.debug(
+                        "New contract %s created. Starting item fetch"
+                        % contract["contract_id"]
+                    )
+
+                    character_id = self.character.character.character_id
+
                     contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
                         character_id=character_id,
                         contract_id=contract["contract_id"],
@@ -117,9 +125,6 @@ class Owner(models.Model):
 
                         cont = Contract.objects.get(contract_id=contract["contract_id"])
                         itm = EveType.objects.get(pk=item["type_id"])
-                        logger.debug(
-                            "Item type is: %s evetype is %s" % (item["type_id"], itm.id)
-                        )
 
                         obj, created = ContractItem.objects.update_or_create(
                             contract=cont,
@@ -128,7 +133,71 @@ class Owner(models.Model):
                             defaults={"contract": cont},
                         )
 
-                logger.debug("Updated items for contract %s" % contract["contract_id"])
+                    logger.debug(
+                        "Updated items for contract %s" % contract["contract_id"]
+                    )
+                else:
+                    logger.debug("Contract %s updated." % contract["contract_id"])
+
+        logger.debug("Fetching corporation contracts for %s" % self.character)
+
+        contracts = self._fetch_corporation_contracts()
+
+        for contract in contracts:
+
+            # Only get contracts with the correct prefill ticker
+            if BUYBACKPROGRAM_TRACKING_PREFILL in contract["title"]:
+                obj, created = Contract.objects.update_or_create(
+                    assignee_id=contract["assignee_id"],
+                    availability=contract["availability"],
+                    contract_id=contract["contract_id"],
+                    date_completed=contract["date_completed"],
+                    date_expired=contract["date_expired"],
+                    date_issued=contract["date_issued"],
+                    for_corporation=contract["for_corporation"],
+                    issuer_corporation_id=contract["issuer_corporation_id"],
+                    issuer_id=contract["issuer_id"],
+                    price=contract["price"],
+                    status=contract["status"],
+                    title=contract["title"],
+                    volume=contract["volume"],
+                    defaults={"contract_id": contract["contract_id"]},
+                )
+
+                if created:
+                    logger.debug(
+                        "New corporation contract %s created. Starting item fetch"
+                        % contract["contract_id"]
+                    )
+
+                    corporation_id = self.character.character.corporation_id
+
+                    contract_items = esi.client.Contracts.get_corporations_corporation_id_contracts_contract_id_items(
+                        corporation_id=corporation_id,
+                        contract_id=contract["contract_id"],
+                        token=token.valid_access_token(),
+                    ).results()
+
+                    for item in contract_items:
+
+                        cont = Contract.objects.get(contract_id=contract["contract_id"])
+                        itm = EveType.objects.get(pk=item["type_id"])
+
+                        obj, created = ContractItem.objects.update_or_create(
+                            contract=cont,
+                            eve_type=itm,
+                            quantity=item["quantity"],
+                            defaults={"contract": cont},
+                        )
+
+                    logger.debug(
+                        "Updated items for corporation contract %s"
+                        % contract["contract_id"]
+                    )
+                else:
+                    logger.debug(
+                        "Corporation contract %s updated." % contract["contract_id"]
+                    )
 
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
     def _fetch_contracts(self, token) -> list:
@@ -137,6 +206,18 @@ class Owner(models.Model):
 
         contracts = esi.client.Contracts.get_characters_character_id_contracts(
             character_id=character_id,
+            token=token.valid_access_token(),
+        ).results()
+
+        return contracts
+
+    @fetch_token_for_owner(["esi-contracts.read_corporation_contracts.v1"])
+    def _fetch_corporation_contracts(self, token) -> list:
+
+        corporation_id = self.character.character.corporation_id
+
+        contracts = esi.client.Contracts.get_corporations_corporation_id_contracts(
+            corporation_id=corporation_id,
             token=token.valid_access_token(),
         ).results()
 
@@ -400,7 +481,8 @@ class ItemPrices(models.Model):
 class Tracking(models.Model):
     program = models.ForeignKey(
         Program,
-        on_delete=models.deletion.CASCADE,
+        null=True,
+        on_delete=models.deletion.SET_NULL,
         related_name="+",
     )
     issuer_user = models.ForeignKey(

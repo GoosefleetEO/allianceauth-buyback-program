@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required, permission_required
+from django.db.models import Q
 from django.shortcuts import redirect, render
 from eveuniverse.models import EveEntity
 
@@ -73,17 +74,23 @@ def program_stats(request):
     }
 
     characters = CharacterOwnership.objects.filter(user=request.user).values_list(
-        "character__character_id"
+        "character__character_id",
     )
 
     logger.debug("Got characters for manager: %s" % characters)
+
+    corporations = CharacterOwnership.objects.filter(user=request.user).values_list(
+        "character__corporation_id",
+    )
+
+    logger.debug("Got corporations for manager: %s" % corporations)
 
     tracking = Tracking.objects.all()
 
     tracking_numbers = tracking.values_list("tracking_number")
 
     contracts = Contract.objects.filter(
-        assignee_id__in=characters,
+        Q(assignee_id__in=characters) | Q(assignee_id__in=corporations),
         title__in=tracking_numbers,
     )
 
@@ -117,6 +124,8 @@ def program_stats(request):
             contract.notes.append(note)
 
         contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+
+        contract.assignee_name = EveEntity.objects.resolve_name(contract.assignee_id)
 
         contract.items = ContractItem.objects.filter(contract=contract)
 

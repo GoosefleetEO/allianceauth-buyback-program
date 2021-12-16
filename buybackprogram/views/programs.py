@@ -23,6 +23,7 @@ logger = get_extension_logger(__name__)
 @token_required(
     scopes=[
         "esi-contracts.read_character_contracts.v1",
+        "esi-contracts.read_corporation_contracts.v1",
     ]
 )
 def setup(request, token):

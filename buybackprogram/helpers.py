@@ -612,6 +612,11 @@ def get_tracking_number(
         BUYBACKPROGRAM_TRACKING_PREFILL + "-" + uuid.uuid4().hex[:6].upper()
     )
 
+    logger.debug(
+        "Contract net total for tracking %s is %s"
+        % (tracking_number, contract_price_data["contract_net_total"])
+    )
+
     tracking = Tracking(
         program=program,
         issuer_user=user,
@@ -619,7 +624,7 @@ def get_tracking_number(
         taxes=contract_price_data["total_tax_amount"],
         hauling_cost=contract_price_data["total_hauling_cost"],
         donation=contract_price_data["total_donation_amount"],
-        net_price=contract_price_data["contract_net_total"],
+        net_price=round(contract_price_data["contract_net_total"]),
         tracking_number=tracking_number,
     )
 
@@ -627,13 +632,14 @@ def get_tracking_number(
 
     for item in buyback_data:
 
-        tracking_item = TrackingItem(
-            tracking=tracking,
-            eve_type=item["type_data"],
-            buy_value=item["item_values"]["unit_value"],
-            quantity=item["item_values"]["quantity"],
-        )
+        if item["type_data"]:
+            tracking_item = TrackingItem(
+                tracking=tracking,
+                eve_type=item["type_data"],
+                buy_value=item["item_values"]["unit_value"],
+                quantity=item["item_values"]["quantity"],
+            )
 
-        tracking_item.save()
+            tracking_item.save()
 
     return tracking_number

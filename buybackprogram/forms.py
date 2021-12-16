@@ -84,9 +84,3 @@ class CalculatorForm(forms.Form):
         help_text="You can set a optional donation percentage on your contract",
         validators=[MaxValueValidator(100), MinValueValidator(0)],
     )
-
-    def __init__(self, *args, items=None, **kwargs):
-        program = kwargs.pop("program", None)
-        # TODO: remove this error
-        print(program)
-        super(CalculatorForm, self).__init__(*args, **kwargs)

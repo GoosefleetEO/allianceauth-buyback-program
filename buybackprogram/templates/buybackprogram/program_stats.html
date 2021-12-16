@@ -26,12 +26,14 @@
         <thead>
             <tr>
                 <th >{% trans "Issuer" %}</th>
+                <th >{% trans "Assignee" %}</th>
                 <th >{% trans "Date issued" %}</th>
                 <th >{% trans "Time pending" %}</th>
                 <th >{% trans "Status" %}</th>
                 <th >{% trans "Tracking #" %}</th>
                 <th >{% trans "Price" %}</th>
                 <th>{% trans "Notes" %}</th>
+                <th>{% trans "Action" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -39,6 +41,7 @@
                 {% if contract.status == 'outstanding' %}
                     <tr>
                         <td>{{contract.issuer_name}}</td>
+                        <td>{{contract.assignee_name}}</td>
                         <td>{{contract.date_issued}}</td>
                         <td>{{ contract.date_issued|timesince }}</td>
                         <td>{{contract.status}}</td>
@@ -72,6 +75,7 @@
                 <th >{% trans "Status" %}</th>
                 <th >{% trans "Tracking #" %}</th>
                 <th >{% trans "Price" %}</th>
+                <th >{% trans "Action" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -85,6 +89,9 @@
                         <td>{{contract.status}}</td>
                         <td>{{contract.title}}</td>
                         <td>{{contract.price|floatformat:0|intcomma|price}}</td>
+                        <td><a class="btn btn-info btn-sm" href="{% url 'buybackprogram:contract_details' contract_title=contract.title %}">
+                        Details
+                    </a></td>
                     </tr>
                 {% endif %}
             {% endfor %}

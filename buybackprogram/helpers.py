@@ -147,7 +147,7 @@ def get_item_prices(item_type, name, quantity, program):
             type_materials = EveTypeMaterial.objects.filter(
                 eve_type_id=item_type.id
             ).prefetch_related("eve_type")
-
+            print(type_materials)
             # Get price details for the materials inside the item
             logger.debug("Prices: Getting refined values for %s" % name)
             for material in type_materials:

@@ -29,9 +29,12 @@ class General(models.Model):
         managed = False
         default_permissions = ()
         permissions = (
-            ("basic_access", "Can access this app."),
-            ("manage_programs", "Can manage own buyback programs"),
-            ("manage_all_programs", "Can manage all buyback programs"),
+            ("basic_access", "Can access this app and see own statics."),
+            (
+                "manage_programs",
+                "Can manage own buyback programs and see own program statics.",
+            ),
+            ("see_all_statics", "Can see all program statics."),
         )
 
 

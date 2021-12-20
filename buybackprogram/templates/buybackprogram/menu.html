@@ -28,6 +28,13 @@
                         </a>
                     </li>
                 {% endif %}
+                {% if perms.buybackprogram.manage_all_programs %}
+                    <li class="{% navactive request 'buybackprogram:program_stats_all' %}">
+                        <a href="{% url 'buybackprogram:program_stats_all' %}">
+                            All Program Statistics
+                        </a>
+                    </li>
+                {% endif %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if perms.buybackprogram.manage_programs %}

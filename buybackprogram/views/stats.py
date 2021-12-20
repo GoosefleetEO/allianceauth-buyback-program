@@ -141,9 +141,6 @@ def program_stats(request):
 
             contract.notes.append(note)
 
-        print(corporations)
-        print(contract.assignee_id)
-
         if (
             contract.assignee_id in corporations
             and not contract_tracking.program.is_corporation
@@ -154,6 +151,8 @@ def program_stats(request):
                 "message": "Contract %s is made for your corporation while they should be made directly to your character in this program."
                 % contract_tracking.tracking_number,
             }
+
+            contract.notes.append(note)
 
         if (
             contract.assignee_id not in corporations
@@ -175,6 +174,77 @@ def program_stats(request):
     }
 
     return render(request, "buybackprogram/program_stats.html", context)
+
+
+@login_required
+@permission_required("buybackprogram.manage_all_programs")
+def program_stats_all(request):
+
+    values = {
+        "outstanding": 0,
+        "finished": 0,
+    }
+
+    tracking = Tracking.objects.all()
+
+    tracking_numbers = tracking.values_list("tracking_number", flat=True)
+
+    contracts = Contract.objects.filter(
+        title__in=tracking_numbers,
+    )
+
+    for contract in contracts:
+
+        if contract.status == "outstanding":
+            values["outstanding"] += contract.price
+        if contract.status == "finished":
+            values["finished"] += contract.price
+
+        contract.notes = []
+
+        try:
+            issuer_character = CharacterOwnership.objects.get(
+                character__character_id=contract.issuer_id
+            )
+            logger.debug("Got issuer character from auth: %s" % issuer_character.user)
+
+        except CharacterOwnership.DoesNotExist:
+            issuer_character = False
+            logger.debug("Contract issuer not registered on AUTH")
+
+            note = {
+                "icon": "fa-question",
+                "color": "orange",
+                "message": "Issuer not registered on AUTH. Possibly an unregistered alt.",
+            }
+
+            contract.notes.append(note)
+
+        contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+
+        contract.assignee_name = EveEntity.objects.resolve_name(contract.assignee_id)
+
+        contract.items = ContractItem.objects.filter(contract=contract)
+
+        contract_tracking = tracking.filter(tracking_number=contract.title).first()
+
+        if contract_tracking.net_price != contract.price:
+            note = {
+                "icon": "fa-skull-crossbones",
+                "color": "red",
+                "message": "Tracked price for %s does not match contract price. See details for more information"
+                % contract_tracking.tracking_number,
+            }
+
+            contract.notes.append(note)
+
+    context = {
+        "contracts": contracts,
+        "values": values,
+        "mine": True,
+    }
+
+    return render(request, "buybackprogram/program_stats_all.html", context)
 
 
 @login_required

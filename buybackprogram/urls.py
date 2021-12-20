@@ -42,6 +42,7 @@ urlpatterns = [
         name="contract_details",
     ),
     path("program_stats", stats.program_stats, name="program_stats"),
+    path("program_stats_all", stats.program_stats_all, name="program_stats_all"),
     url(
         r"^item_autocomplete/$",
         common.item_autocomplete,

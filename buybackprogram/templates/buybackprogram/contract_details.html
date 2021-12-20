@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load humanize %}
 {% load price_formats %}
-
+{% load static %}
 {% block details %}
 
 <div>
@@ -86,7 +86,7 @@
         <tbody>
             {% for item in tracking_items %}
                     <tr>
-                        <td>{{item.eve_type.name}}</td>
+                        <td><img class="item-icon" src="https://image.eveonline.com/Type/{{item.eve_type.id}}_64.png" />{{item.eve_type.name}}</td>
                         <td>{{item.quantity|intcomma}}</td>
                         <td>{{item.buy_value|floatformat:0|intcomma}} ISK</td>
                     </tr>
@@ -108,7 +108,7 @@
         <tbody>
             {% for item in contract_items %}
                     <tr>
-                        <td>{{item.eve_type.name}}</td>
+                        <td><img class="item-icon" src="https://image.eveonline.com/Type/{{item.eve_type.id}}_64.png" />{{item.eve_type.name}}</td>
                         <td>{{item.quantity|intcomma}}</td>
                     </tr>
             {% endfor %}
@@ -127,6 +127,7 @@
 {% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'buybackprogram/style.css' %}">
 {% endblock %}
 
 {% block extra_script %}

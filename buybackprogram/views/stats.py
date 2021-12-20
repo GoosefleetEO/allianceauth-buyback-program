@@ -21,12 +21,12 @@ def my_stats(request):
     }
 
     characters = CharacterOwnership.objects.filter(user=request.user).values_list(
-        "character__character_id"
+        "character__character_id", flat=True
     )
 
     tracking = Tracking.objects.all()
 
-    tracking_numbers = tracking.values_list("tracking_number")
+    tracking_numbers = tracking.values_list("tracking_number", flat=True)
 
     contracts = Contract.objects.filter(
         issuer_id__in=characters,
@@ -74,20 +74,20 @@ def program_stats(request):
     }
 
     characters = CharacterOwnership.objects.filter(user=request.user).values_list(
-        "character__character_id",
+        "character__character_id", flat=True
     )
 
     logger.debug("Got characters for manager: %s" % characters)
 
     corporations = CharacterOwnership.objects.filter(user=request.user).values_list(
-        "character__corporation_id",
+        "character__corporation_id", flat=True
     )
 
     logger.debug("Got corporations for manager: %s" % corporations)
 
     tracking = Tracking.objects.all()
 
-    tracking_numbers = tracking.values_list("tracking_number")
+    tracking_numbers = tracking.values_list("tracking_number", flat=True)
 
     contracts = Contract.objects.filter(
         Q(assignee_id__in=characters) | Q(assignee_id__in=corporations),
@@ -136,6 +136,33 @@ def program_stats(request):
                 "icon": "fa-skull-crossbones",
                 "color": "red",
                 "message": "Tracked price for %s does not match contract price. See details for more information"
+                % contract_tracking.tracking_number,
+            }
+
+            contract.notes.append(note)
+
+        print(corporations)
+        print(contract.assignee_id)
+
+        if (
+            contract.assignee_id in corporations
+            and not contract_tracking.program.is_corporation
+        ):
+            note = {
+                "icon": "fa-home",
+                "color": "orange",
+                "message": "Contract %s is made for your corporation while they should be made directly to your character in this program."
+                % contract_tracking.tracking_number,
+            }
+
+        if (
+            contract.assignee_id not in corporations
+            and contract_tracking.program.is_corporation
+        ):
+            note = {
+                "icon": "fa-user",
+                "color": "orange",
+                "message": "Contract %s is made for your character while they should be made to your corporation in this program."
                 % contract_tracking.tracking_number,
             }
 

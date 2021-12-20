@@ -138,6 +138,15 @@ def program_calculate(request, program_pk):
                             quantity = 1
                             item_accepted = False
 
+                            note = {
+                                "icon": "fa-box-open",
+                                "color": "red",
+                                "message": "Unpacked items are now allowed at this location. Repack %s to get a price for it"
+                                % name,
+                            }
+
+                            notes.append(note)
+
                     # Anything else
                     else:
                         if program.allow_unpacked_items:
@@ -187,7 +196,7 @@ def program_calculate(request, program_pk):
                         item_values = item_missing(name, quantity)
 
                         buyback_item = {
-                            "type_data": False,
+                            "type_data": item_type,
                             "item_prices": {
                                 "notes": notes,
                                 "raw_prices": False,

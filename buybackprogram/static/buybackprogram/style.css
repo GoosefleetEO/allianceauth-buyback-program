@@ -29,3 +29,8 @@
 .allianceauth-buyback-program-plugin .tooltip:hover .tooltiptext {
   visibility: visible;
 }
+
+.allianceauth-buyback-program-plugin .item-icon{
+  height: 25px !important;
+  padding-right: 5px;
+}

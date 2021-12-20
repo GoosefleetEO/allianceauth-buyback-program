@@ -84,7 +84,7 @@
 
     </table>
 </div>
-
+{{buyback_data}}
 <div class="table-responsive" style="margin: 20px 0;">
     <h4>Item details</h4>
     <p class="text-muted">Details for each item and their price calculations</p>
@@ -104,7 +104,7 @@
         <tbody>
             {% for item in buyback_data %}
                     <tr>
-                        <td><b>{{ item.item_values.name }}</b></td>
+                        <td><img class="item-icon" src="https://image.eveonline.com/Type/{{item.type_data.id}}_64.png" /><b>{{ item.item_values.name }}</b></td>
                         <td>{{ item.item_values.quantity|intcomma }}</td>
                         <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
                         <td>{{ item.item_prices.type_prices.buy|floatformat:0|intcomma|price }}</td>

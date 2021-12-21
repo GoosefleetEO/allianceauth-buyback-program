@@ -11,9 +11,9 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 - [Images](#images)
 - [Features](#features)
 - [Installation](#installation)
+- [Management Commands](#management-commands)
 - [Permissions](#permissions)
 - [Settings](#settings)
-- [Management Commands](#management-commands)
 - [FAQ](#faq)
 - [Change Log](CHANGELOG.md)
 
@@ -57,10 +57,26 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 
 ## Installation
 
+1. Activate your venv `source /home/allianceserver/venv/auth/bin/activate`
+1. Install the plugin `pip install aa-buybackprogram`
+1. Add `buybackprogram` into your settings/local.py installed apps section
+1. Run migrations `python manage.py migrate`
+1. Collect static files `python manage.py collectstatic`
+1. Reload supervisor
+1. Run the management commands in the next section
+
+## Management Commands
+
+Buybackprogram requires a lot of data to function as it is designed to allow your clients to sell you any items that exsist in EVE. For this reason pre-loading all the date will take a while.
+
+### Type data
+
+To load type data run the command `python manage.py buybackprogram_load_data`. This will start the preload of all `EveType`, `SolarSystem` and `EveTypeMaterial` objects.
+
+You can follow the progress of the load from your auth dashboard task que. You can expect to see 50k+ tasks generated from this command.
+
 ## Permissions
 
 ## Settings
-
-## Management Commands
 
 ## FAQ

@@ -140,7 +140,7 @@ Find a solar system by typing in the solar system box. Then determine a name for
 ### Additional settings
 Name | Description | Default
 -- | -- | --
-BUYBACKPROGRAM_TRACKING_PREFILL | This is the prefill tag you will have on the tracking description for your contracts | aa-bbp
+BUYBACKPROGRAM_TRACKING_PREFILL | This is the prefill tag you will have on the tracking description for your contracts | aa-bbp.
 
 ## Program
 Once you have created a location you can setup the actual program. Click on the `create program` button to create a new program.

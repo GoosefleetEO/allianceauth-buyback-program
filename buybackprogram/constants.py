@@ -16,7 +16,6 @@ ORE_EVE_GROUPS = [
     467,
     468,
     469,
-    1884,
 ]
 
 MOON_ORE_EVE_GROUPS = [

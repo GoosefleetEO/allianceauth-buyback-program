@@ -41,7 +41,7 @@ class Command(BaseCommand):
         if user_input.lower() == "y":
             self._update_models()
             self.stdout.write(
-                "All objects added to celery queue. You can monitor the progress of these tasks from your AUTH dashboard. You can expect to see ~80k tasks added to the que."
+                "All objects added to celery queue. You can monitor the progress of these tasks from your AUTH dashboard. You can expect to see ~50k tasks added to the que. Once tasks are completed you can preload price data with buybackprogram_load_prices"
             )
         else:
             self.stdout.write("Aborted")

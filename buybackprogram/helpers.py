@@ -180,12 +180,12 @@ def get_item_prices(item_type, name, quantity, program):
             item_material_price = []
             # Get all refining materials for item
 
-            try:
-                type_materials = EveTypeMaterial.objects.get(
-                    eve_type_id=item_type.id
-                ).prefetch_related("eve_type")
-            except EveTypeMaterial.DoesNotExist:
-                type_materials = []
+            type_materials = EveTypeMaterial.objects.filter(
+                eve_type_id=item_type.id
+            ).prefetch_related("eve_type")
+
+            if type_materials.count() == 0:
+
                 note = {
                     "icon": "fa-exclamation-triangle",
                     "color": "red",

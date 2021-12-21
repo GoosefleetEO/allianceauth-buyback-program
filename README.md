@@ -119,6 +119,7 @@ CELERYBEAT_SCHEDULE['buybackprogram_update_all_contracts'] = {
 Overview of all permissions in this program. Note that all permissions are in the "general" section.
 
 Name | Purpose | Example Target Audience
+-- | -- | --
 basic_access | Can access this app and see own statics. Can use buyback programs that are allowed by the buyback restriction rules. | Member State
 manage_programs | Can create new locations and buyback programs and manage their own buyback programs. Can see own buyback programs statics. | Buyback managers
 see_all_statics | Can see all statistics in all buyback programs | Leadership
@@ -138,6 +139,7 @@ Find a solar system by typing in the solar system box. Then determine a name for
 
 ### Additional settings
 Name | Description | Default
+-- | -- | --
 BUYBACKPROGRAM_TRACKING_PREFILL | This is the prefill tag you will have on the tracking description for your contracts | aa-bbp
 
 ### Program

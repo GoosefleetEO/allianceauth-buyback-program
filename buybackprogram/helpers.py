@@ -15,6 +15,18 @@ from buybackprogram.models import ItemPrices, ProgramItem, Tracking, TrackingIte
 logger = get_extension_logger(__name__)
 
 
+def get_item_tax(program, item_id):
+    try:
+        program_item_settings = ProgramItem.objects.get(
+            program=program, item_type__id=item_id
+        )
+
+        return program_item_settings.item_tax
+
+    except ProgramItem.DoesNotExist:
+        return False
+
+
 def get_or_create_prices(item_id):
 
     try:
@@ -94,6 +106,7 @@ def get_item_prices(item_type, name, quantity, program):
     has_price_variants = False
 
     # Get special taxes and see if our item belongs to this table
+
     program_item_settings = ProgramItem.objects.filter(
         program=program, item_type__id=item_type.id
     ).first()
@@ -296,19 +309,6 @@ def get_item_values(item_type, item_prices, program):
     type_raw_value = False
     compression_raw_value = False
 
-    # Get special taxes and see if our item belongs to this table
-    program_item_settings = ProgramItem.objects.filter(
-        program=program, item_type__id=item_type.id
-    ).first()
-
-    # If we have an special taxation item, assign it to a variable
-    if program_item_settings:
-        item_tax = program_item_settings.item_tax
-
-        logger.debug("Values: Found tax %s for %s" % (item_tax, item_type))
-
-    # If no special taxes are found we ensure our tax variable remains zero
-
     # Get values for the type prices (base prices) if we have any
     if item_prices["raw_prices"]:
 
@@ -325,7 +325,7 @@ def get_item_values(item_type, item_prices, program):
             program, price, item_type.volume, quantity
         )
         program_tax = program.tax
-        item_tax = item_tax
+        item_tax = get_item_tax(program, item_type.id)
         tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
         logger.debug("Values: Calculating type value for %s" % item_type)
@@ -348,6 +348,7 @@ def get_item_values(item_type, item_prices, program):
             "raw_value": type_raw_value,
             "value": type_value,
             "is_buy_value": False,
+            "notes": [],
         }
 
         if price_dencity_tax:
@@ -359,10 +360,22 @@ def get_item_values(item_type, item_prices, program):
             }
 
             item_prices["notes"].append(note)
+
+        # Add notes for extr taxes
+        if item_tax > 0:
+
+            note = {
+                "icon": "fa-percentage",
+                "color": "orange",
+                "message": "%s has an additional %s %s item spesific tax applied on it"
+                % (item_type.name, item_tax, "%"),
+            }
+            raw_item["notes"].append(note)
     else:
         raw_item = {
             "unite_value": False,
             "value": False,
+            "total_tax": False,
             "raw_value": False,
         }
 
@@ -372,10 +385,13 @@ def get_item_values(item_type, item_prices, program):
         refined = {
             "materials": [],
             "unit_value": False,
+            "total_tax": False,
             "raw_value": False,
             "value": False,
             "is_buy_value": False,
         }
+
+        material_count = len(item_prices["material_prices"])
 
         for material in item_prices["material_prices"]:
 
@@ -387,7 +403,7 @@ def get_item_values(item_type, item_prices, program):
             price = buy
             price_dencity = price / materials.volume
             program_tax = program.tax
-            item_tax = item_tax
+            item_tax = get_item_tax(program, material["id"])
             refining_rate = program.refining_rate / 100
             tax_multiplier = (100 - (program_tax + item_tax)) / 100
 
@@ -408,17 +424,33 @@ def get_item_values(item_type, item_prices, program):
                 "unit_value": price * tax_multiplier,
                 "raw_value": raw_value,
                 "value": value,
+                "notes": [],
             }
+
+            # Add notes for extr taxes
+            if item_tax > 0:
+
+                note = {
+                    "icon": "fa-percentage",
+                    "color": "orange",
+                    "message": "%s has an additional %s %s item spesific tax applied on it"
+                    % (materials.name, item_tax, "%"),
+                }
+
+                r["notes"].append(note)
 
             refined["materials"].append(r)
 
             refined["value"] += value
             refined["raw_value"] += raw_value
+            refined["total_tax"] += r["total_tax"] / material_count
             refined["unit_value"] += value / quantity
+
     else:
         refined = {
             "value": False,
             "raw_value": False,
+            "total_tax": False,
             "unit_value": False,
         }
 
@@ -438,7 +470,7 @@ def get_item_values(item_type, item_prices, program):
             program, price, compressed_version.volume, quantity
         )
         program_tax = program.tax
-        item_tax = item_tax
+        item_tax = get_item_tax(program, compressed_version.id)
         tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
         logger.debug("Values: Calculating compression value for %s" % item_type.id)
@@ -461,11 +493,25 @@ def get_item_values(item_type, item_prices, program):
             "raw_value": compression_raw_value,
             "value": compression_value,
             "is_buy_value": False,
+            "notes": [],
         }
+
+        # Add notes for extr taxes
+        if item_tax > 0:
+
+            note = {
+                "icon": "fa-percentage",
+                "color": "orange",
+                "message": "%s has an additional %s %s item spesific tax applied on it"
+                % (compressed_version.name, item_tax, "%"),
+            }
+
+            compressed["notes"].append(note)
     else:
         compressed = {
             "value": False,
             "raw_value": False,
+            "total_tax": False,
             "unit_value": False,
         }
 
@@ -495,21 +541,6 @@ def get_item_values(item_type, item_prices, program):
             "is_buy_value": False,
         }
 
-    # Add notes for extr taxes
-    if item_tax > 0:
-
-        note = {
-            "icon": "fa-percentage",
-            "color": "orange",
-            "message": "%s has special taxation bracket, %s %s extra tax applied"
-            % (
-                raw_item["name"],
-                item_tax,
-                "%",
-            ),
-        }
-        item_prices["notes"].append(note)
-
     # Get the highest value of the used pricing methods
     buy_value = max([raw_item["value"], refined["value"], compressed["value"]])
 
@@ -524,9 +555,10 @@ def get_item_values(item_type, item_prices, program):
     # Determine what value we will use for buy value
     if buy_value == raw_item["value"]:
         raw_item["is_buy_value"] = True
+        tax_value = raw_item["total_tax"]
     elif buy_value == refined["value"]:
         refined["is_buy_value"] = True
-
+        tax_value = refined["total_tax"]
         note = {
             "icon": "fa-exchange-alt",
             "color": "blue",
@@ -536,7 +568,7 @@ def get_item_values(item_type, item_prices, program):
         item_prices["notes"].append(note)
     elif buy_value == compressed["value"]:
         compressed["is_buy_value"] = True
-
+        tax_value = compressed["total_tax"]
         note = {
             "icon": "fa-exchange-alt",
             "color": "blue",
@@ -559,6 +591,7 @@ def get_item_values(item_type, item_prices, program):
         "compression_value": compressed["value"],
         "unit_value": unit_value,
         "raw_value": raw_value,
+        "tax_value": tax_value,
         "buy_value": buy_value,
     }
 

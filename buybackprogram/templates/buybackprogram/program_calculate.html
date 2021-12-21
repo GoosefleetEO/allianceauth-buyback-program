@@ -108,9 +108,9 @@
                         <td>{{ item.item_values.quantity|intcomma }}</td>
                         <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
                         <td>{{ item.item_prices.type_prices.buy|floatformat:0|intcomma|price }}</td>
-                        <td>{{ item.item_values.normal.total_tax|tax }}</td>
+                        <td>{{ item.item_values.tax_value|tax }}</td>
                         <td>{{ item.item_values.unit_value|floatformat:0|intcomma|price }}</td>
-                        <td>{{ item.item_values.normal.value|floatformat:0|intcomma|price }}</td>
+                        <td>{{ item.item_values.buy_value|floatformat:0|intcomma|price }}</td>
                         <td>
                             {% for note in item.item_prices.notes%}
                                 <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
@@ -133,7 +133,11 @@
                             <td>{{ item.item_values.normal.total_tax|tax }}</td>
                             <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.unit_value|floatformat:0|intcomma|price }}</td>
                             <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.value|floatformat:0|intcomma|price }}</td>
-                            <td></td>
+                            <td>
+                                {% for note in item.item_values.normal.notes%}
+                                    <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
+                                {% endfor %}
+                            </td>
                         </tr>
                     {% endif %}
 
@@ -152,7 +156,11 @@
                             <td>{{item.item_values.compressed.total_tax|tax}}</td>
                             <td class="buy-value-{{item.item_values.compressed.is_buy_value}}">{{item.item_values.compressed.unit_value|floatformat:0|intcomma|price}}</td>
                             <td class="buy-value-{{item.item_values.compressed.is_buy_value}}">{{item.item_values.compressed.value|floatformat:0|intcomma|price}}</td>
-                            <td></td>
+                            <td>
+                                {% for note in item.item_values.compressed.notes%}
+                                    <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
+                                {% endfor %}
+                            </td>
                         </tr>
                     {% endif %}
 
@@ -172,7 +180,11 @@
                                 <td>{{material.total_tax|tax}}</td>
                                 <td class="buy-value-{{item.item_values.refined.is_buy_value}}">{{material.unit_value|floatformat:0|intcomma|price}}</td>
                                 <td class="buy-value-{{item.item_values.refined.is_buy_value}}">{{material.value|floatformat:0|intcomma|price}}</td>
-                                <td></td>
+                                <td>
+                                {% for note in material.notes%}
+                                    <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
+                                {% endfor %}
+                            </td>
                             </tr>
                         {% endfor %}
                     {% endif %}

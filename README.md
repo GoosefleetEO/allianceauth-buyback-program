@@ -58,7 +58,7 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 ## Installation
 
 1. Activate your venv ```source /home/allianceserver/venv/auth/bin/activate```
-1. Install the plugin ```pip install aa-buyback-program```
+1. Install the plugin ```pip install aa-buybackprogram```
 1. Add ```buybackprogram``` into your settings/local.py installed apps section
 1. Run migrations ```python manage.py migrate```
 1. Collect static files ```python manage.py collectstatic```

@@ -9,7 +9,7 @@ from eveuniverse.models import EveType, EveTypeMaterial
 from allianceauth.services.hooks import get_extension_logger
 
 from buybackprogram.app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
-from buybackprogram.constants import ORE_EVE_GROUPS
+from buybackprogram.constants import MOON_ORE_EVE_GROUPS, ORE_EVE_GROUPS
 from buybackprogram.models import ItemPrices, ProgramItem, Tracking, TrackingItem
 
 logger = get_extension_logger(__name__)
@@ -64,6 +64,13 @@ def getList(dict):
 
 def is_ore(item_id):
     if item_id in ORE_EVE_GROUPS:
+        return True
+    else:
+        return False
+
+
+def is_moon_ore(item_id):
+    if item_id in MOON_ORE_EVE_GROUPS:
         return True
     else:
         return False
@@ -189,7 +196,9 @@ def get_item_prices(item_type, name, quantity, program):
             }
 
         # Check if we should get refined value for the item
-        if is_ore(item_type.eve_group.id) and program.use_refined_value:
+        if (
+            is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id)
+        ) and program.use_refined_value:
             item_material_price = []
             # Get all refining materials for item
 

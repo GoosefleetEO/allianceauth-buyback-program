@@ -371,6 +371,7 @@ def get_item_values(item_type, item_prices, program):
                 % (item_type.name, item_tax, "%"),
             }
             raw_item["notes"].append(note)
+            item_prices["notes"].append(note)
     else:
         raw_item = {
             "unite_value": False,
@@ -657,6 +658,7 @@ def get_item_buy_value(buyback_data, program, donation):
         "total_all_items": total_all_items,
         "total_tax_amount": tota_all_items_raw - total_all_items,
         "total_donation_amount": total_donation,
+        "hauling_cost": program.hauling_fuel_cost,
         "total_hauling_cost": total_hauling_cost,
         "contract_net_total": contract_net_total,
     }

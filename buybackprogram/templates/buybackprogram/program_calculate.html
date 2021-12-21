@@ -64,13 +64,13 @@
         {% if program.hauling_fuel_cost > 0 %}
         <tr>
             <th>Hauling cost</th>
-            <td>{{contract_price_data.total_hauling_cost|floatformat:0|intcomma}} ISK</td>
+            <td>{{contract_price_data.total_hauling_cost|floatformat:0|intcomma}} ISK @ {{contract_price_data.hauling_cost|floatformat:0|intcomma}} ISK / m³</td>
         </tr>
         {% endif %}
         {% if contract_price_data.total_donation_amount %}
         <tr>
             <th>Donation amount</th>
-            <td>{{contract_price_data.total_donation_amount|floatformat:0|intcomma}} ISK <i>({{donation}} %)</i></td>
+            <td>{{contract_price_data.total_donation_amount|floatformat:0|intcomma}} ISK <i> @ {{donation}} %</i></td>
         </tr>
         {% endif %}
         <tr>

@@ -414,7 +414,7 @@ def get_item_values(item_type, item_prices, program):
             r = {
                 "id": material["id"],
                 "name": materials.name,
-                "quantity": quantity,
+                "quantity": quantity * program.refining_rate,
                 "buy": buy,
                 "sell": sell,
                 "program_tax": program_tax,

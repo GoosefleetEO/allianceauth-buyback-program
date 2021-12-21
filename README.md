@@ -15,7 +15,6 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 - [Permissions](#permissions)
 - [Settings](#settings)
 - [Program Settings](#program-settings)
-- [FAQ](#faq)
 - [Change Log](CHANGELOG.md)
 
 ## Images
@@ -109,7 +108,7 @@ CELERYBEAT_SCHEDULE['buybackprogram_update_all_prices'] = {
 To fetch contracts from your program managers add the following line in your `local.py` settings file. This will update your contracts every hour
 
 ```
-# Buybackprogram price updates
+# Buybackprogram contract updates
 CELERYBEAT_SCHEDULE['buybackprogram_update_all_contracts'] = {
     'task': 'buybackprogram.tasks.update_all_contracts',
     'schedule': crontab(minute=0, hour='*'),
@@ -136,6 +135,10 @@ Each buyback program is operated by a manager. To add a new manager click on the
 1. Each buyback program operates at a location that is constructed of `SolarSystem` and a `Custom name`. To add a new location click on the `add location` button on the buyback page.
 
 Find a solar system by typing in the solar system box. Then determine a name for the structure. Most often you want to use the actual ingame name of the structure so that people are able to identify the location.
+
+### Additional settings
+Name | Description | Default
+BUYBACKPROGRAM_TRACKING_PREFILL | This is the prefill tag you will have on the tracking description for your contracts | aa-bbp
 
 ### Program
 Once you have created a location you can setup the actual program. Click on the `create program` button to create a new program.
@@ -217,5 +220,3 @@ If no options are selected the program will be visible for everyone with the `ba
 
 Do not mix group and state restrictions as this may lead into logic error. If you need to mix then create a separate programs for them.
 {: .alert .alert-danger}
-
-## FAQ

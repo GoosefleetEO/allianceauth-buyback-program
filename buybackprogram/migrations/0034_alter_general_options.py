@@ -6,12 +6,23 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('buybackprogram', '0033_auto_20211216_1924'),
+        ("buybackprogram", "0033_auto_20211216_1924"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='general',
-            options={'default_permissions': (), 'managed': False, 'permissions': (('basic_access', 'Can access this app and see own statics.'), ('manage_programs', 'Can manage own buyback programs and see own program statics.'), ('see_all_statics', 'Can see all program statics.'))},
+            name="general",
+            options={
+                "default_permissions": (),
+                "managed": False,
+                "permissions": (
+                    ("basic_access", "Can access this app and see own statics."),
+                    (
+                        "manage_programs",
+                        "Can manage own buyback programs and see own program statics.",
+                    ),
+                    ("see_all_statics", "Can see all program statics."),
+                ),
+            },
         ),
     ]

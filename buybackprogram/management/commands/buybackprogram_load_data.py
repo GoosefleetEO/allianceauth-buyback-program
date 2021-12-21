@@ -11,21 +11,26 @@ class Command(BaseCommand):
     help = "Setup all needed data for buyback program to operate"
 
     def _update_models(self):
-        """updates all SDE models from ESI and provides progress output"""
-        models = [
-            EveSolarSystem,
-            EveType,
-        ]
-        model_count = 0
-        for EveModel in models:
-            model_count += 1
-            self.stdout.write(
-                "Updating objects for %s (%d/%d)..."
-                % (EveModel.__name__, model_count, len(models))
-            )
-            EveModel.objects.update_or_create_all_esi(
-                include_children=True, wait_for_children=False
-            )
+
+        self.stdout.write(
+            "Adding %s objects to celery task queue. This may take a minute..."
+            % (EveSolarSystem.__name__)
+        )
+
+        EveSolarSystem.objects.update_or_create_all_esi(
+            include_children=False, wait_for_children=False
+        )
+
+        self.stdout.write(
+            "Adding %s objects to celery task queue. This may take a few minutes..."
+            % (EveType.__name__)
+        )
+
+        EveType.objects.update_or_create_all_esi(
+            include_children=False,
+            wait_for_children=False,
+            enabled_sections=[EveType.Section.TYPE_MATERIALS],
+        )
 
     def handle(self, *args, **options):
         self.stdout.write(
@@ -36,7 +41,7 @@ class Command(BaseCommand):
         if user_input.lower() == "y":
             self._update_models()
             self.stdout.write(
-                "Fetch tasks added to worker queue. You can monitor the progress of these tasks from your dashboard."
+                "All objects added to celery queue. You can monitor the progress of these tasks from your AUTH dashboard. You can expect to see ~80k tasks added to the que."
             )
         else:
             self.stdout.write("Aborted")

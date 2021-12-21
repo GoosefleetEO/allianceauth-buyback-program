@@ -97,7 +97,7 @@ def update_all_prices():
         ItemPrices.objects.bulk_update(prices, ["buy", "sell", "updated"])
         logger.debug("All prices succesfully updated")
     except Error as e:
-        logger.errro("Error updating prices: %s" % e)
+        logger.error("Error updating prices: %s" % e)
 
 
 @shared_task(

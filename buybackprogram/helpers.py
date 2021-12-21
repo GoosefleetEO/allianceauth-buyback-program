@@ -1,5 +1,9 @@
 import uuid
 
+import requests
+
+from django.db import Error
+from django.utils import timezone
 from eveuniverse.models import EveType, EveTypeMaterial
 
 from allianceauth.services.hooks import get_extension_logger
@@ -9,6 +13,37 @@ from buybackprogram.constants import ORE_EVE_GROUPS
 from buybackprogram.models import ItemPrices, ProgramItem, Tracking, TrackingItem
 
 logger = get_extension_logger(__name__)
+
+
+def get_or_create_prices(item_id):
+
+    try:
+        return ItemPrices.objects.get(eve_type_id=item_id)
+
+    except ItemPrices.DoesNotExist:
+
+        response_fuzzwork = requests.get(
+            "https://market.fuzzwork.co.uk/aggregates/",
+            params={
+                "types": item_id,
+                "station": 60003760,
+            },
+        )
+
+        items_fuzzwork = response_fuzzwork.json()
+
+        buy = int(float(items_fuzzwork[str(item_id)]["buy"]["max"]))
+        sell = int(float(items_fuzzwork[str(item_id)]["sell"]["min"]))
+        updated = timezone.now()
+
+        try:
+            price = ItemPrices.objects.create(
+                eve_type_id=item_id, buy=buy, sell=sell, updated=updated
+            )
+
+            return price
+        except Error as e:
+            logger.error("Error updating prices: %s" % e)
 
 
 def getList(dict):
@@ -64,7 +99,7 @@ def get_item_prices(item_type, name, quantity, program):
     ).first()
 
     # Get item raw price information
-    item_price = ItemPrices.objects.get(eve_type_id=item_type.id)
+    item_price = get_or_create_prices(item_type.id)
 
     # Check what items are allowed
     if program.allow_all_items:
@@ -144,16 +179,30 @@ def get_item_prices(item_type, name, quantity, program):
         if is_ore(item_type.eve_group.id) and program.use_refined_value:
             item_material_price = []
             # Get all refining materials for item
-            type_materials = EveTypeMaterial.objects.filter(
-                eve_type_id=item_type.id
-            ).prefetch_related("eve_type")
-            print(type_materials)
+
+            try:
+                type_materials = EveTypeMaterial.objects.get(
+                    eve_type_id=item_type.id
+                ).prefetch_related("eve_type")
+            except EveTypeMaterial.DoesNotExist:
+                type_materials = []
+                note = {
+                    "icon": "fa-exclamation-triangle",
+                    "color": "red",
+                    "message": "Refined price valuation is used in this program but TypeMaterials for %s are missing from the database."
+                    % name,
+                }
+
+                notes.append(note)
+
+                logger.error(
+                    "TypeMaterials not found for %s. Did you forget to run buybackprogram_load_data?"
+                    % name
+                )
+
             # Get price details for the materials inside the item
-            logger.debug("Prices: Getting refined values for %s" % name)
             for material in type_materials:
-                material_price = ItemPrices.objects.filter(
-                    eve_type_id=material.material_eve_type.id
-                ).first()
+                material_price = get_or_create_prices(material.material_eve_type.id)
 
                 refining_ratio = item_type.portion_size
 
@@ -171,6 +220,8 @@ def get_item_prices(item_type, name, quantity, program):
 
             has_price_variants = True
 
+            logger.debug("Prices: Got refined values for %s" % name)
+
         else:
             item_material_price = False
             type_materials = False
@@ -184,16 +235,10 @@ def get_item_prices(item_type, name, quantity, program):
         ):
 
             compresed_name = "Compressed " + name
+            compresed_type = EveType.objects.filter(name=compresed_name).first()
             compression_ratio = item_type.portion_size
 
-            logger.debug(
-                "Prices: Getting compression prices for %s based on original item %s"
-                % (compresed_name, name)
-            )
-
-            compression_price = ItemPrices.objects.filter(
-                eve_type_id__name=compresed_name
-            ).first()
+            compression_price = get_or_create_prices(compresed_type.id)
 
             logger.debug(
                 "Got prices %s ISK for %s" % (compression_price.buy, compresed_name)
@@ -207,6 +252,11 @@ def get_item_prices(item_type, name, quantity, program):
             }
 
             has_price_variants = True
+
+            logger.debug(
+                "Prices: Got compression prices for %s based on original item %s"
+                % (compresed_name, name)
+            )
 
         # If item can't or should not be compressed
         else:
@@ -262,19 +312,17 @@ def get_item_values(item_type, item_prices, program):
     # Get values for the type prices (base prices) if we have any
     if item_prices["raw_prices"]:
 
-        types = EveType.objects.filter(id=item_prices["raw_prices"]["id"]).first()
-
         quantity = item_prices["raw_prices"]["quantity"]
         sell = item_prices["raw_prices"]["sell"]
         buy = item_prices["raw_prices"]["buy"]
         price = buy
 
-        if not types.volume <= 0:
-            price_dencity = price / types.volume
+        if not item_type.volume <= 0:
+            price_dencity = price / item_type.volume
         else:
             price_dencity = False
         price_dencity_tax = get_price_dencity_tax(
-            program, price, types.volume, quantity
+            program, price, item_type.volume, quantity
         )
         program_tax = program.tax
         item_tax = item_tax
@@ -286,8 +334,8 @@ def get_item_values(item_type, item_prices, program):
         type_value = type_raw_value * tax_multiplier
 
         raw_item = {
-            "id": types.id,
-            "name": types.name,
+            "id": item_type.id,
+            "name": item_type.name,
             "quantity": quantity,
             "buy": buy,
             "sell": sell,
@@ -423,18 +471,16 @@ def get_item_values(item_type, item_prices, program):
 
     if not has_buy_price(item_prices):
 
-        types = EveType.objects.filter(id=item_type.id).first()
-
         note = {
             "icon": "fa-question",
             "color": "red",
-            "message": "%s has no price data" % types.name,
+            "message": "%s has no price data" % item_type.name,
         }
         item_prices["notes"].append(note)
 
         raw_item = {
-            "id": types.id,
-            "name": types.name,
+            "id": item_type.id,
+            "name": item_type.name,
             "quantity": item_prices["quantity"],
             "buy": False,
             "sell": False,

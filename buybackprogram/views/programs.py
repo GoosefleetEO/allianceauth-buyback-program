@@ -208,7 +208,7 @@ def location_add(request):
 
 
 @login_required
-@permission_required("buybackprogram.manage_programs")
+@permission_required("buybackprogram.basic_access")
 def program_edit_item(request, program_pk):
     program = Program.objects.get(pk=program_pk)
 

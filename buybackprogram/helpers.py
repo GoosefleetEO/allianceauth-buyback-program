@@ -390,7 +390,7 @@ def get_item_values(item_type, item_prices, program):
             r = {
                 "id": material["id"],
                 "name": materials.name,
-                "quantity": quantity * program.refining_rate,
+                "quantity": quantity * program.refining_rate / item_type.portion_size,
                 "buy": buy,
                 "sell": sell,
                 "program_tax": program_tax,
@@ -521,9 +521,15 @@ def get_item_values(item_type, item_prices, program):
         tax_value = raw_item["total_tax"]
 
         item_prices["notes"].append(
-            note_price_dencity_tax(raw_item["name"], price_dencity, price_dencity_tax)
+            note_price_dencity_tax(
+                raw_item["name"],
+                raw_item["price_dencity"],
+                raw_item["price_dencity_tax"],
+            )
         )
-        item_prices["notes"].append(note_item_specific_tax(raw_item["name"], item_tax))
+        item_prices["notes"].append(
+            note_item_specific_tax(raw_item["name"], raw_item["item_tax"])
+        )
 
     elif buy_value == refined["value"]:
 
@@ -532,12 +538,19 @@ def get_item_values(item_type, item_prices, program):
 
         item_prices["notes"].append(note_refined_price_used(raw_item["name"]))
 
-        item_prices["notes"].append(
-            note_price_dencity_tax(raw_item["name"], price_dencity, price_dencity_tax)
-        )
-        item_prices["notes"].append(
-            note_item_specific_tax(raw_item["name"] + " material", item_tax)
-        )
+        for material in refined["materials"]:
+            item_prices["notes"].append(
+                note_price_dencity_tax(
+                    material["name"],
+                    material["price_dencity"],
+                    material["price_dencity_tax"],
+                )
+            )
+            item_prices["notes"].append(
+                note_item_specific_tax(
+                    material["name"] + " material", material["item_tax"]
+                )
+            )
 
     elif buy_value == compressed["value"]:
 
@@ -547,9 +560,15 @@ def get_item_values(item_type, item_prices, program):
         item_prices["notes"].append(note_compressed_price_used(raw_item["name"]))
 
         item_prices["notes"].append(
-            note_price_dencity_tax(raw_item["name"], price_dencity, price_dencity_tax)
+            note_price_dencity_tax(
+                compressed["name"],
+                compressed["price_dencity"],
+                compressed["price_dencity_tax"],
+            )
         )
-        item_prices["notes"].append(note_item_specific_tax(raw_item["name"], item_tax))
+        item_prices["notes"].append(
+            note_item_specific_tax(raw_item["name"], compressed["item_tax"])
+        )
 
     logger.debug("Values: Best buy value for %s is %s ISK" % (item_type, buy_value))
 

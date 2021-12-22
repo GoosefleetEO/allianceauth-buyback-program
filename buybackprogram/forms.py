@@ -27,7 +27,7 @@ class ProgramItemForm(forms.Form):
     )
     item_tax = forms.IntegerField(
         label="Tax amount",
-        validators=[MaxValueValidator(100), MinValueValidator(0)],
+        validators=[MaxValueValidator(100), MinValueValidator(-100)],
         help_text="Set an tax on the item. If program default tax is defined this tax will be added on top of the program tax. If program does not allow all items this tax is used to calculate the tax for the product.",
     )
     disallow_item = forms.BooleanField(

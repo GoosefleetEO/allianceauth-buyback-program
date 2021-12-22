@@ -174,7 +174,7 @@
                         {% for material in item.item_values.refined.materials %}
                             <tr class="collapse" id="{{ item.item_values.normal.id }}-refined{{ forloop.counter }}">
                                 <td style="padding-left: 30px;">{{material.name}}</td>
-                                <td>{{material.quantity}}</td>
+                                <td>{{material.quantity|floatformat:2}}</td>
                                 <td>{{material.sell|floatformat:0|intcomma|price}}</td>
                                 <td>{{material.buy|floatformat:0|intcomma|price}}</td>
                                 <td>{{material.total_tax|tax}}</td>

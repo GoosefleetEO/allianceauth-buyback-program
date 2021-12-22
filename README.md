@@ -172,14 +172,16 @@ You can use a price dencity modifier which will add a additional tax on items wi
 This setting is aimer more at high sec buyback programs.
 {: .alert .alert-info}
 
-#### Price dencity treshold
+This setting will also be applied on ore price variants
+{: .alert .alert-warning}
+
+#### Price dencity threshold
 This is the lowest isk/m^3 ratio for items that are accepted to the program without the price dencity tax. Finding your own limits depends on your logistical department.
 
 For example: Tritanium is 500 ISK/m³ @ 5 ISK per unit price. PLEX is 14,5Trillion ISK/m³ @2.9M per unit price.
 
 #### Price dencity tax
 This is the tax which will be applied to items with a price dencity bellow the price dencity treshold
-
 
 You should avoid using both the hauling fuel cost and the price dencity modifier at the same time as their function is fairly similar.
 {: .alert .alert-warning}
@@ -214,7 +216,6 @@ Most often you want to buy only items that are packed. This will ensure that peo
 #### Refining rate
 The refining rate is used in combination with the use refined value option.
 
-
 ### Restrctions
 You can restict the visibnility of the buyback programs to groups and states with the restriction options.
 
@@ -222,3 +223,11 @@ If no options are selected the program will be visible for everyone with the `ba
 
 Do not mix group and state restrictions as this may lead into logic error. If you need to mix then create a separate programs for them.
 {: .alert .alert-danger}
+
+## Program item settings
+You can modifyindividual item settings or allow items for a program that has set `allow all items = False` via the `modify item` menu for each program.
+
+Set a item specific tax for each item. The tax wil be applied on top of the default tax for the program. You can also disallow an item from beeing accepted in the contract completely.
+
+The item specific tax can also be a negative value allowing you to decrease taxes on certain items.
+{: .alert .alert-info}

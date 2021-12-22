@@ -3,6 +3,18 @@ from allianceauth.services.hooks import get_extension_logger
 logger = get_extension_logger(__name__)
 
 
+def note_missing_jita_buy(buy_price, name):
+    if buy_price == 0:
+        note = {
+            "icon": "fa-question",
+            "color": "red",
+            "message": "%s has no buy orders in jita" % name,
+        }
+        return note
+    else:
+        return False
+
+
 def note_price_dencity_tax(name, price_dencity, price_dencity_tax):
     if price_dencity_tax:
         note = {

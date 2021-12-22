@@ -225,7 +225,7 @@ Do not mix group and state restrictions as this may lead into logic error. If yo
 {: .alert .alert-danger}
 
 ## Program item settings
-You can modifyindividual item settings or allow items for a program that has set `allow all items = False` via the `modify item` menu for each program.
+You can modify individual item settings or allow items for a program that has set `allow all items = False` via the `special taxes` menu for each program.
 
 Set a item specific tax for each item. The tax wil be applied on top of the default tax for the program. You can also disallow an item from beeing accepted in the contract completely.
 

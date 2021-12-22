@@ -12,11 +12,15 @@
             <table style="width: 50%" class="table table-condensed">
                 <tbody>
                     <tr>
+                        <th>Outstanding count:</th>
+                        <td>{{values.outstanding_count}}</td>
                         <th>Outstanding value:</th>
                         <td>{{values.outstanding|floatformat:0|intcomma|price}}</td>
                     </tr>
                     <tr>
-                        <th>Total sold:</th>
+                        <th>Total sold count:</th>
+                        <td>{{values.finished_count}}</td>
+                        <th>Total sold value:</th>
                         <td>{{values.finished|floatformat:0|intcomma|price}}</td>
                     </tr>
                 </tbody>

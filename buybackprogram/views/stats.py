@@ -18,6 +18,8 @@ def my_stats(request):
     values = {
         "outstanding": 0,
         "finished": 0,
+        "outstanding_count": 0,
+        "finished_count": 0,
     }
 
     characters = CharacterOwnership.objects.filter(user=request.user).values_list(
@@ -37,8 +39,10 @@ def my_stats(request):
 
         if contract.status == "outstanding":
             values["outstanding"] += contract.price
+            values["outstanding_count"] += 1
         if contract.status == "finished":
             values["finished"] += contract.price
+            values["finished_count"] += 1
 
         contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
 
@@ -71,6 +75,8 @@ def program_stats(request):
     values = {
         "outstanding": 0,
         "finished": 0,
+        "outstanding_count": 0,
+        "finished_count": 0,
     }
 
     characters = CharacterOwnership.objects.filter(user=request.user).values_list(
@@ -100,8 +106,10 @@ def program_stats(request):
 
         if contract.status == "outstanding":
             values["outstanding"] += contract.price
+            values["outstanding_count"] += 1
         if contract.status == "finished":
             values["finished"] += contract.price
+            values["finished_count"] += 1
 
         contract.notes = []
 
@@ -183,6 +191,8 @@ def program_stats_all(request):
     values = {
         "outstanding": 0,
         "finished": 0,
+        "outstanding_count": 0,
+        "finished_count": 0,
     }
 
     tracking = Tracking.objects.all()
@@ -197,8 +207,10 @@ def program_stats_all(request):
 
         if contract.status == "outstanding":
             values["outstanding"] += contract.price
+            values["outstanding_count"] += 1
         if contract.status == "finished":
             values["finished"] += contract.price
+            values["finished_count"] += 1
 
         contract.notes = []
 

@@ -15,6 +15,7 @@ from buybackprogram.notes import (
     note_compressed_price_used,
     note_item_disallowed,
     note_item_specific_tax,
+    note_missing_jita_buy,
     note_missing_typematerials,
     note_no_price_data,
     note_price_dencity_tax,
@@ -188,6 +189,8 @@ def get_item_prices(item_type, name, quantity, program):
                 "buy": item_price.buy,
                 "sell": item_price.sell,
             }
+
+        notes.append(note_missing_jita_buy(item_price.buy, name))
 
         # Check if we should get refined value for the item
         if (

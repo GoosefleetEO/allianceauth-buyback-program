@@ -91,8 +91,8 @@ def note_no_price_data(name):
 
 def note_refined_price_used(name):
     note = {
-        "icon": "fa-exchange-alt",
-        "color": "blue",
+        "icon": "fa-industry",
+        "color": "#5858df",
         "message": "Best price: Using refined price for %s" % name,
     }
 
@@ -101,8 +101,8 @@ def note_refined_price_used(name):
 
 def note_compressed_price_used(name):
     note = {
-        "icon": "fa-exchange-alt",
-        "color": "blue",
+        "icon": "fa-file-archive",
+        "color": "#5858df",
         "message": "Best price: Using compressed price for %s" % name,
     }
     return note

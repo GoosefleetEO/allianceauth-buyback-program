@@ -11,6 +11,16 @@ from allianceauth.services.hooks import get_extension_logger
 from buybackprogram.app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
 from buybackprogram.constants import MOON_ORE_EVE_GROUPS, ORE_EVE_GROUPS
 from buybackprogram.models import ItemPrices, ProgramItem, Tracking, TrackingItem
+from buybackprogram.notes import (
+    note_compressed_price_used,
+    note_item_disallowed,
+    note_item_specific_tax,
+    note_missing_typematerials,
+    note_no_price_data,
+    note_price_dencity_tax,
+    note_refined_price_used,
+    note_unpublished_item,
+)
 
 logger = get_extension_logger(__name__)
 
@@ -92,15 +102,24 @@ def get_price_dencity_tax(program, item_value, item_volume, item_quantity):
     if program.price_dencity_modifier:
 
         if not item_volume <= 0:
-            item_isk_dencity = item_value / (item_volume * item_quantity)
+            item_isk_dencity = item_value / item_volume
         else:
             item_isk_dencity = False
 
-        logger.debug("Values: Our item isk dencity is at %s ISK/m³" % item_isk_dencity)
+        logger.debug(
+            "Values: Our item isk dencity is at %s ISK/m³ with value: %s, volume: %s"
+            % (item_isk_dencity, item_value, item_volume)
+        )
 
         if item_isk_dencity < program.price_dencity_treshold and item_isk_dencity:
+            logger.debug(
+                "Isk dencity under threshold value, applying extra taxes of %s"
+                % program.price_dencity_tax
+            )
+
             return program.price_dencity_tax
         else:
+            logger.debug("Isk dencity above threshold value, no extra taxes added")
             return False
     else:
         return False
@@ -126,51 +145,26 @@ def get_item_prices(item_type, name, quantity, program):
         if program_item_settings:
             item_disallowed = program_item_settings.disallow_item
 
-            if item_disallowed:
-                note = {
-                    "icon": "fa-hand-paper",
-                    "color": "red",
-                    "message": "%s is disallowed in this program" % name,
-                }
+            notes.append(note_item_disallowed(item_disallowed, name))
 
-                notes.append(note)
         else:
             item_disallowed = False
     else:
         if program_item_settings:
             item_disallowed = program_item_settings.disallow_item
 
-            if item_disallowed:
-                note = {
-                    "icon": "fa-hand-paper",
-                    "color": "red",
-                    "message": "%s is disallowed in this program" % name,
-                }
+            notes.append(note_item_disallowed(item_disallowed, name))
 
-                notes.append(note)
         else:
             item_disallowed = True
 
-            note = {
-                "icn": "fa-hand-paper",
-                "color": "red",
-                "message": "%s is disallowed in this program" % name,
-            }
-
-            notes.append(note)
+            notes.append(note_item_disallowed(item_disallowed, name))
 
     # If item is somehow not published (expired items etc.)
     if not item_type.published:
         item_disallowed = True
 
-        note = {
-            "icon": "fa-hand-paper",
-            "color": "red",
-            "message": "%s is not a published item. Special commondite or expired item?"
-            % name,
-        }
-
-        notes.append(note)
+        notes.append(note_unpublished_item(name))
 
     if not item_disallowed:
 
@@ -206,21 +200,7 @@ def get_item_prices(item_type, name, quantity, program):
                 eve_type_id=item_type.id
             ).prefetch_related("eve_type")
 
-            if type_materials.count() == 0:
-
-                note = {
-                    "icon": "fa-exclamation-triangle",
-                    "color": "red",
-                    "message": "Refined price valuation is used in this program but TypeMaterials for %s are missing from the database."
-                    % name,
-                }
-
-                notes.append(note)
-
-                logger.error(
-                    "TypeMaterials not found for %s. Did you forget to run buybackprogram_load_data?"
-                    % name
-                )
+            notes.append(note_missing_typematerials(type_materials, name))
 
             # Get price details for the materials inside the item
             for material in type_materials:
@@ -318,7 +298,7 @@ def get_item_values(item_type, item_prices, program):
     type_raw_value = False
     compression_raw_value = False
 
-    # Get values for the type prices (base prices) if we have any
+    # Get values for the type prices (base prices)
     if item_prices["raw_prices"]:
 
         quantity = item_prices["raw_prices"]["quantity"]
@@ -360,27 +340,11 @@ def get_item_values(item_type, item_prices, program):
             "notes": [],
         }
 
-        if price_dencity_tax:
-            note = {
-                "icon": "fa-weight-hanging",
-                "color": "orange",
-                "message": "%s has price dencity of %s isk/m³, %s %s low price dencity tax applied"
-                % (raw_item["name"], price_dencity, price_dencity_tax, "%"),
-            }
+        raw_item["notes"].append(
+            note_price_dencity_tax(raw_item["name"], price_dencity, price_dencity_tax)
+        )
+        raw_item["notes"].append(note_item_specific_tax(item_type.name, item_tax))
 
-            item_prices["notes"].append(note)
-
-        # Add notes for extr taxes
-        if item_tax > 0:
-
-            note = {
-                "icon": "fa-percentage",
-                "color": "orange",
-                "message": "%s has an additional %s %s item spesific tax applied on it"
-                % (item_type.name, item_tax, "%"),
-            }
-            raw_item["notes"].append(note)
-            item_prices["notes"].append(note)
     else:
         raw_item = {
             "unite_value": False,
@@ -389,7 +353,7 @@ def get_item_values(item_type, item_prices, program):
             "raw_value": False,
         }
 
-    # Get values for item materials
+    # Get values for refined variant
     if item_prices["material_prices"]:
 
         refined = {
@@ -412,10 +376,13 @@ def get_item_values(item_type, item_prices, program):
             buy = material["buy"]
             price = buy
             price_dencity = price / materials.volume
+            price_dencity_tax = get_price_dencity_tax(
+                program, price, materials.volume, quantity
+            )
             program_tax = program.tax
             item_tax = get_item_tax(program, material["id"])
             refining_rate = program.refining_rate / 100
-            tax_multiplier = (100 - (program_tax + item_tax)) / 100
+            tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
             raw_value = quantity * refining_rate * price
             value = raw_value * tax_multiplier
@@ -428,8 +395,8 @@ def get_item_values(item_type, item_prices, program):
                 "sell": sell,
                 "program_tax": program_tax,
                 "item_tax": item_tax,
-                "price_dencity_tax": 0,
-                "total_tax": program_tax + item_tax,
+                "price_dencity_tax": price_dencity_tax,
+                "total_tax": program_tax + item_tax + price_dencity_tax,
                 "price_dencity": price_dencity,
                 "unit_value": price * tax_multiplier,
                 "raw_value": raw_value,
@@ -437,17 +404,10 @@ def get_item_values(item_type, item_prices, program):
                 "notes": [],
             }
 
-            # Add notes for extr taxes
-            if item_tax > 0:
-
-                note = {
-                    "icon": "fa-percentage",
-                    "color": "orange",
-                    "message": "%s has an additional %s %s item spesific tax applied on it"
-                    % (materials.name, item_tax, "%"),
-                }
-
-                r["notes"].append(note)
+            r["notes"].append(
+                note_price_dencity_tax(materials.name, price_dencity, price_dencity_tax)
+            )
+            r["notes"].append(note_item_specific_tax(materials.name, item_tax))
 
             refined["materials"].append(r)
 
@@ -464,7 +424,7 @@ def get_item_values(item_type, item_prices, program):
             "unit_value": False,
         }
 
-    # Calculate values for compressed variant
+    # Get values for compressed variant
     if item_prices["compression_prices"]:
 
         compressed_version = EveType.objects.filter(
@@ -506,17 +466,14 @@ def get_item_values(item_type, item_prices, program):
             "notes": [],
         }
 
-        # Add notes for extr taxes
-        if item_tax > 0:
-
-            note = {
-                "icon": "fa-percentage",
-                "color": "orange",
-                "message": "%s has an additional %s %s item spesific tax applied on it"
-                % (compressed_version.name, item_tax, "%"),
-            }
-
-            compressed["notes"].append(note)
+        compressed["notes"].append(
+            note_price_dencity_tax(
+                compressed_version.name, price_dencity, price_dencity_tax
+            )
+        )
+        compressed["notes"].append(
+            note_item_specific_tax(compressed_version.name, item_tax)
+        )
     else:
         compressed = {
             "value": False,
@@ -527,12 +484,7 @@ def get_item_values(item_type, item_prices, program):
 
     if not has_buy_price(item_prices):
 
-        note = {
-            "icon": "fa-question",
-            "color": "red",
-            "message": "%s has no price data" % item_type.name,
-        }
-        item_prices["notes"].append(note)
+        item_prices["notes"].append(note_no_price_data(item_type.name))
 
         raw_item = {
             "id": item_type.id,
@@ -564,28 +516,40 @@ def get_item_values(item_type, item_prices, program):
 
     # Determine what value we will use for buy value
     if buy_value == raw_item["value"]:
+
         raw_item["is_buy_value"] = True
         tax_value = raw_item["total_tax"]
+
+        item_prices["notes"].append(
+            note_price_dencity_tax(raw_item["name"], price_dencity, price_dencity_tax)
+        )
+        item_prices["notes"].append(note_item_specific_tax(raw_item["name"], item_tax))
+
     elif buy_value == refined["value"]:
+
         refined["is_buy_value"] = True
         tax_value = refined["total_tax"]
-        note = {
-            "icon": "fa-exchange-alt",
-            "color": "blue",
-            "message": "Best price: Using refined price for %s" % raw_item["name"],
-        }
 
-        item_prices["notes"].append(note)
+        item_prices["notes"].append(note_refined_price_used(raw_item["name"]))
+
+        item_prices["notes"].append(
+            note_price_dencity_tax(raw_item["name"], price_dencity, price_dencity_tax)
+        )
+        item_prices["notes"].append(
+            note_item_specific_tax(raw_item["name"] + " material", item_tax)
+        )
+
     elif buy_value == compressed["value"]:
+
         compressed["is_buy_value"] = True
         tax_value = compressed["total_tax"]
-        note = {
-            "icon": "fa-exchange-alt",
-            "color": "blue",
-            "message": "Best price: Using compressed price for %s" % raw_item["name"],
-        }
 
-        item_prices["notes"].append(note)
+        item_prices["notes"].append(note_compressed_price_used(raw_item["name"]))
+
+        item_prices["notes"].append(
+            note_price_dencity_tax(raw_item["name"], price_dencity, price_dencity_tax)
+        )
+        item_prices["notes"].append(note_item_specific_tax(raw_item["name"], item_tax))
 
     logger.debug("Values: Best buy value for %s is %s ISK" % (item_type, buy_value))
 

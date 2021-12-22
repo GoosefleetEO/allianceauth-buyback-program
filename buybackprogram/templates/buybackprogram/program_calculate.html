@@ -84,7 +84,7 @@
 
     </table>
 </div>
-
+{{buyback_data}}
 <div class="table-responsive" style="margin: 20px 0;">
     <h4>Item details</h4>
     <p class="text-muted">Details for each item and their price calculations</p>
@@ -134,7 +134,7 @@
                             <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.unit_value|floatformat:0|intcomma|price }}</td>
                             <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.value|floatformat:0|intcomma|price }}</td>
                             <td>
-                                {% for note in item.item_values.normal.notes%}
+                                {% for note in item.item_values.normal.notes %}
                                     <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
                                 {% endfor %}
                             </td>

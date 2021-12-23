@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.1.3] - 2021-12-23
+
+### Added
+- Missing manifest entry for swagger.json
+
 ## [0.1.2] - 2021-12-23
 
 ### Changed

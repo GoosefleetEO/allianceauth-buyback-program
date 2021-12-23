@@ -12,3 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Fixed
+
+## [0.1.2] - 2021-12-23
+
+### Changed
+- Tracking item creation changed to bulk create to decrease database calls
+
+### Fixed
+- Multiple typos

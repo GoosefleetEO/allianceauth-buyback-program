@@ -732,7 +732,6 @@ def get_tracking_number(
                 quantity=item["item_values"]["quantity"],
             )
 
-            
             objs.append(tracking_item)
     try:
         TrackingItem.objects.bulk_create(objs)

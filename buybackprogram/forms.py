@@ -10,6 +10,11 @@ class ProgramForm(forms.ModelForm):
     class Meta:
         model = Program
         fields = "__all__"
+        labels = {
+            "price_dencity_modifier": "Price density modifier",
+            "price_dencity_treshold": "Price density threshold",
+            "price_dencity_tax": "Price density tax",
+        }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)

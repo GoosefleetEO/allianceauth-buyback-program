@@ -423,11 +423,11 @@ class Program(models.Model):
             )
         if self.price_dencity_modifier and not self.price_dencity_tax:
             raise ValidationError(
-                "Price dencity is used but value for price dencity tax is missing"
+                "Price density is used but value for price density tax is missing"
             )
         if self.price_dencity_modifier and not self.price_dencity_treshold:
             raise ValidationError(
-                "Price dencity is used but value for price dencity treshold is missing"
+                "Price density is used but value for price density threshold is missing"
             )
         if self.use_refined_value and not self.refining_rate:
             raise ValidationError(

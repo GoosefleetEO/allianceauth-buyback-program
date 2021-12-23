@@ -36,7 +36,7 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 	- Global program tax
 	- Item specified tax
 	- Hauling fuel cost
-	- Low price dencity tax
+	- Dynamic low price density tax
 - Best price variant for ore:
 	- Supports raw, compressed, refined and any combination of the 3.
 	- Will calculate price by the best available pricing method
@@ -166,24 +166,22 @@ You can add a fuel cost expense that is applied on each item sold via this progr
 This setting is aimed more to null sec buyback programs to make it easier to calculate your taxes and display your members the expenses you have when selling.
 {: .alert .alert-info}
 
-#### Price dencity modifier
-You can use a price dencity modifier which will add a additional tax on items with low price per volume ratio such as T1 ships.
+#### Price density modifier
+You can use a price density modifier which will add a additional tax on items with low price per volume ratio such as T1 ships.
 
 This setting is aimer more at high sec buyback programs.
 {: .alert .alert-info}
 
-This setting will also be applied on ore price variants
-{: .alert .alert-warning}
-
-#### Price dencity threshold
-This is the lowest isk/m^3 ratio for items that are accepted to the program without the price dencity tax. Finding your own limits depends on your logistical department.
+#### Price density threshold
+This is the lowest isk/m^3 ratio for items that are accepted to the program without the price density tax. Finding your own limits depends on your logistical department.
 
 For example: Tritanium is 500 ISK/m³ @ 5 ISK per unit price. PLEX is 14,5Trillion ISK/m³ @2.9M per unit price.
 
-#### Price dencity tax
-This is the tax which will be applied to items with a price dencity bellow the price dencity treshold
+#### Price density tax
+This is the tax which will be applied to items with a price density below the price density threshold
 
-You should avoid using both the hauling fuel cost and the price dencity modifier at the same time as their function is fairly similar.
+You should avoid using both the hauling fuel cost and the price density modifier at the same time as their function is fairly similar.
+
 {: .alert .alert-warning}
 
 #### Allow all items

@@ -14,7 +14,7 @@ from .app_settings import BUYBACKPROGRAM_TASKS_TIME_LIMIT
 
 logger = get_extension_logger(__name__)
 
-DEFAULT_TASK_PRIORITY = 6
+NORMAL_TASK_PRIORITY = 4
 
 # Create your tasks here
 TASK_DEFAULT_KWARGS = {
@@ -122,7 +122,7 @@ def update_all_contracts():
     for owner in Owner.objects.all():
         update_contracts_for_owner.apply_async(
             kwargs={"owner_pk": owner.pk},
-            priority=DEFAULT_TASK_PRIORITY,
+            priority=NORMAL_TASK_PRIORITY,
         )
 
 

@@ -1,3 +1,4 @@
+{::options parse_block_html="true" /}
 # Buyback Program
 
 An Alliance Auth app for creating buyback programs and to allow users calculate prices for buyback contracts.
@@ -8,6 +9,7 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 [![chat](https://img.shields.io/discord/790364535294132234)](https://discord.gg/zmh52wnfvM)
 
 ## Contents
+{:toc}
 - [Images](#images)
 - [Features](#features)
 - [Installation](#installation)

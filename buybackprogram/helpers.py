@@ -720,6 +720,8 @@ def get_tracking_number(
 
     tracking.save()
 
+    objs = []
+
     for item in buyback_data:
 
         if item["type_data"]:
@@ -730,6 +732,12 @@ def get_tracking_number(
                 quantity=item["item_values"]["quantity"],
             )
 
-            tracking_item.save()
+            
+            objs.append(tracking_item)
+    try:
+        TrackingItem.objects.bulk_create(objs)
+        logger.debug("Succesfully created items for tracking %s" % tracking_number)
+    except Error as e:
+        logger.error("Error creating tracking items: %s" % e)
 
     return tracking_number

@@ -24,7 +24,7 @@ def setting_icons(option, program):
         "price_dencity_modifier": {
             "icon": "fa-compress-arrows-alt",
             "color": False,
-            "message": "Items with price dencity bellow {} isk/m³ will have an additional {} % tax on them.".format(
+            "message": "Items with price density below {} isk/m³ will have an additional {} % tax on them.".format(
                 program.price_dencity_treshold, program.price_dencity_tax
             ),
         },

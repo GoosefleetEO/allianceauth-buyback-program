@@ -96,7 +96,7 @@ def get_price_dencity_tax(program, item_value, item_volume, item_quantity):
         else:
             item_isk_dencity = False
 
-        logger.debug("Values: Our item isk dencity is at %s ISK/m³" % item_isk_dencity)
+        logger.debug("Values: Our item isk density is at %s ISK/m³" % item_isk_dencity)
 
         if item_isk_dencity < program.price_dencity_treshold and item_isk_dencity:
             return program.price_dencity_tax
@@ -364,7 +364,7 @@ def get_item_values(item_type, item_prices, program):
             note = {
                 "icon": "fa-weight-hanging",
                 "color": "orange",
-                "message": "%s has price dencity of %s isk/m³, %s %s low price dencity tax applied"
+                "message": "%s has price density of %s isk/m³, %s %s low price density tax applied"
                 % (raw_item["name"], price_dencity, price_dencity_tax, "%"),
             }
 

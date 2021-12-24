@@ -144,9 +144,9 @@ class Owner(models.Model):
 
         logger.debug("Fetching corporation contracts for %s" % self.character)
 
-        contracts = self._fetch_corporation_contracts()
+        corporation_contracts = self._fetch_corporation_contracts()
 
-        for contract in contracts:
+        for contract in corporation_contracts:
 
             # Only get contracts with the correct prefill ticker
             if BUYBACKPROGRAM_TRACKING_PREFILL in contract["title"]:

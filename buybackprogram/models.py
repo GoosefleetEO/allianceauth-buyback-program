@@ -3,7 +3,7 @@ from typing import Tuple
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import Error, models
 from esi.errors import TokenExpiredError, TokenInvalidError
 from esi.models import Token
 from eveuniverse.models import EveSolarSystem, EveType
@@ -126,18 +126,31 @@ class Owner(models.Model):
                         token=token.valid_access_token(),
                     ).results()
 
+                    objs = []
+
                     for item in contract_items:
 
                         cont = Contract.objects.get(contract_id=contract["contract_id"])
                         itm = EveType.objects.get(pk=item["type_id"])
 
-                        obj, created = ContractItem.objects.update_or_create(
+                        contract_item = ContractItem(
                             contract=cont,
-                            defaults={
-                                "contract": cont,
-                                "eve_type": itm,
-                                "quantity": item["quantity"],
-                            },
+                            eve_type=itm,
+                            quantity=item["quantity"],
+                        )
+
+                        objs.append(contract_item)
+
+                    try:
+                        ContractItem.objects.bulk_create(objs)
+                        logger.debug(
+                            "Succesfully added items for contract %s into database"
+                            % contract["contract_id"]
+                        )
+                    except Error as e:
+                        logger.error(
+                            "Error adding items for contract %s: %s"
+                            % (contract["contract_id"], e)
                         )
 
                     logger.debug(
@@ -187,24 +200,32 @@ class Owner(models.Model):
                         token=token.valid_access_token(),
                     ).results()
 
+                    objs = []
+
                     for item in contract_items:
 
                         cont = Contract.objects.get(contract_id=contract["contract_id"])
                         itm = EveType.objects.get(pk=item["type_id"])
 
-                        obj, created = ContractItem.objects.update_or_create(
+                        contract_item = ContractItem(
                             contract=cont,
-                            defaults={
-                                "contract": cont,
-                                "eve_type": itm,
-                                "quantity": item["quantity"],
-                            },
+                            eve_type=itm,
+                            quantity=item["quantity"],
                         )
 
-                    logger.debug(
-                        "Updated items for corporation contract %s"
-                        % contract["contract_id"]
-                    )
+                        objs.append(contract_item)
+
+                    try:
+                        ContractItem.objects.bulk_create(objs)
+                        logger.debug(
+                            "Succesfully added items for contract %s into database"
+                            % contract["contract_id"]
+                        )
+                    except Error as e:
+                        logger.error(
+                            "Error adding items for contract %s: %s"
+                            % (contract["contract_id"], e)
+                        )
                 else:
                     logger.debug(
                         "Corporation contract %s updated." % contract["contract_id"]

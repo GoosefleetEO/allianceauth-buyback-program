@@ -55,6 +55,8 @@ def program_calculate(request, program_pk):
                     # get item name and quantity
                     parts = item.split("\t")
 
+                    logger.debug("Got %s parts" % parts)
+
                     # Get item name from the first part
                     name = parts[0].replace("*", "")
 

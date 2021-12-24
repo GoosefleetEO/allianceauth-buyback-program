@@ -40,7 +40,6 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 - Best price variant for ore:
 	- Supports raw, compressed, refined and any combination of the 3.
 	- Will calculate price by the best available pricing method
-
 - Allow / disallow unpacked items
 - Restrict program to:
 	- States
@@ -75,15 +74,13 @@ To load type data run the command ```python manage.py buybackprogram_load_data``
 
 You can follow the progress of the load from your auth da
 
-You will need to wait for the type data to load up before you can start to use the plugin. Trying to calculate prices for items that have not been preloaded into the database will result in 0 prices for the item degardless of your settings.
-{: .alert .alert-danger}
+> :warning: You will need to wait for the type data to load up before you can start to use the plugin. Trying to calculate prices for items that have not been preloaded into the database will result in 0 prices for the item degardless of your settings.
 
 ### Price data
 
 After you have preloaded the type data you can preload price data into the database. Price data preloading is not mandatory but will speed up the first buyback calculations.
 
-If price information is not found for items when the prices are calcualted the first time the prices for that item will be fetched during the calculation process. This will increase the calculation time for the contract.
-{: .alert .alert-info}
+> :information_source: If price information is not found for items when the prices are calcualted the first time the prices for that item will be fetched during the calculation process. This will increase the calculation time for the contract.
 
 To preload price data run ```python manage.py buybackprogram_load_prices```
 
@@ -105,13 +102,13 @@ CELERYBEAT_SCHEDULE['buybackprogram_update_all_prices'] = {
 ```
 
 #### Contract updates
-To fetch contracts from your program managers add the following line in your `local.py` settings file. This will update your contracts every hour
+To fetch contracts from your program managers add the following line in your `local.py` settings file. This will update your contracts every 15 minutes
 
 ```
 # Buybackprogram contract updates
 CELERYBEAT_SCHEDULE['buybackprogram_update_all_contracts'] = {
     'task': 'buybackprogram.tasks.update_all_contracts',
-    'schedule': crontab(minute=0, hour='*'),
+    'schedule': crontab(minute=0, hour='*/15'),
 }
 ```
 
@@ -163,14 +160,13 @@ General tax is applied on all items sold via the buyback. You can add additional
 #### Hauling fuel cost
 You can add a fuel cost expense that is applied on each item sold via this program based on the volume of the item.
 
-This setting is aimed more to null sec buyback programs to make it easier to calculate your taxes and display your members the expenses you have when selling.
-{: .alert .alert-info}
+> :information_source: This setting is aimed more to null sec buyback programs to make it easier to calculate your taxes and display your members the expenses you have when selling.
+
 
 #### Price density modifier
 You can use a price density modifier which will add a additional tax on items with low price per volume ratio such as T1 ships.
 
-This setting is aimer more at high sec buyback programs.
-{: .alert .alert-info}
+> :information_source: This setting is aimer more at high sec buyback programs.
 
 #### Price density threshold
 This is the lowest isk/m^3 ratio for items that are accepted to the program without the price density tax. Finding your own limits depends on your logistical department.
@@ -180,9 +176,7 @@ For example: Tritanium is 500 ISK/m³ @ 5 ISK per unit price. PLEX is 14,5Trilli
 #### Price density tax
 This is the tax which will be applied to items with a price density below the price density threshold
 
-You should avoid using both the hauling fuel cost and the price density modifier at the same time as their function is fairly similar.
-
-{: .alert .alert-warning}
+> :warning: You should avoid using both the hauling fuel cost and the price density modifier at the same time as their function is fairly similar.
 
 #### Allow all items
 If you wish to allow any types of items to be sold via this program keep this box ticker.
@@ -194,8 +188,7 @@ If you do not want to accept all items you can set this box to False. By doing t
 ### Ore settings
 Ore type items such as asteroid, moon goo and ice have additional pricing methods you can use. You can use a mix of any of the three pricing models.
 
-When using more than one pricing model the best price will be used as the buy value.
-{: .alert .alert-info}
+> :information_source: When using more than one pricing model the best price will be used as the buy value.
 
 #### Use Refined value
 If you wish to calculate ore buyback value based on the mineral values tick this box.
@@ -219,6 +212,7 @@ You can restict the visibnility of the buyback programs to groups and states wit
 
 If no options are selected the program will be visible for everyone with the `basic_access` role.
 
+<<<<<<< HEAD
 Do not mix group and state restrictions as this may lead into logic error. If you need to mix then create a separate programs for them.
 {: .alert .alert-danger}
 
@@ -229,3 +223,6 @@ Set a item specific tax for each item. The tax wil be applied on top of the defa
 
 The item specific tax can also be a negative value allowing you to decrease taxes on certain items.
 {: .alert .alert-info}
+=======
+> :no_entry: Do not mix group and state restrictions as this may lead into logic error. If you need to mix then create a separate programs for them.
+>>>>>>> release/0.1.4

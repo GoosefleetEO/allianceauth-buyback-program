@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.1.6] - 2021-12-24
+
+### Fixed
+- Calculation quantities did not parse correctly if the user had hidden or added more columns to the default detailed view.
+
 ## [0.1.5] - 2021-12-24
 
 ### Fixed

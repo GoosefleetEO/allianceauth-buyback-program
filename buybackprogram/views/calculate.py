@@ -55,7 +55,7 @@ def program_calculate(request, program_pk):
                     # get item name and quantity
                     parts = item.split("\t")
 
-                    logger.debug("Got %s parts" % parts)
+                    logger.debug("Got %s parts from parser: %s" % (len(parts), parts))
 
                     # Get item name from the first part
                     name = parts[0].replace("*", "")
@@ -87,8 +87,28 @@ def program_calculate(request, program_pk):
                         }
                         notes.append(note)
 
+                    # Anything else
+                    if len(parts) == 1:
+                        if program.allow_unpacked_items:
+
+                            quantity = 1
+
+                        else:
+
+                            quantity = 1
+                            item_accepted = False
+
+                            note = {
+                                "icon": "fa-box-open",
+                                "color": "red",
+                                "message": "Unpacked items are now allowed at this location. Repack %s to get a price for it"
+                                % name,
+                            }
+
+                            notes.append(note)
+
                     # Icons view
-                    if len(parts) == 2:
+                    elif len(parts) == 2:
                         # Get item quantity.
                         if not parts[1] == "\r":
 
@@ -120,7 +140,7 @@ def program_calculate(request, program_pk):
                             notes.append(note)
 
                     # Detail view
-                    elif len(parts) == 7:
+                    else:
                         # Get item quantity.
                         if parts[1]:
 
@@ -134,26 +154,6 @@ def program_calculate(request, program_pk):
                             )
 
                         elif program.allow_unpacked_items:
-
-                            quantity = 1
-
-                        else:
-
-                            quantity = 1
-                            item_accepted = False
-
-                            note = {
-                                "icon": "fa-box-open",
-                                "color": "red",
-                                "message": "Unpacked items are now allowed at this location. Repack %s to get a price for it"
-                                % name,
-                            }
-
-                            notes.append(note)
-
-                    # Anything else
-                    else:
-                        if program.allow_unpacked_items:
 
                             quantity = 1
 

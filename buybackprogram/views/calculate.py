@@ -1,5 +1,3 @@
-import re
-
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect, render
 from django.utils.html import format_html
@@ -93,7 +91,13 @@ def program_calculate(request, program_pk):
                         if not parts[1] == "\r":
 
                             # Get quantities and format the different localization imputs
-                            quantity = int(re.sub(r"\D", "", parts[1]))
+                            quantity = int(
+                                parts[1]
+                                .replace(" ", "")
+                                .replace(".", "")
+                                .replace(",", "")
+                                .replace("\xa0", "")
+                            )
 
                         elif program.allow_unpacked_items:
 
@@ -123,6 +127,7 @@ def program_calculate(request, program_pk):
                                 parts[1]
                                 .replace(" ", "")
                                 .replace(".", "")
+                                .replace(",", "")
                                 .replace("\xa0", "")
                             )
 

@@ -13,14 +13,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-## [0.1.5] - yyyy-mm-dd
-
-### Added
-
-### Changed
+## [0.1.5] - 2021-12-24
 
 ### Fixed
 - Fixed #3
+- Fixes #4 by adding support for UK localization
 
 ## [0.1.4] - 2021-12-24
 

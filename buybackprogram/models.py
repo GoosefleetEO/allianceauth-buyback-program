@@ -93,20 +93,22 @@ class Owner(models.Model):
             # Only get contracts with the correct prefill ticker
             if BUYBACKPROGRAM_TRACKING_PREFILL in contract["title"]:
                 obj, created = Contract.objects.update_or_create(
-                    assignee_id=contract["assignee_id"],
-                    availability=contract["availability"],
                     contract_id=contract["contract_id"],
-                    date_completed=contract["date_completed"],
-                    date_expired=contract["date_expired"],
-                    date_issued=contract["date_issued"],
-                    for_corporation=contract["for_corporation"],
-                    issuer_corporation_id=contract["issuer_corporation_id"],
-                    issuer_id=contract["issuer_id"],
-                    price=contract["price"],
-                    status=contract["status"],
-                    title=contract["title"],
-                    volume=contract["volume"],
-                    defaults={"contract_id": contract["contract_id"]},
+                    defaults={
+                        "contract_id": contract["contract_id"],
+                        "assignee_id": contract["assignee_id"],
+                        "availability": contract["availability"],
+                        "date_completed": contract["date_completed"],
+                        "date_expired": contract["date_expired"],
+                        "date_issued": contract["date_issued"],
+                        "for_corporation": contract["for_corporation"],
+                        "issuer_corporation_id": contract["issuer_corporation_id"],
+                        "issuer_id": contract["issuer_id"],
+                        "price": contract["price"],
+                        "status": contract["status"],
+                        "title": contract["title"],
+                        "volume": contract["volume"],
+                    },
                 )
 
                 # If we created an new contract
@@ -131,9 +133,11 @@ class Owner(models.Model):
 
                         obj, created = ContractItem.objects.update_or_create(
                             contract=cont,
-                            eve_type=itm,
-                            quantity=item["quantity"],
-                            defaults={"contract": cont},
+                            defaults={
+                                "contract": cont,
+                                "eve_type": itm,
+                                "quantity": item["quantity"],
+                            },
                         )
 
                     logger.debug(
@@ -151,20 +155,22 @@ class Owner(models.Model):
             # Only get contracts with the correct prefill ticker
             if BUYBACKPROGRAM_TRACKING_PREFILL in contract["title"]:
                 obj, created = Contract.objects.update_or_create(
-                    assignee_id=contract["assignee_id"],
-                    availability=contract["availability"],
                     contract_id=contract["contract_id"],
-                    date_completed=contract["date_completed"],
-                    date_expired=contract["date_expired"],
-                    date_issued=contract["date_issued"],
-                    for_corporation=contract["for_corporation"],
-                    issuer_corporation_id=contract["issuer_corporation_id"],
-                    issuer_id=contract["issuer_id"],
-                    price=contract["price"],
-                    status=contract["status"],
-                    title=contract["title"],
-                    volume=contract["volume"],
-                    defaults={"contract_id": contract["contract_id"]},
+                    defaults={
+                        "contract_id": contract["contract_id"],
+                        "assignee_id": contract["assignee_id"],
+                        "availability": contract["availability"],
+                        "date_completed": contract["date_completed"],
+                        "date_expired": contract["date_expired"],
+                        "date_issued": contract["date_issued"],
+                        "for_corporation": contract["for_corporation"],
+                        "issuer_corporation_id": contract["issuer_corporation_id"],
+                        "issuer_id": contract["issuer_id"],
+                        "price": contract["price"],
+                        "status": contract["status"],
+                        "title": contract["title"],
+                        "volume": contract["volume"],
+                    },
                 )
 
                 if created:
@@ -188,9 +194,11 @@ class Owner(models.Model):
 
                         obj, created = ContractItem.objects.update_or_create(
                             contract=cont,
-                            eve_type=itm,
-                            quantity=item["quantity"],
-                            defaults={"contract": cont},
+                            defaults={
+                                "contract": cont,
+                                "eve_type": itm,
+                                "quantity": item["quantity"],
+                            },
                         )
 
                     logger.debug(

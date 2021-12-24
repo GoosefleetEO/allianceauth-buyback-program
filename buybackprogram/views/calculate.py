@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect, render
 from django.utils.html import format_html
@@ -56,7 +58,7 @@ def program_calculate(request, program_pk):
                     parts = item.split("\t")
 
                     # Get item name from the first part
-                    name = parts[0]
+                    name = parts[0].replace("*", "")
 
                     item_type = EveType.objects.filter(name=name).first()
 
@@ -91,12 +93,7 @@ def program_calculate(request, program_pk):
                         if not parts[1] == "\r":
 
                             # Get quantities and format the different localization imputs
-                            quantity = int(
-                                parts[1]
-                                .replace(" ", "")
-                                .replace(".", "")
-                                .replace("\xa0", "")
-                            )
+                            quantity = int(re.sub(r"\D", "", parts[1]))
 
                         elif program.allow_unpacked_items:
 

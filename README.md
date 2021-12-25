@@ -108,7 +108,7 @@ To fetch contracts from your program managers add the following line in your `lo
 # Buybackprogram contract updates
 CELERYBEAT_SCHEDULE['buybackprogram_update_all_contracts'] = {
     'task': 'buybackprogram.tasks.update_all_contracts',
-    'schedule': crontab(minute=0, hour='*/15'),
+    'schedule': (minute='*/15'),
 }
 ```
 
@@ -212,17 +212,11 @@ You can restict the visibnility of the buyback programs to groups and states wit
 
 If no options are selected the program will be visible for everyone with the `basic_access` role.
 
-<<<<<<< HEAD
-Do not mix group and state restrictions as this may lead into logic error. If you need to mix then create a separate programs for them.
-{: .alert .alert-danger}
+> :no_entry: Do not mix group and state restrictions as this may lead into logic error. If you need to mix then create a separate programs for them.
 
 ## Program item settings
 You can modify individual item settings or allow items for a program that has set `allow all items = False` via the `special taxes` menu for each program.
 
 Set a item specific tax for each item. The tax wil be applied on top of the default tax for the program. You can also disallow an item from beeing accepted in the contract completely.
 
-The item specific tax can also be a negative value allowing you to decrease taxes on certain items.
-{: .alert .alert-info}
-=======
-> :no_entry: Do not mix group and state restrictions as this may lead into logic error. If you need to mix then create a separate programs for them.
->>>>>>> release/0.1.4
+> :information_source: The item specific tax can also be a negative value allowing you to decrease taxes on certain items.

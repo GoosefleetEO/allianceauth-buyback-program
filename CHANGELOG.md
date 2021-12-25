@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.1.7] - 2021-12-24
+
+### Added
+
+### Changed
+
+### Fixed
+- Availability field not displaying corp if owner is a corporation on calculation page
+- Fixes #7, refined price not used correctly when selling compressed price with only refined pricing method.
+
 ## [0.1.6] - 2021-12-24
 
 ### Fixed

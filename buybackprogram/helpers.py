@@ -170,11 +170,7 @@ def get_item_prices(item_type, name, quantity, program):
     if not item_disallowed:
 
         # If raw ore value should not be taken into account
-        if (
-            not program.use_raw_ore_value
-            and is_ore(item_type.eve_group.id)
-            and "Compressed" not in item_type.name
-        ):
+        if not program.use_raw_ore_value and is_ore(item_type.eve_group.id):
             item_raw_price = {
                 "id": item_type.id,
                 "quantity": quantity,
@@ -233,13 +229,13 @@ def get_item_prices(item_type, name, quantity, program):
             logger.debug("Prices: No refined value used for %s" % name)
 
         # Get compressed versions of the ores that are not yet compressed
-        if (
-            is_ore(item_type.eve_group.id)
-            and "Compressed" not in name
-            and program.use_compressed_value
-        ):
+        if is_ore(item_type.eve_group.id) and program.use_compressed_value:
 
-            compresed_name = "Compressed " + name
+            if "Compressed" in name:
+                compresed_name = name
+            else:
+                compresed_name = "Compressed " + name
+
             compresed_type = EveType.objects.filter(name=compresed_name).first()
             compression_ratio = item_type.portion_size
 

@@ -22,7 +22,7 @@
             </tr>
             <tr>
                 <th>Availability:</th>
-                {% if program.corporation %}
+                {% if program.is_corporation %}
                     <td data-type="copy_value">{{program.owner.corporation}}</td>
                     <td><button data-type="copy"><i class="fas fa-copy"></i></button></td>
                 {% else %}

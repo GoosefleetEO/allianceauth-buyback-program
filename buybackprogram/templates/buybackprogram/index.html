@@ -27,7 +27,7 @@
                 <td>{{ program.tax }} %</td>
 
                 {% if program.is_corporation %}
-                    <td >Corp: {{ program.owner.corporation }}</td>
+                    <td >{{ program.owner.corporation }}</td>
                 {% else %}
                     <td >{{ program.owner.character.character }}</td>
                 {% endif %}

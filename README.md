@@ -108,8 +108,9 @@ To fetch contracts from your program managers add the following line in your `lo
 # Buybackprogram contract updates
 CELERYBEAT_SCHEDULE['buybackprogram_update_all_contracts'] = {
     'task': 'buybackprogram.tasks.update_all_contracts',
-    'schedule': (minute='*/15'),
+    'schedule': crontab(minute='*/15'),
 }
+
 ```
 
 ## Permissions

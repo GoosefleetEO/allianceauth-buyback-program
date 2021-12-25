@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-## [0.1.7] - 2021-12-24
+## [0.1.8] - 2021-12-24
 
 ### Fixed
 - Availability field not displaying corp if owner is a corporation on calculation page

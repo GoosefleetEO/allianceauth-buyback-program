@@ -11,6 +11,11 @@ urlpatterns = [
     path("program_add", programs.program_add, name="program_add"),
     path("location_add", programs.location_add, name="location_add"),
     url(
+        r"^location(?P<location_pk>[0-9]+)/remove$",
+        programs.location_remove,
+        name="location_remove",
+    ),
+    url(
         r"^program/(?P<program_pk>[0-9]+)/edit_item$",
         programs.program_edit_item,
         name="program_edit_item",

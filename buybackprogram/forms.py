@@ -2,7 +2,7 @@ from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 from eveuniverse.models import EveSolarSystem, EveType
 
-from buybackprogram.models import Owner, Program
+from buybackprogram.models import Location, Owner, Program
 
 
 class ProgramForm(forms.ModelForm):
@@ -21,6 +21,9 @@ class ProgramForm(forms.ModelForm):
 
         super(ProgramForm, self).__init__(*args, **kwargs)
         self.fields["owner"].queryset = Owner.objects.filter(user=self.user)
+        self.fields["location"].queryset = Location.objects.filter(
+            owner__user=self.user
+        )
 
 
 class ProgramItemForm(forms.Form):

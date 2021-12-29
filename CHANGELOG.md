@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.2.0] - yyyy-mm-dd
+
+### Added
+- Fixed #10, added ability to delete own locations
+
+### Changed
+
+### Fixed
+- Removed ability to use locations that were created by other managers.
+
 ## [0.1.8] - 2021-12-24
 
 ### Fixed

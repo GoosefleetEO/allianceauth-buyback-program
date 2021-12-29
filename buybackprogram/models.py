@@ -334,6 +334,13 @@ class Location(models.Model):
         related_name="+",
     )
 
+    owner = models.ForeignKey(
+        Owner,
+        help_text="Player that created the location",
+        null=True,
+        on_delete=models.deletion.CASCADE,
+    )
+
     def __str__(self):
         return self.eve_solar_system.name + " | " + self.name
 

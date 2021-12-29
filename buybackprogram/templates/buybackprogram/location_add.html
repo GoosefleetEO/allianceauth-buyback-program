@@ -24,10 +24,13 @@
       </thead>
       <tbody>
         {% for location in locations %}
-          <tr>
-            <td>{{location.eve_solar_system.name}}</td>
-            <td style="text-align: center;">{{location.name}}</td>
-          </tr>
+          {% if location.owner.user == request.user %}
+            <tr>
+              <td>{{location.eve_solar_system.name}}</td>
+              <td style="text-align: center;">{{location.name}}</td>
+              <td><a class="btn btn-sm btn-danger" href="{% url 'buybackprogram:location_remove' location_pk=location.id %}">Delete</a></td>
+            </tr>
+          {% endif %}
         {% endfor %}
       </tbody>
     </table>

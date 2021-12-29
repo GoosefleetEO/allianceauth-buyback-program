@@ -167,23 +167,26 @@ def location_add(request):
     locations = Location.objects.all()
 
     if request.method != "POST":
-        form = LocationForm()
+        form = LocationForm(user=request.user)
     else:
         form = LocationForm(
-            request.POST,
-            value=int(request.POST["eve_solar_system"]),
+            request.POST, value=int(request.POST["eve_solar_system"]), user=request.user
         )
 
         if form.is_valid():
             eve_solar_system = form.cleaned_data["eve_solar_system"]
             name = form.cleaned_data["name"]
 
+            owner = Owner.objects.get(user=request.user)
+
             created = Location.objects.update_or_create(
                 eve_solar_system=eve_solar_system,
                 name=name,
+                owner=owner,
                 defaults={
                     "eve_solar_system": eve_solar_system,
                     "name": name,
+                    "owner": owner,
                 },
             )
 
@@ -205,6 +208,42 @@ def location_add(request):
     }
 
     return render(request, "buybackprogram/location_add.html", context)
+
+
+@login_required
+@permission_required("buybackprogram.manage_programs")
+def location_remove(request, location_pk):
+
+    location = Location.objects.get(pk=location_pk)
+
+    if location.owner.user == request.user:
+        location.delete()
+
+        messages_plus.warning(
+            request,
+            format_html(
+                gettext_lazy(
+                    "Deleted location %(location)s. Any programs affiliated with this location has been removed as well."
+                )
+                % {
+                    "location": format_html(
+                        "<strong>{}</strong>", location.eve_solar_system
+                    ),
+                }
+            ),
+        )
+
+    else:
+        messages_plus.error(
+            request,
+            format_html(
+                gettext_lazy(
+                    "You did not create this location and thus you can't delete it."
+                )
+            ),
+        )
+
+    return redirect("/buybackprogram/location_add")
 
 
 @login_required

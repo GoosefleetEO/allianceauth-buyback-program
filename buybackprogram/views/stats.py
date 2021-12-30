@@ -15,6 +15,8 @@ logger = get_extension_logger(__name__)
 @permission_required("buybackprogram.basic_access")
 def my_stats(request):
 
+    valid_contracts = []
+
     values = {
         "outstanding": 0,
         "finished": 0,
@@ -26,41 +28,56 @@ def my_stats(request):
         "character__character_id", flat=True
     )
 
-    tracking = Tracking.objects.all()
+    tracking_numbers = Tracking.objects.all()
 
-    tracking_numbers = tracking.values_list("tracking_number", flat=True)
+    for tracking in tracking_numbers:
 
-    contracts = Contract.objects.filter(
-        issuer_id__in=characters,
-        title__in=tracking_numbers,
-    )
+        contract = Contract.objects.filter(
+            issuer_id__in=characters, title__contains=tracking.tracking_number
+        ).first()
 
-    for contract in contracts:
+        if contract:
 
-        if contract.status == "outstanding":
-            values["outstanding"] += contract.price
-            values["outstanding_count"] += 1
-        if contract.status == "finished":
-            values["finished"] += contract.price
-            values["finished_count"] += 1
+            logger.debug(
+                "Contract %s has a match in tracking numbers" % contract.contract_id
+            )
 
-        contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+            if contract.status == "outstanding":
+                values["outstanding"] += contract.price
+                values["outstanding_count"] += 1
+            if contract.status == "finished":
+                values["finished"] += contract.price
+                values["finished_count"] += 1
 
-        contract.items = ContractItem.objects.filter(contract=contract)
+            contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
 
-        contract_tracking = tracking.filter(tracking_number=contract.title).first()
+            logger.debug("Issuer name for contract is %s" % contract.issuer_name)
 
-        if contract_tracking.net_price != contract.price:
-            note = {
-                "icon": "fa-skull-crossbones",
-                "color": "red",
-                "message": "Tracked price does not match contract price. Either a mistake in the copy pasted values or seller has changed contracted items after calculating the price",
-            }
+            contract.items = ContractItem.objects.filter(contract=contract)
 
-            contract.note = note
+            if tracking.net_price != contract.price:
+                note = {
+                    "icon": "fa-skull-crossbones",
+                    "color": "red",
+                    "message": "Tracked price does not match contract price. Either a mistake in the copy pasted values or seller has changed contracted items after calculating the price",
+                }
+
+                contract.note = note
+
+            if not tracking.tracking_number == contract.title:
+                note = {
+                    "icon": "fa-exclamation",
+                    "color": "orange",
+                    "message": "Contract description contains extra characterse besides the tracking number. The description should be: '%s', instead it is: '%s'"
+                    % (tracking.tracking_number, contract.title),
+                }
+
+                contract.notes.append(note)
+
+            valid_contracts.append(contract)
 
     context = {
-        "contracts": contracts,
+        "contracts": valid_contracts,
         "values": values,
         "mine": True,
     }
@@ -71,6 +88,8 @@ def my_stats(request):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def program_stats(request):
+
+    valid_contracts = []
 
     values = {
         "outstanding": 0,
@@ -91,92 +110,108 @@ def program_stats(request):
 
     logger.debug("Got corporations for manager: %s" % corporations)
 
-    tracking = Tracking.objects.all()
+    tracking_numbers = Tracking.objects.all()
 
-    tracking_numbers = tracking.values_list("tracking_number", flat=True)
+    for tracking in tracking_numbers:
 
-    contracts = Contract.objects.filter(
-        Q(assignee_id__in=characters) | Q(assignee_id__in=corporations),
-        title__in=tracking_numbers,
-    )
+        contract = Contract.objects.filter(
+            Q(assignee_id__in=characters) | Q(assignee_id__in=corporations),
+            title__contains=tracking.tracking_number,
+        ).first()
 
-    logger.debug("Got contracts for manager: %s" % contracts)
+        if contract:
 
-    for contract in contracts:
-
-        if contract.status == "outstanding":
-            values["outstanding"] += contract.price
-            values["outstanding_count"] += 1
-        if contract.status == "finished":
-            values["finished"] += contract.price
-            values["finished_count"] += 1
-
-        contract.notes = []
-
-        try:
-            issuer_character = CharacterOwnership.objects.get(
-                character__character_id=contract.issuer_id
+            logger.debug(
+                "Contract %s has a match in tracking numbers" % contract.contract_id
             )
-            logger.debug("Got issuer character from auth: %s" % issuer_character.user)
 
-        except CharacterOwnership.DoesNotExist:
-            issuer_character = False
-            logger.debug("Contract issuer not registered on AUTH")
+            if contract.status == "outstanding":
+                values["outstanding"] += contract.price
+                values["outstanding_count"] += 1
+            if contract.status == "finished":
+                values["finished"] += contract.price
+                values["finished_count"] += 1
 
-            note = {
-                "icon": "fa-question",
-                "color": "orange",
-                "message": "Issuer not registered on AUTH. Possibly an unregistered alt.",
-            }
+            contract.notes = []
 
-            contract.notes.append(note)
+            try:
+                issuer_character = CharacterOwnership.objects.get(
+                    character__character_id=contract.issuer_id
+                )
+                logger.debug(
+                    "Got issuer character from auth: %s" % issuer_character.user
+                )
 
-        contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+            except CharacterOwnership.DoesNotExist:
+                issuer_character = False
+                logger.debug("Contract issuer not registered on AUTH")
 
-        contract.assignee_name = EveEntity.objects.resolve_name(contract.assignee_id)
+                note = {
+                    "icon": "fa-question",
+                    "color": "orange",
+                    "message": "Issuer not registered on AUTH. Possibly an unregistered alt.",
+                }
 
-        contract.items = ContractItem.objects.filter(contract=contract)
+                contract.notes.append(note)
 
-        contract_tracking = tracking.filter(tracking_number=contract.title).first()
+            contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
 
-        if contract_tracking.net_price != contract.price:
-            note = {
-                "icon": "fa-skull-crossbones",
-                "color": "red",
-                "message": "Tracked price for %s does not match contract price. See details for more information"
-                % contract_tracking.tracking_number,
-            }
+            contract.assignee_name = EveEntity.objects.resolve_name(
+                contract.assignee_id
+            )
 
-            contract.notes.append(note)
+            contract.items = ContractItem.objects.filter(contract=contract)
 
-        if (
-            contract.assignee_id in corporations
-            and not contract_tracking.program.is_corporation
-        ):
-            note = {
-                "icon": "fa-home",
-                "color": "orange",
-                "message": "Contract %s is made for your corporation while they should be made directly to your character in this program."
-                % contract_tracking.tracking_number,
-            }
+            if tracking.net_price != contract.price:
+                note = {
+                    "icon": "fa-skull-crossbones",
+                    "color": "red",
+                    "message": "Tracked price for %s does not match contract price. See details for more information"
+                    % tracking.tracking_number,
+                }
 
-            contract.notes.append(note)
+                contract.notes.append(note)
 
-        if (
-            contract.assignee_id not in corporations
-            and contract_tracking.program.is_corporation
-        ):
-            note = {
-                "icon": "fa-user",
-                "color": "orange",
-                "message": "Contract %s is made for your character while they should be made to your corporation in this program."
-                % contract_tracking.tracking_number,
-            }
+            if (
+                contract.assignee_id in corporations
+                and not tracking.program.is_corporation
+            ):
+                note = {
+                    "icon": "fa-home",
+                    "color": "orange",
+                    "message": "Contract %s is made for your corporation while they should be made directly to your character in this program."
+                    % tracking.tracking_number,
+                }
 
-            contract.notes.append(note)
+                contract.notes.append(note)
+
+            if (
+                contract.assignee_id not in corporations
+                and tracking.program.is_corporation
+            ):
+                note = {
+                    "icon": "fa-user",
+                    "color": "orange",
+                    "message": "Contract %s is made for your character while they should be made to your corporation in this program."
+                    % tracking.tracking_number,
+                }
+
+                contract.notes.append(note)
+
+            if not tracking.tracking_number == contract.title:
+                note = {
+                    "icon": "fa-exclamation",
+                    "color": "orange",
+                    "message": "Contract description contains extra characterse besides the tracking number. The description should be: '%s', instead it is: '%s'"
+                    % (tracking.tracking_number, contract.title),
+                }
+
+                contract.notes.append(note)
+
+            valid_contracts.append(contract)
 
     context = {
-        "contracts": contracts,
+        "contracts": valid_contracts,
         "values": values,
         "mine": True,
     }
@@ -188,6 +223,8 @@ def program_stats(request):
 @permission_required("buybackprogram.manage_all_programs")
 def program_stats_all(request):
 
+    valid_contracts = []
+
     values = {
         "outstanding": 0,
         "finished": 0,
@@ -195,63 +232,81 @@ def program_stats_all(request):
         "finished_count": 0,
     }
 
-    tracking = Tracking.objects.all()
+    tracking_numbers = Tracking.objects.all()
 
-    tracking_numbers = tracking.values_list("tracking_number", flat=True)
+    for tracking in tracking_numbers:
 
-    contracts = Contract.objects.filter(
-        title__in=tracking_numbers,
-    )
+        contract = Contract.objects.filter(
+            title__contains=tracking.tracking_number
+        ).first()
 
-    for contract in contracts:
+        if contract:
 
-        if contract.status == "outstanding":
-            values["outstanding"] += contract.price
-            values["outstanding_count"] += 1
-        if contract.status == "finished":
-            values["finished"] += contract.price
-            values["finished_count"] += 1
-
-        contract.notes = []
-
-        try:
-            issuer_character = CharacterOwnership.objects.get(
-                character__character_id=contract.issuer_id
+            logger.debug(
+                "Contract %s has a match in tracking numbers" % contract.contract_id
             )
-            logger.debug("Got issuer character from auth: %s" % issuer_character.user)
 
-        except CharacterOwnership.DoesNotExist:
-            issuer_character = False
-            logger.debug("Contract issuer not registered on AUTH")
+            if contract.status == "outstanding":
+                values["outstanding"] += contract.price
+                values["outstanding_count"] += 1
+            if contract.status == "finished":
+                values["finished"] += contract.price
+                values["finished_count"] += 1
 
-            note = {
-                "icon": "fa-question",
-                "color": "orange",
-                "message": "Issuer not registered on AUTH. Possibly an unregistered alt.",
-            }
+            contract.notes = []
 
-            contract.notes.append(note)
+            try:
+                issuer_character = CharacterOwnership.objects.get(
+                    character__character_id=contract.issuer_id
+                )
+                logger.debug(
+                    "Got issuer character from auth: %s" % issuer_character.user
+                )
 
-        contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+            except CharacterOwnership.DoesNotExist:
+                issuer_character = False
+                logger.debug("Contract issuer not registered on AUTH")
 
-        contract.assignee_name = EveEntity.objects.resolve_name(contract.assignee_id)
+                note = {
+                    "icon": "fa-question",
+                    "color": "orange",
+                    "message": "Issuer not registered on AUTH. Possibly an unregistered alt.",
+                }
 
-        contract.items = ContractItem.objects.filter(contract=contract)
+                contract.notes.append(note)
 
-        contract_tracking = tracking.filter(tracking_number=contract.title).first()
+            contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
 
-        if contract_tracking.net_price != contract.price:
-            note = {
-                "icon": "fa-skull-crossbones",
-                "color": "red",
-                "message": "Tracked price for %s does not match contract price. See details for more information"
-                % contract_tracking.tracking_number,
-            }
+            contract.assignee_name = EveEntity.objects.resolve_name(
+                contract.assignee_id
+            )
 
-            contract.notes.append(note)
+            contract.items = ContractItem.objects.filter(contract=contract)
+
+            if tracking.net_price != contract.price:
+                note = {
+                    "icon": "fa-skull-crossbones",
+                    "color": "red",
+                    "message": "Tracked price for %s does not match contract price. See details for more information"
+                    % tracking.tracking_number,
+                }
+
+                contract.notes.append(note)
+
+            if not tracking.tracking_number == contract.title:
+                note = {
+                    "icon": "fa-exclamation",
+                    "color": "orange",
+                    "message": "Contract description contains extra characterse besides the tracking number. The description should be: '%s', instead it is: '%s'"
+                    % (tracking.tracking_number, contract.title),
+                }
+
+                contract.notes.append(note)
+
+            valid_contracts.append(contract)
 
     context = {
-        "contracts": contracts,
+        "contracts": valid_contracts,
         "values": values,
         "mine": True,
     }
@@ -275,6 +330,9 @@ def contract_details(request, contract_title):
         )
 
         tracking_items = TrackingItem.objects.filter(tracking=tracking)
+
+        contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+        contract.assignee_name = EveEntity.objects.resolve_name(contract.assignee_id)
 
         if contract.price != tracking.net_price:
             note = {

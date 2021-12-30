@@ -70,6 +70,7 @@ class LocationForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         value = kwargs.pop("value", None)
+        self.user = kwargs.pop("user", None)
 
         super(LocationForm, self).__init__(*args, **kwargs)
 

@@ -17,8 +17,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Fixed #10, added ability to delete own locations
+- Fixes #12, added requirement for eveuniverse in readme
 
 ### Changed
+- Fixes #11, now also tracking contracts that have extra characters in the description such as extra spaces.
+- Merger readme periodic tasks into a single code block to make copying easier
 
 ### Fixed
 - Removed ability to use locations that were created by other managers.

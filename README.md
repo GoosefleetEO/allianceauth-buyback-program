@@ -10,6 +10,7 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 ## Contents
 - [Images](#images)
 - [Features](#features)
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Setup](#setup)
 - [Permissions](#permissions)
@@ -54,6 +55,11 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 	- Alerts for mistakes in contracts such as missmatching price
 - Contract tracking history
 
+## Requirements
+
+1. Buyback program is a plugin for Alliance Auth. If you don't have Alliance Auth running already, please install it first before proceeding. (see the official [AA installation guide](https://allianceauth.readthedocs.io/en/latest/installation/auth/allianceauth/) for details)
+1. Buyback program needs the app [django-eveuniverse](https://gitlab.com/ErikKalkoken/django-eveuniverse) to function. Please make sure it is installed, before before continuing.
+
 ## Installation
 
 1. Activate your venv ```source /home/allianceserver/venv/auth/bin/activate```
@@ -88,10 +94,9 @@ To preload price data run ```python manage.py buybackprogram_load_prices```
 
 Buyback program requires a few periodic tasks to operate and update its data.
 
-#### Price updates
 Buybackprogram is designed to use localy stored prices to speed up the price calculations. It is important that you have the price update task in your periodic tasks so that your prices will update.
 
-To have your prices updated every 24 hours add the following line in your `local.py` setting file:
+By adding the following lines in your `local.py` setting file the progral will update the stored item prices at midnight. It will also check for any new contracts and update the statistics page with them every 15 minutes:
 
 ```
 # Buybackprogram price updates
@@ -99,18 +104,12 @@ CELERYBEAT_SCHEDULE['buybackprogram_update_all_prices'] = {
     'task': 'buybackprogram.tasks.update_all_prices',
     'schedule': crontab(minute=0, hour='0'),
 }
-```
 
-#### Contract updates
-To fetch contracts from your program managers add the following line in your `local.py` settings file. This will update your contracts every 15 minutes
-
-```
 # Buybackprogram contract updates
 CELERYBEAT_SCHEDULE['buybackprogram_update_all_contracts'] = {
     'task': 'buybackprogram.tasks.update_all_contracts',
     'schedule': crontab(minute='*/15'),
 }
-
 ```
 
 ## Permissions

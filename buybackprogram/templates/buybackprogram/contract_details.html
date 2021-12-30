@@ -25,6 +25,14 @@
                     <td>{{contract.date_issued}}</td>
                 </tr>
                 <tr>
+                    <th >{% trans "Issued from" %}</th>
+                    <td>{{contract.issuer_name}}</td>
+                </tr>
+                <tr>
+                    <th >{% trans "Issued to" %}</th>
+                    <td>{{contract.assignee_name}}</td>
+                </tr>
+                <tr>
                     <th >{% trans "Time pending" %}</th>
                     <td>{{contract.date_issued|timesince }}</td>
                 </tr>

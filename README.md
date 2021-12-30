@@ -130,9 +130,23 @@ Each user with `manage_programs` permission is able to setup their own buyback p
 Each buyback program is operated by a manager. To add a new manager click on the `setup manager` button.
 
 ### Locations
-1. Each buyback program operates at a location that is constructed of `SolarSystem` and a `Custom name`. To add a new location click on the `add location` button on the buyback page.
+1. Each buyback program operates at a location that is constructed of `SolarSystem` and a `Custom name` and an optional `Structure ID`. To add a new location click on the `add location` button on the buyback page.
 
+#### Solar System & Name
 Find a solar system by typing in the solar system box. Then determine a name for the structure. Most often you want to use the actual ingame name of the structure so that people are able to identify the location.
+
+The solarsytem name will indicate your sellers where the program contract structure is located. The name will describe the structure name in where the contracts should be created and most often should be identical to the actual structure name ingame.
+
+#### Structure ID
+Structure ID is optional and will enable contract location tracking in the program statistics page. If a program location has been given a structure ID the statistics page will display a warning if the user has made the actual contract from some other structure than the one that was determined in the buyback program.
+
+The easiest way to find the actual structure id is to link the structure name into any chat box and post the structure name into the chat. This can be dont in any channel or the structure name can be also copied from any MOTDs.
+
+After you have posted the structure name in the chat right click it and press copy. You can now paste the structure into notepad or any other text editor and your output should look like this:
+```
+[17:37:54] Ikarus Cesaille > <url=showinfo:35826//1037962518481>Oisio - LinkNet Central Station</url> `
+```
+The unique structure ID for your structure is then `1037962518481`. Adding the ID to the location ID field will check if the contract creation location matches this ID.
 
 ### Additional settings
 Name | Description | Default

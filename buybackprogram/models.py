@@ -104,6 +104,7 @@ class Owner(models.Model):
                         "for_corporation": contract["for_corporation"],
                         "issuer_corporation_id": contract["issuer_corporation_id"],
                         "issuer_id": contract["issuer_id"],
+                        "start_location_id": contract["start_location_id"],
                         "price": contract["price"],
                         "status": contract["status"],
                         "title": contract["title"],
@@ -179,6 +180,7 @@ class Owner(models.Model):
                         "for_corporation": contract["for_corporation"],
                         "issuer_corporation_id": contract["issuer_corporation_id"],
                         "issuer_id": contract["issuer_id"],
+                        "start_location_id": contract["start_location_id"],
                         "price": contract["price"],
                         "status": contract["status"],
                         "title": contract["title"],
@@ -341,8 +343,21 @@ class Location(models.Model):
         on_delete=models.deletion.CASCADE,
     )
 
+    structure_id = models.BigIntegerField(
+        default=None,
+        null=True,
+        help_text="The ID for the structure you wish to accept the contracts at. If left empty the program statistics page will not track if the contract is actually made at the correct structure or not. To get the ID for the structure see readme for getting structure IDs",
+    )
+
     def __str__(self):
-        return self.eve_solar_system.name + " | " + self.name
+
+        return (
+            self.eve_solar_system.name
+            + " | "
+            + self.name
+            + ", ID: "
+            + str(self.structure_id)
+        )
 
 
 class Program(models.Model):
@@ -567,6 +582,7 @@ class Contract(models.Model):
     for_corporation = models.BooleanField()
     issuer_corporation_id = models.IntegerField()
     issuer_id = models.IntegerField()
+    start_location_id = models.BigIntegerField(null=True)
     price = models.BigIntegerField()
     status = models.CharField(max_length=30)
     title = models.CharField(max_length=128)

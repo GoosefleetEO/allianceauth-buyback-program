@@ -55,6 +55,21 @@ def my_stats(request):
 
             contract.items = ContractItem.objects.filter(contract=contract)
 
+            structure_id = tracking.program.location.structure_id
+
+            if (
+                contract.start_location_id
+                and structure_id != contract.start_location_id
+            ):
+                note = {
+                    "icon": "fa-compass",
+                    "color": "red",
+                    "message": "Contract location id %s does not match program location id %s"
+                    % (contract.start_location_id, structure_id),
+                }
+
+                contract.notes.append(note)
+
             if tracking.net_price != contract.price:
                 note = {
                     "icon": "fa-skull-crossbones",
@@ -161,6 +176,21 @@ def program_stats(request):
             )
 
             contract.items = ContractItem.objects.filter(contract=contract)
+
+            structure_id = tracking.program.location.structure_id
+
+            if (
+                contract.start_location_id
+                and structure_id != contract.start_location_id
+            ):
+                note = {
+                    "icon": "fa-compass",
+                    "color": "red",
+                    "message": "Contract location id %s does not match program location id %s"
+                    % (contract.start_location_id, structure_id),
+                }
+
+                contract.notes.append(note)
 
             if tracking.net_price != contract.price:
                 note = {
@@ -282,6 +312,21 @@ def program_stats_all(request):
             )
 
             contract.items = ContractItem.objects.filter(contract=contract)
+
+            structure_id = tracking.program.location.structure_id
+
+            if (
+                contract.start_location_id
+                and structure_id != contract.start_location_id
+            ):
+                note = {
+                    "icon": "fa-compass",
+                    "color": "red",
+                    "message": "Contract location id %s does not match program location id %s"
+                    % (contract.start_location_id, structure_id),
+                }
+
+                contract.notes.append(note)
 
             if tracking.net_price != contract.price:
                 note = {

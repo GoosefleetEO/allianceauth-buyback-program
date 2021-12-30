@@ -21,6 +21,7 @@
       <thead>
         <th>Solar System</th>
         <th style="text-align: center;">Name</th>
+        <th style="text-align: center;">Structure ID</th>
       </thead>
       <tbody>
         {% for location in locations %}
@@ -28,6 +29,7 @@
             <tr>
               <td>{{location.eve_solar_system.name}}</td>
               <td style="text-align: center;">{{location.name}}</td>
+              <td style="text-align: center;">{{location.structure_id}}</td>
               <td><a class="btn btn-sm btn-danger" href="{% url 'buybackprogram:location_remove' location_pk=location.id %}">Delete</a></td>
             </tr>
           {% endif %}

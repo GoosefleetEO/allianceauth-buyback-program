@@ -65,7 +65,12 @@ class LocationForm(forms.Form):
     )
     name = forms.CharField(
         label="Structure/station name",
-        help_text="A name or identification tag of the structure where the items should be contracted at.",
+        help_text="A name or identification tag of the structure where the items should be contracted at. Does not need to match ingame name.",
+    )
+
+    structure_id = forms.CharField(
+        label="Structure/station ID",
+        help_text="The ingame ID for the structure you wish to accept the contracts at. <strong>If left empty the program statistics page will not track if the contract is actually made at the correct structure or not.</strong>",
     )
 
     def __init__(self, *args, **kwargs):

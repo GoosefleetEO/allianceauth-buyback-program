@@ -345,6 +345,7 @@ class Location(models.Model):
 
     structure_id = models.BigIntegerField(
         default=None,
+        blank=True,
         null=True,
         help_text="The ID for the structure you wish to accept the contracts at. If left empty the program statistics page will not track if the contract is actually made at the correct structure or not. To get the ID for the structure see readme for getting structure IDs",
     )
@@ -443,6 +444,16 @@ class Program(models.Model):
         null=True,
         help_text="Refining rate to be used if refined value is active",
         validators=[MaxValueValidator(100), MinValueValidator(0)],
+    )
+
+    blue_loot_npc_price = models.BooleanField(
+        default=False,
+        help_text="Valuate blue loot (Sleeper loot) by NPC buy order prices instead of Jita prices",
+    )
+
+    red_loot_npc_price = models.BooleanField(
+        default=False,
+        help_text="Valuate red loot (Triglavian loot) by NPC buy order prices instead of Jita prices",
     )
 
     restricted_to_group = models.ManyToManyField(

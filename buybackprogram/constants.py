@@ -31,3 +31,14 @@ MOON_ORE_EVE_GROUPS = [
     4031,
     4094,
 ]
+
+BLUE_LOOT_TYPE_IDS = [
+    30744,
+    30745,
+    30746,
+    30747,
+]
+
+RED_LOOT_TYPE_IDS = [
+    48121,
+]

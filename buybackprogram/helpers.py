@@ -4,12 +4,17 @@ import requests
 
 from django.db import Error
 from django.utils import timezone
-from eveuniverse.models import EveType, EveTypeMaterial
+from eveuniverse.models import EveMarketPrice, EveType, EveTypeMaterial
 
 from allianceauth.services.hooks import get_extension_logger
 
 from buybackprogram.app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
-from buybackprogram.constants import MOON_ORE_EVE_GROUPS, ORE_EVE_GROUPS
+from buybackprogram.constants import (
+    BLUE_LOOT_TYPE_IDS,
+    MOON_ORE_EVE_GROUPS,
+    ORE_EVE_GROUPS,
+    RED_LOOT_TYPE_IDS,
+)
 from buybackprogram.models import ItemPrices, ProgramItem, Tracking, TrackingItem
 from buybackprogram.notes import (
     note_compressed_price_used,
@@ -18,6 +23,7 @@ from buybackprogram.notes import (
     note_missing_jita_buy,
     note_missing_typematerials,
     note_no_price_data,
+    note_npc_price,
     note_price_dencity_tax,
     note_refined_price_used,
     note_unpublished_item,
@@ -35,6 +41,15 @@ def get_item_tax(program, item_id):
         return program_item_settings.item_tax
 
     except ProgramItem.DoesNotExist:
+        return False
+
+
+def use_npc_price(item_id, program):
+    if item_id in BLUE_LOOT_TYPE_IDS and program.blue_loot_npc_price:
+        return True
+    elif item_id in RED_LOOT_TYPE_IDS and program.red_loot_npc_price:
+        return True
+    else:
         return False
 
 
@@ -69,6 +84,13 @@ def get_or_create_prices(item_id):
             logger.error("Error updating prices: %s" % e)
 
 
+def get_npc_price(item_id):
+    try:
+        return EveMarketPrice.objects.get(eve_type=item_id)
+    except Error as e:
+        logger.error("Error getting NPC prices for %s: %s" % (item_id, e))
+
+
 def getList(dict):
     return dict.keys()
 
@@ -92,6 +114,7 @@ def has_buy_price(item):
         not item["raw_prices"]
         and not item["material_prices"]
         and not item["compression_prices"]
+        and not item["npc_prices"]
     ):
         return False
     else:
@@ -264,12 +287,31 @@ def get_item_prices(item_type, name, quantity, program):
             logger.debug("Prices: No compression required/available for %s" % name)
             compressed_type_prices = False
 
+        # Get NPC prices
+        if use_npc_price(item_type.id, program):
+            item_npc_price = get_npc_price(item_type.id)
+
+            npc_type_prices = {
+                "id": item_type.id,
+                "quantity": quantity,
+                "buy": item_npc_price.average_price,
+                "sell": False,
+            }
+
+            logger.debug("Prices: Got NPC buy price for %s" % name)
+
+        else:
+
+            logger.debug("Prices: No NPC prices required/available for %s" % name)
+            npc_type_prices = False
+
         prices = {
             "quantity": quantity,
             "type_prices": item_price,
             "raw_prices": item_raw_price,
             "material_prices": item_material_price,
             "compression_prices": compressed_type_prices,
+            "npc_prices": npc_type_prices,
             "has_price_variants": has_price_variants,
             "notes": notes,
         }
@@ -280,6 +322,7 @@ def get_item_prices(item_type, name, quantity, program):
             "raw_prices": False,
             "material_prices": False,
             "compression_prices": False,
+            "npc_prices": False,
             "has_price_variants": has_price_variants,
             "notes": notes,
         }
@@ -481,6 +524,62 @@ def get_item_values(item_type, item_prices, program):
             "unit_value": False,
         }
 
+    # Get value for NPC price
+    if item_prices["npc_prices"]:
+
+        quantity = item_prices["npc_prices"]["quantity"]
+        sell = item_prices["npc_prices"]["sell"]
+        buy = item_prices["npc_prices"]["buy"]
+        price = buy
+
+        if not item_type.volume <= 0:
+            price_dencity = price / item_type.volume
+        else:
+            price_dencity = False
+        price_dencity_tax = get_price_dencity_tax(
+            program, price, item_type.volume, quantity
+        )
+        program_tax = program.tax
+        item_tax = get_item_tax(program, item_type.id)
+        tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
+
+        logger.debug("Values: Calculating npc value for %s" % item_type)
+
+        type_raw_value = quantity * price
+        type_value = type_raw_value * tax_multiplier
+
+        npc_item = {
+            "id": item_type.id,
+            "name": item_type.name,
+            "quantity": quantity,
+            "buy": buy,
+            "sell": sell,
+            "program_tax": program_tax,
+            "item_tax": item_tax,
+            "price_dencity_tax": price_dencity_tax,
+            "total_tax": program_tax + item_tax + price_dencity_tax,
+            "price_dencity": price_dencity,
+            "unit_value": price * tax_multiplier,
+            "raw_value": type_raw_value,
+            "value": type_value,
+            "is_buy_value": False,
+            "notes": [],
+        }
+
+        npc_item["notes"].append(
+            note_price_dencity_tax(npc_item["name"], price_dencity, price_dencity_tax)
+        )
+        npc_item["notes"].append(note_item_specific_tax(item_type.name, item_tax))
+
+    else:
+        npc_item = {
+            "unite_value": False,
+            "value": False,
+            "total_tax": False,
+            "raw_value": False,
+        }
+
+    # If there are no price variations at all for the item
     if not has_buy_price(item_prices):
 
         item_prices["notes"].append(note_no_price_data(item_type.name))
@@ -503,15 +602,20 @@ def get_item_values(item_type, item_prices, program):
         }
 
     # Get the highest value of the used pricing methods
-    buy_value = max([raw_item["value"], refined["value"], compressed["value"]])
+    if not item_prices["npc_prices"]:
+        buy_value = max([raw_item["value"], refined["value"], compressed["value"]])
 
-    raw_value = max(
-        [raw_item["raw_value"], refined["raw_value"], compressed["raw_value"]]
-    )
+        raw_value = max(
+            [raw_item["raw_value"], refined["raw_value"], compressed["raw_value"]]
+        )
 
-    unit_value = max(
-        [raw_item["unit_value"], refined["unit_value"], compressed["unit_value"]]
-    )
+        unit_value = max(
+            [raw_item["unit_value"], refined["unit_value"], compressed["unit_value"]]
+        )
+    else:
+        buy_value = npc_item["value"]
+        raw_value = npc_item["raw_value"]
+        unit_value = npc_item["unit_value"]
 
     # Determine what value we will use for buy value
     if buy_value == raw_item["value"]:
@@ -568,6 +672,23 @@ def get_item_values(item_type, item_prices, program):
         item_prices["notes"].append(
             note_item_specific_tax(raw_item["name"], compressed["item_tax"])
         )
+    elif buy_value == npc_item["value"]:
+
+        npc_item["is_buy_value"] = True
+        tax_value = npc_item["total_tax"]
+
+        item_prices["notes"].append(note_npc_price(raw_item["name"]))
+
+        item_prices["notes"].append(
+            note_price_dencity_tax(
+                raw_item["name"],
+                raw_item["price_dencity"],
+                raw_item["price_dencity_tax"],
+            )
+        )
+        item_prices["notes"].append(
+            note_item_specific_tax(raw_item["name"], raw_item["item_tax"])
+        )
 
     logger.debug("Values: Best buy value for %s is %s ISK" % (item_type, buy_value))
 
@@ -578,9 +699,11 @@ def get_item_values(item_type, item_prices, program):
         "normal": raw_item,
         "refined": refined,
         "compressed": compressed,
+        "npc": npc_item,
         "type_value": raw_item["value"],
         "material_value": refined["value"],
         "compression_value": compressed["value"],
+        "npc_value": npc_item["value"],
         "unit_value": unit_value,
         "raw_value": raw_value,
         "tax_value": tax_value,

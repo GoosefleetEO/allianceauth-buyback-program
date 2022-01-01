@@ -43,6 +43,11 @@ def setting_icons(option, program):
             "color": False,
             "message": "Raw price is taken into account when calculating values for ores.",
         },
+        "npc_price": {
+            "icon": "fa-robot",
+            "color": False,
+            "message": "Some items are using NPC prices from NPC buy orders instead of Jita prices.",
+        },
         "unpacked": {
             "icon": "fa-box-open",
             "color": False,
@@ -98,6 +103,11 @@ def program_setting(program):
 
     if program.use_refined_value:
         setting = setting_icons("refined", program)
+
+        settings.append(setting)
+
+    if program.blue_loot_npc_price or program.red_loot_npc_price:
+        setting = setting_icons("npc_price", program)
 
         settings.append(setting)
 

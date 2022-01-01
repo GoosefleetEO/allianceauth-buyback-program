@@ -221,6 +221,12 @@ Most often you want to buy only items that are packed. This will ensure that peo
 #### Refining rate
 The refining rate is used in combination with the use refined value option.
 
+### Blue loot npc price
+If you cant to use NPC buy order prices for blue loot (Sleeper loot) instead of Jita prices check this box. NPC price for these items will always be used even when Jita price would be higher.
+
+### Red loot npc price
+If you cant to use NPC buy order prices for red loot (Triglavian loot) instead of Jita prices check this box. NPC price for these items will always be used even when Jita price would be higher.
+
 ### Restrctions
 You can restict the visibnility of the buyback programs to groups and states with the restriction options.
 

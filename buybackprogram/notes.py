@@ -118,3 +118,12 @@ def note_compressed_price_used(name):
         "message": "Best price: Using compressed price for %s" % name,
     }
     return note
+
+
+def note_npc_price(name):
+    note = {
+        "icon": "fa-robot",
+        "color": "#5858df",
+        "message": "Using NPC buy price for %s instead of Jita buy prices" % name,
+    }
+    return note

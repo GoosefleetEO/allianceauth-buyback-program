@@ -145,6 +145,29 @@
                             </tr>
                         {% endif %}
 
+                        {% if item.item_values.npc.value %}
+                            <tr>
+                                <td colspan="6" data-toggle="collapse" data-target="#{{ item.item_values.normal.id }}-npc" class="accordion-toggle">
+                                    <i style="padding-left: 10px;" class="fas fa-angle-down"> NPC buy order</i>
+                                </td>
+                            </tr>
+
+                            <tr class="collapse" id="{{ item.item_values.normal.id }}-npc">
+                                <td style="padding-left: 30px;">{{item.item_values.npc.name}}</td>
+                                <td>{{item.item_values.npc.quantity|intcomma}}</td>
+                                <td>{{item.item_values.npc.sell|floatformat:0|intcomma|price}}</td>
+                                <td>{{item.item_values.npc.buy|floatformat:0|intcomma|price}}</td>
+                                <td>{{item.item_values.npc.total_tax|tax}}</td>
+                                <td class="buy-value-{{item.item_values.npc.is_buy_value}}">{{item.item_values.npc.unit_value|floatformat:0|intcomma|price}}</td>
+                                <td class="buy-value-{{item.item_values.npc.is_buy_value}}">{{item.item_values.npc.value|floatformat:0|intcomma|price}}</td>
+                                <td>
+                                    {% for note in item.item_values.npc.notes%}
+                                        <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        {% endif %}
+
                         {% if item.item_values.compressed.value %}
                             <tr>
                                 <td colspan="6" data-toggle="collapse" data-target="#{{ item.item_values.normal.id }}-compressed" class="accordion-toggle">

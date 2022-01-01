@@ -69,6 +69,7 @@ class LocationForm(forms.Form):
     )
 
     structure_id = forms.CharField(
+        required=False,
         label="Structure/station ID",
         help_text="The ingame ID for the structure you wish to accept the contracts at. <strong>If left empty the program statistics page will not track if the contract is actually made at the correct structure or not.</strong>",
     )

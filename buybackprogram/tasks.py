@@ -4,6 +4,7 @@ from celery import shared_task
 
 from django.db import Error
 from django.utils import timezone
+from eveuniverse.models import EveMarketPrice
 
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.services.tasks import QueueOnce
@@ -98,6 +99,10 @@ def update_all_prices():
         logger.debug("All prices succesfully updated")
     except Error as e:
         logger.error("Error updating prices: %s" % e)
+
+    EveMarketPrice.objects.update_from_esi()
+
+    logger.debug("Updated all eveuniverse market prices.")
 
 
 @shared_task(

@@ -176,7 +176,7 @@ def location_add(request):
         if form.is_valid():
             eve_solar_system = form.cleaned_data["eve_solar_system"]
             name = form.cleaned_data["name"]
-            structure_id = form.cleaned_data["structure_id"]
+            structure_id = form.cleaned_data["structure_id"] or None
 
             owner = Owner.objects.get(user=request.user)
 

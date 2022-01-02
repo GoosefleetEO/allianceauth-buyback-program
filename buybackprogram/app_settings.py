@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.conf import settings
 
 from .utils import clean_setting
@@ -15,3 +16,21 @@ BUYBACKPROGRAM_TASKS_TIME_LIMIT = clean_setting("BUYBACKPROGRAM_TASKS_TIME_LIMIT
 BUYBACKPROGRAM_TRACKING_PREFILL = clean_setting(
     "BUYBACKPROGRAM_TRACKING_PREFILL", "aa-bbp"
 )
+
+
+def allianceauth_discordbot_active():
+    """
+    check if allianceauth-dicordbot is installed and active
+    :return:
+    """
+
+    return apps.is_installed("aadiscordbot")
+
+
+def aa_discordnotify_active():
+    """
+    check if allianceauth-dicordbot is installed and active
+    :return:
+    """
+
+    return apps.is_installed("discordnotify")

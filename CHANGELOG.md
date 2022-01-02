@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixes #12, added requirement for eveuniverse in readme
 - Fixes #9, added ability to track contract locations per structure ID
 - Fixes #13, added ability to praisal blue and red loot by npc buy orders
+- Fixes #5, added the ability to receive notifications for new contracts and for sellers notifications about completed contracts
 
 ### Changed
 - Fixes #11, now also tracking contracts that have extra characters in the description such as extra spaces.

@@ -1,9 +1,12 @@
 from typing import Tuple
 
+from aadiscordbot.app_settings import get_site_url
+
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import Error, models
+from django.utils.translation import gettext as _
 from esi.errors import TokenExpiredError, TokenInvalidError
 from esi.models import Token
 from eveuniverse.models import EveSolarSystem, EveType
@@ -14,12 +17,24 @@ from allianceauth.authentication.models import CharacterOwnership, State
 from allianceauth.eveonline.models import EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 
-from buybackprogram.app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
+from buybackprogram.notification import (
+    send_message_to_discord_channel,
+    send_user_notification,
+)
 
 from .decorators import fetch_token_for_owner
 from .providers import esi
 
 logger = get_extension_logger(__name__)
+
+
+def get_sentinel_user():
+    """
+    get user or create one
+    :return:
+    """
+
+    return User.objects.get_or_create(username="deleted")[0]
 
 
 class General(models.Model):
@@ -84,154 +99,287 @@ class Owner(models.Model):
     )
     def update_contracts_esi(self, token):
 
-        logger.debug("Fetching contracts for %s" % self.character)
+        logger.debug("Fetching contracts for %s" % self.user)
 
         contracts = self._fetch_contracts()
 
-        for contract in contracts:
+        tracking_numbers = Tracking.objects.all()
 
-            # Only get contracts with the correct prefill ticker
-            if BUYBACKPROGRAM_TRACKING_PREFILL in contract["title"]:
-                obj, created = Contract.objects.update_or_create(
-                    contract_id=contract["contract_id"],
-                    defaults={
-                        "contract_id": contract["contract_id"],
-                        "assignee_id": contract["assignee_id"],
-                        "availability": contract["availability"],
-                        "date_completed": contract["date_completed"],
-                        "date_expired": contract["date_expired"],
-                        "date_issued": contract["date_issued"],
-                        "for_corporation": contract["for_corporation"],
-                        "issuer_corporation_id": contract["issuer_corporation_id"],
-                        "issuer_id": contract["issuer_id"],
-                        "start_location_id": contract["start_location_id"],
-                        "price": contract["price"],
-                        "status": contract["status"],
-                        "title": contract["title"],
-                        "volume": contract["volume"],
-                    },
-                )
+        url = get_site_url()
 
-                # If we created an new contract
-                if created:
+        for tracking in tracking_numbers:
+            for contract in contracts:
+
+                # Only get contracts with the correct prefill ticker
+                if tracking.tracking_number in contract["title"]:
+
                     logger.debug(
-                        "New contract %s created. Starting item fetch"
+                        "Found a matching contract from tracking for %s "
                         % contract["contract_id"]
                     )
 
-                    character_id = self.character.character.character_id
-
-                    contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
-                        character_id=character_id,
-                        contract_id=contract["contract_id"],
-                        token=token.valid_access_token(),
-                    ).results()
-
-                    objs = []
-
-                    for item in contract_items:
-
-                        cont = Contract.objects.get(contract_id=contract["contract_id"])
-                        itm = EveType.objects.get(pk=item["type_id"])
-
-                        contract_item = ContractItem(
-                            contract=cont,
-                            eve_type=itm,
-                            quantity=item["quantity"],
-                        )
-
-                        objs.append(contract_item)
-
                     try:
-                        ContractItem.objects.bulk_create(objs)
-                        logger.debug(
-                            "Succesfully added items for contract %s into database"
-                            % contract["contract_id"]
-                        )
-                    except Error as e:
-                        logger.error(
-                            "Error adding items for contract %s: %s"
-                            % (contract["contract_id"], e)
+                        old_contract = Contract.objects.get(
+                            contract_id=contract["contract_id"]
                         )
 
-                    logger.debug(
-                        "Updated items for contract %s" % contract["contract_id"]
-                    )
-                else:
-                    logger.debug("Contract %s updated." % contract["contract_id"])
+                    except ProgramItem.DoesNotExist:
+                        old_contract = False
 
-        logger.debug("Fetching corporation contracts for %s" % self.character)
+                    if old_contract.status not in ["finished", "rejected"]:
+                        obj, created = Contract.objects.update_or_create(
+                            contract_id=contract["contract_id"],
+                            defaults={
+                                "contract_id": contract["contract_id"],
+                                "assignee_id": contract["assignee_id"],
+                                "availability": contract["availability"],
+                                "date_completed": contract["date_completed"],
+                                "date_expired": contract["date_expired"],
+                                "date_issued": contract["date_issued"],
+                                "for_corporation": contract["for_corporation"],
+                                "issuer_corporation_id": contract[
+                                    "issuer_corporation_id"
+                                ],
+                                "issuer_id": contract["issuer_id"],
+                                "start_location_id": contract["start_location_id"],
+                                "price": contract["price"],
+                                "status": contract["status"],
+                                "title": contract["title"],
+                                "volume": contract["volume"],
+                            },
+                        )
+
+                        # If we created an new contract
+                        if created:
+                            logger.debug(
+                                "New contract %s created. Starting item fetch"
+                                % contract["contract_id"]
+                            )
+
+                            character_id = self.character.character.character_id
+
+                            contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
+                                character_id=character_id,
+                                contract_id=contract["contract_id"],
+                                token=token.valid_access_token(),
+                            ).results()
+
+                            objs = []
+
+                            for item in contract_items:
+
+                                cont = Contract.objects.get(
+                                    contract_id=contract["contract_id"]
+                                )
+                                itm = EveType.objects.get(pk=item["type_id"])
+
+                                contract_item = ContractItem(
+                                    contract=cont,
+                                    eve_type=itm,
+                                    quantity=item["quantity"],
+                                )
+
+                                objs.append(contract_item)
+
+                            try:
+                                ContractItem.objects.bulk_create(objs)
+                                logger.debug(
+                                    "Succesfully added items for contract %s into database"
+                                    % contract["contract_id"]
+                                )
+                            except Error as e:
+                                logger.error(
+                                    "Error adding items for contract %s: %s"
+                                    % (contract["contract_id"], e)
+                                )
+
+                            message = "**New buyback contract**\n\n"
+                            message += f"**Issued to:** {tracking.program.owner}\n"
+                            message += f"**Tracking:** {tracking.tracking_number}\n"
+                            message += f'**Value:** {contract["price"]}\n\n'
+
+                            if tracking.program.discord_dm_notification:
+
+                                send_user_notification(
+                                    user=self.user,
+                                    level="success",
+                                    title=_("New buyback contract"),
+                                    message=message,
+                                )
+
+                            if tracking.program.discord_channel_notification:
+                                send_message_to_discord_channel(
+                                    channel_id=tracking.program.discord_channel_notification,
+                                    message=message,
+                                )
+
+                        else:
+                            logger.debug("Contract %s updated." % obj.contract_id)
+
+                        if (
+                            old_contract.status == "outstanding"
+                            and obj.status == "finished"
+                        ):
+                            user_settings = UserSettings.objects.get(
+                                user=tracking.issuer_user
+                            )
+
+                            if user_settings.disable_notifications is False:
+
+                                logger.info(
+                                    "Contract %s has been completed. Sending notification for %s"
+                                    % (obj.contract_id, tracking.issuer_user)
+                                )
+
+                                message = "**Buyback contract accepted**\n\n"
+                                message += f"**Issued to:** {tracking.program.owner}\n"
+                                message += f"**Tracking:** {tracking.tracking_number}\n"
+                                message += f'**Value:** {contract["price"]}\n'
+                                message += f"*You can disable these notifications at {url}/buybackprogram/user_settings_edit*\n\n"
+
+                                send_user_notification(
+                                    user=tracking.issuer_user,
+                                    level="success",
+                                    title=_("Buyback contract accepted"),
+                                    message=message,
+                                )
+
+        logger.debug("Fetching corporation contracts for %s" % self.user)
 
         corporation_contracts = self._fetch_corporation_contracts()
 
-        for contract in corporation_contracts:
-
-            # Only get contracts with the correct prefill ticker
-            if BUYBACKPROGRAM_TRACKING_PREFILL in contract["title"]:
-                obj, created = Contract.objects.update_or_create(
-                    contract_id=contract["contract_id"],
-                    defaults={
-                        "contract_id": contract["contract_id"],
-                        "assignee_id": contract["assignee_id"],
-                        "availability": contract["availability"],
-                        "date_completed": contract["date_completed"],
-                        "date_expired": contract["date_expired"],
-                        "date_issued": contract["date_issued"],
-                        "for_corporation": contract["for_corporation"],
-                        "issuer_corporation_id": contract["issuer_corporation_id"],
-                        "issuer_id": contract["issuer_id"],
-                        "start_location_id": contract["start_location_id"],
-                        "price": contract["price"],
-                        "status": contract["status"],
-                        "title": contract["title"],
-                        "volume": contract["volume"],
-                    },
-                )
-
-                if created:
-                    logger.debug(
-                        "New corporation contract %s created. Starting item fetch"
-                        % contract["contract_id"]
-                    )
-
-                    corporation_id = self.character.character.corporation_id
-
-                    contract_items = esi.client.Contracts.get_corporations_corporation_id_contracts_contract_id_items(
-                        corporation_id=corporation_id,
-                        contract_id=contract["contract_id"],
-                        token=token.valid_access_token(),
-                    ).results()
-
-                    objs = []
-
-                    for item in contract_items:
-
-                        cont = Contract.objects.get(contract_id=contract["contract_id"])
-                        itm = EveType.objects.get(pk=item["type_id"])
-
-                        contract_item = ContractItem(
-                            contract=cont,
-                            eve_type=itm,
-                            quantity=item["quantity"],
-                        )
-
-                        objs.append(contract_item)
-
+        for tracking in tracking_numbers:
+            for contract in corporation_contracts:
+                if tracking.tracking_number in contract["title"]:
                     try:
-                        ContractItem.objects.bulk_create(objs)
-                        logger.debug(
-                            "Succesfully added items for contract %s into database"
-                            % contract["contract_id"]
+                        old_contract = Contract.objects.get(
+                            contract_id=contract["contract_id"]
                         )
-                    except Error as e:
-                        logger.error(
-                            "Error adding items for contract %s: %s"
-                            % (contract["contract_id"], e)
+
+                    except ProgramItem.DoesNotExist:
+                        old_contract = False
+
+                    if old_contract.status not in ["finished", "rejected"]:
+                        obj, created = Contract.objects.update_or_create(
+                            contract_id=contract["contract_id"],
+                            defaults={
+                                "contract_id": contract["contract_id"],
+                                "assignee_id": contract["assignee_id"],
+                                "availability": contract["availability"],
+                                "date_completed": contract["date_completed"],
+                                "date_expired": contract["date_expired"],
+                                "date_issued": contract["date_issued"],
+                                "for_corporation": contract["for_corporation"],
+                                "issuer_corporation_id": contract[
+                                    "issuer_corporation_id"
+                                ],
+                                "issuer_id": contract["issuer_id"],
+                                "start_location_id": contract["start_location_id"],
+                                "price": contract["price"],
+                                "status": contract["status"],
+                                "title": contract["title"],
+                                "volume": contract["volume"],
+                            },
                         )
-                else:
-                    logger.debug(
-                        "Corporation contract %s updated." % contract["contract_id"]
-                    )
+
+                        if created:
+                            logger.debug(
+                                "New corporation contract %s created. Starting item fetch"
+                                % contract["contract_id"]
+                            )
+
+                            corporation_id = self.character.character.corporation_id
+
+                            contract_items = esi.client.Contracts.get_corporations_corporation_id_contracts_contract_id_items(
+                                corporation_id=corporation_id,
+                                contract_id=contract["contract_id"],
+                                token=token.valid_access_token(),
+                            ).results()
+
+                            objs = []
+
+                            for item in contract_items:
+
+                                cont = Contract.objects.get(
+                                    contract_id=contract["contract_id"]
+                                )
+                                itm = EveType.objects.get(pk=item["type_id"])
+
+                                contract_item = ContractItem(
+                                    contract=cont,
+                                    eve_type=itm,
+                                    quantity=item["quantity"],
+                                )
+
+                                objs.append(contract_item)
+
+                            try:
+                                ContractItem.objects.bulk_create(objs)
+                                logger.debug(
+                                    "Succesfully added items for contract %s into database"
+                                    % contract["contract_id"]
+                                )
+                            except Error as e:
+                                logger.error(
+                                    "Error adding items for contract %s: %s"
+                                    % (contract["contract_id"], e)
+                                )
+
+                            user_settings = UserSettings.objects.get(user=self.user)
+
+                            message = "**New buyback contract**\n\n"
+                            message += f"**Issued to:** {tracking.program.owner}\n"
+                            message += f"**Tracking:** {tracking.tracking_number}\n"
+                            message += f'**Value:** {contract["price"]}\n\n'
+
+                            if tracking.program.discord_dm_notification:
+
+                                send_user_notification(
+                                    user=self.user,
+                                    level="success",
+                                    title=_("New buyback contract"),
+                                    message=message,
+                                )
+
+                            if tracking.program.discord_channel_notification:
+                                send_message_to_discord_channel(
+                                    channel_id=tracking.program.discord_channel_notification,
+                                    message=message,
+                                )
+
+                        else:
+                            logger.debug(
+                                "Corporation contract %s updated."
+                                % contract["contract_id"]
+                            )
+
+                        if (
+                            old_contract.status == "outstanding"
+                            and obj.status == "finished"
+                        ):
+                            user_settings = UserSettings.objects.get(
+                                user=tracking.issuer_user
+                            )
+
+                            if user_settings.disable_notifications is False:
+
+                                logger.info(
+                                    "Contract %s has been completed. Sending notification for %s"
+                                    % (obj.contract_id, tracking.issuer_user)
+                                )
+
+                                message = "**Buyback contract accepted**\n\n"
+                                message += f"**Issued to:** {tracking.program.owner}\n"
+                                message += f"**Tracking:** {tracking.tracking_number}\n"
+                                message += f'**Value:** {contract["price"]}\n'
+                                message += f"*You can disable these notifications at {url}/buybackprogram/user_settings_edit*\n\n"
+
+                                send_user_notification(
+                                    user=tracking.issuer_user,
+                                    level="success",
+                                    title=_("Buyback contract accepted"),
+                                    message=message,
+                                )
 
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
     def _fetch_contracts(self, token) -> list:
@@ -469,6 +617,19 @@ class Program(models.Model):
         help_text="The state(s) that will be able to see this buyback program. If none is selected program is open for all.",
     )
 
+    discord_dm_notification = models.BooleanField(
+        verbose_name="Discord direct messages for new contracts",
+        default=False,
+        help_text="Check if you want to receive a direct message notification each time a new contract is created. <b>Requires aa-discordbot app to work</b>",
+    )
+
+    discord_channel_notification = models.BigIntegerField(
+        verbose_name="Discord channel ID for notifications",
+        null=True,
+        blank=True,
+        help_text="Check if you want to feed new contracts to a discord channel. <b>Requires aa-discordbot app to work</b>",
+    )
+
     class Meta:
         default_permissions = ()
 
@@ -615,3 +776,31 @@ class ContractItem(models.Model):
     )
 
     quantity = models.IntegerField()
+
+
+class UserSettings(models.Model):
+    """
+    User settings
+    """
+
+    user = models.ForeignKey(
+        User,
+        related_name="+",
+        null=True,
+        blank=True,
+        default=None,
+        on_delete=models.SET(get_sentinel_user),
+    )
+
+    disable_notifications = models.BooleanField(
+        default=False,
+    )
+
+    class Meta:
+        """
+        Meta definitions
+        """
+
+        default_permissions = ()
+        verbose_name = _("User Settings")
+        verbose_name_plural = _("User Settings")

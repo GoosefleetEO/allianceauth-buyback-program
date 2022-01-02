@@ -29,7 +29,7 @@ class Command(BaseCommand):
         EveType.objects.update_or_create_all_esi(
             include_children=False,
             wait_for_children=False,
-            enabled_sections=[EveType.Section.TYPE_MATERIALS],
+            enabled_sections=[EveType.Section.TYPE_MATERIALS, EveType.Section.DOGMAS],
         )
 
     def handle(self, *args, **options):

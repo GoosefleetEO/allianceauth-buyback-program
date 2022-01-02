@@ -1,8 +1,9 @@
 from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
-from eveuniverse.models import EveSolarSystem, EveType
+from django.utils.translation import gettext as _
+from eveuniverse.models import EveMarketGroup, EveSolarSystem, EveType
 
-from buybackprogram.models import Location, Owner, Program
+from buybackprogram.models import Location, Owner, Program, UserSettings
 
 
 class ProgramForm(forms.ModelForm):
@@ -32,6 +33,12 @@ class ProgramItemForm(forms.Form):
         label="Item type",
         help_text="Add the name of item which you want to determine an tax on. Once you start typing, we offer suggestions",
         empty_label=None,
+    )
+    marketgroup = forms.ModelChoiceField(
+        queryset=EveMarketGroup.objects.all(),
+        label="Item Group",
+        help_text="Select a group to be added to special taxation. Each item in the group will be added with the same",
+        required=False,
     )
     item_tax = forms.IntegerField(
         label="Tax amount",
@@ -99,3 +106,26 @@ class CalculatorForm(forms.Form):
         help_text="You can set a optional donation percentage on your contract",
         validators=[MaxValueValidator(100), MinValueValidator(0)],
     )
+
+
+class UserSettingsForm(forms.ModelForm):
+    """
+    User settings form
+    """
+
+    disable_notifications = forms.BooleanField(
+        initial=False,
+        required=False,
+        label=_(
+            "Disable notifications. "
+            "(Auth and Discord, if a relevant module is installed)"
+        ),
+    )
+
+    class Meta:  # pylint: disable=too-few-public-methods
+        """
+        Meta definitions
+        """
+
+        model = UserSettings
+        fields = ["disable_notifications"]

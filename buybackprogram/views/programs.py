@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy
 from esi.decorators import token_required
+from eveuniverse.models import EveType
 
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
@@ -178,7 +179,7 @@ def location_add(request):
             name = form.cleaned_data["name"]
             structure_id = form.cleaned_data["structure_id"] or None
 
-            owner = Owner.objects.get(user=request.user)
+            owner = Owner.objects.filter(user=request.user).first()
 
             created = Location.objects.update_or_create(
                 eve_solar_system=eve_solar_system,
@@ -265,25 +266,48 @@ def program_edit_item(request, program_pk):
         )
 
         if form.is_valid():
-            item_type = form.cleaned_data["item_type"]
+
             item_tax = form.cleaned_data["item_tax"]
             disallow_item = form.cleaned_data["disallow_item"]
 
-            created = ProgramItem.objects.update_or_create(
-                item_type=item_type,
-                program=program,
-                defaults={
-                    "item_tax": item_tax,
-                    "disallow_item": disallow_item,
-                },
-            )
+            if form.cleaned_data["marketgroup"]:
+                logger.debug(
+                    "Adding %s items to special taxation"
+                    % form.cleaned_data["marketgroup"]
+                )
 
-            if created:
+                item_type = EveType.objects.filter(
+                    eve_market_group=form.cleaned_data["marketgroup"]
+                )
+
+            item_type = [form.cleaned_data["item_type"]]
+
+            for item in item_type:
+
+                ProgramItem.objects.update_or_create(
+                    item_type=item,
+                    program=program,
+                    defaults={
+                        "item_tax": item_tax,
+                        "disallow_item": disallow_item,
+                    },
+                )
+
+            if len(item_type) == 1:
                 messages_plus.success(
                     request,
                     format_html(
                         "Added <strong>{}</strong> to program with <strong>{}</strong> % tax",
-                        item_type,
+                        item_type[0].name,
+                        item_tax,
+                    ),
+                )
+            else:
+                messages_plus.success(
+                    request,
+                    format_html(
+                        "Added <strong>{}</strong> items to program with <strong>{}</strong> % tax",
+                        len(item_type),
                         item_tax,
                     ),
                 )

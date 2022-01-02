@@ -1,12 +1,15 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import F, Q
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.utils.html import format_html
 from eveuniverse.models import EveSolarSystem, EveType
 
 from allianceauth.services.hooks import get_extension_logger
 
-from buybackprogram.models import Program
+from buybackprogram.forms import UserSettingsForm
+from buybackprogram.models import Program, UserSettings
+from buybackprogram.utils import messages_plus
 
 logger = get_extension_logger(__name__)
 
@@ -22,6 +25,17 @@ def index(request):
     user_state = [request.user.profile.state]
 
     logger.debug("User %s state is : %s" % (request.user, user_state))
+
+    try:
+        user_settings = UserSettings.objects.get(user=request.user)
+    except UserSettings.DoesNotExist:
+        # create the default settings in the DB for the current user
+        user_settings = UserSettings()
+        user_settings.user = request.user
+        user_settings.save()
+
+        # get the user settings again
+        user_settings = UserSettings.objects.get(user=request.user)
 
     program = (
         Program.objects.filter(
@@ -78,3 +92,55 @@ def solarsystem_autocomplete(request):
     ).values("value", "text")
 
     return JsonResponse(list(items), safe=False)
+
+
+@login_required
+@permission_required("buybackprogram.basic_access")
+def user_settings_edit(request):
+
+    try:
+        user_settings = UserSettings.objects.get(user=request.user)
+    except UserSettings.DoesNotExist:
+        # create the default settings in the DB for the current user
+        user_settings = UserSettings()
+        user_settings.user = request.user
+        user_settings.save()
+
+        # get the user settings again
+        user_settings = UserSettings.objects.get(user=request.user)
+
+    if request.method != "POST":
+        user_settings_form = UserSettingsForm(instance=user_settings)
+    else:
+        user_settings_form = UserSettingsForm(request.POST, instance=user_settings)
+
+        # check whether it's valid:
+        if user_settings_form.is_valid():
+            # user_settings.user = request.user
+            user_settings.disable_notifications = user_settings_form.cleaned_data[
+                "disable_notifications"
+            ]
+            user_settings.save()
+
+            if user_settings.disable_notifications:
+                messages_plus.success(
+                    request,
+                    format_html(
+                        "Discord notifications <strong>disabled</strong>",
+                    ),
+                )
+            else:
+                messages_plus.success(
+                    request,
+                    format_html(
+                        "Discord notifications <strong>enabled</strong>",
+                    ),
+                )
+
+            return redirect("buybackprogram:index")
+
+    context = {
+        "form": user_settings_form,
+    }
+
+    return render(request, "buybackprogram/user_settings.html", context)

@@ -10,6 +10,7 @@ urlpatterns = [
     path("setup", programs.setup, name="setup"),
     path("program_add", programs.program_add, name="program_add"),
     path("location_add", programs.location_add, name="location_add"),
+    path("user_settings_edit", common.user_settings_edit, name="user_settings_edit"),
     url(
         r"^location(?P<location_pk>[0-9]+)/remove$",
         programs.location_remove,

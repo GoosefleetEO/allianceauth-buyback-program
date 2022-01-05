@@ -13,7 +13,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-## [0.2.0] - yyyy-mm-dd
+## [1.0.0] - yyyy-mm-dd
+
+** THIS RELEASE CONTAINS MAJOR CHANGES THAT REQUIRE A CLEAN REINSTALL OF THE APP. ALL PREVIOUS DATA INSIDE THIS APP WILL BE LOST **
+
+## Updating from 0.1.8 to 1.0.0
+- Activate your virtual enviroment `source /home/allianceserver/venv/auth/bin/activate`
+- Remove all data from 0.1.8 ** THIS COMMAND WILL REMOVE ALL DATA FROM THE BUYBACKPROGRAM APP STORED IN YOUR DATABASE ** `python /home/allianceserver/myauth/manage.py migrate buybackprogram zero`
+- Upgrade to 1.0.0 with `pip install -U aa-buybackprogram==1.0.0`
+- Run the migrations `python /home/allianceserver/myauth/manage.py migrate`
+- Collect static files `python /home/allianceserver/myauth/manage.py collectstatic`
+- Restart auth `supervisorctl restart myauth:`
+- Setup your programs
 
 ### Added
 - Fixed #10, added ability to delete own locations

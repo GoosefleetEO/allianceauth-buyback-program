@@ -70,7 +70,6 @@ class Owner(models.Model):
 
     corporation = models.OneToOneField(
         EveCorporationInfo,
-        primary_key=True,
         on_delete=models.deletion.CASCADE,
         related_name="+",
     )

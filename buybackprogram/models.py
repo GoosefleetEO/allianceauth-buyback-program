@@ -68,7 +68,7 @@ class Owner(models.Model):
         (ERROR_ESI_UNAVAILABLE, "ESI API is currently unavailable"),
     ]
 
-    corporation = models.OneToOneField(
+    corporation = models.ForeignKey(
         EveCorporationInfo,
         on_delete=models.deletion.CASCADE,
         related_name="+",

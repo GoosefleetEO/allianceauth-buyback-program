@@ -24,21 +24,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Run the migrations `python /home/allianceserver/myauth/manage.py migrate`
 - Collect static files `python /home/allianceserver/myauth/manage.py collectstatic`
 - Restart auth `supervisorctl restart myauth:`
+- Load data `python manage.py buybackprogram_load_data`
+- Load prices `python manage.py buybackprogram_load_prices`
 - Setup your programs
 
 ### Added
 - Fixed #10, added ability to delete own locations
-- Fixes #12, added requirement for eveuniverse in readme
 - Fixes #9, added ability to track contract locations per structure ID
 - Fixes #13, added ability to praisal blue and red loot by npc buy orders
 - Fixes #5, added the ability to receive notifications for new contracts and for sellers notifications about completed contracts
+- Fixed #15, added mention of scopes into readme file
+- Fixes #12, added requirement for eveuniverse in readme
+- Fixes #8, added the ability to add special taxes via market groups
 
 ### Changed
 - Fixes #11, now also tracking contracts that have extra characters in the description such as extra spaces.
 - Merger readme periodic tasks into a single code block to make copying easier
+- Removed ability to use locations that were created by other managers.
+- Moved some views into a separate file
+- Added more views for special taxes
+- Renamed special taxes view paths
 
 ### Fixed
-- Removed ability to use locations that were created by other managers.
+- Fixed #16, a corporation can now have multiple managers
 
 ## [0.1.8] - 2021-12-24
 

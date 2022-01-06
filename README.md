@@ -55,39 +55,38 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 	- Alerts for mistakes in contracts such as missmatching price
 - Contract tracking history
 
-## Requirements
+## Step 1 - Prerequisites
 
 1. Buyback program is a plugin for Alliance Auth. If you don't have Alliance Auth running already, please install it first before proceeding. (see the official [AA installation guide](https://allianceauth.readthedocs.io/en/latest/installation/auth/allianceauth/) for details)
 1. Buyback program needs the app [django-eveuniverse](https://gitlab.com/ErikKalkoken/django-eveuniverse) to function. Please make sure it is installed, before before continuing.
 
-## Installation
+## Step 2 - Install App
 
 1. Activate your venv ```source /home/allianceserver/venv/auth/bin/activate```
 1. Install the plugin ```pip install aa-buybackprogram```
-1. Add ```buybackprogram``` into your settings/local.py installed apps section
+1. Add ```'buybackprogram',``` into your settings/local.py installed apps section
 1. Run migrations ```python manage.py migrate```
 1. Collect static files ```python manage.py collectstatic```
 1. Reload supervisor
-1. Run the management commands in the next section
 
-## Update EVE Online API Application
+## Step 3 - Update EVE Online API Application
 Update the Eve Online API app used for authentication in your AA installation to include the following scopes:
 - `esi-contracts.read_character_contracts.v1`
 - `esi-contracts.read_corporation_contracts.v1`
 
-## Setup
+## Step 4 - Data Preload
 
 Buybackprogram requires a lot of data to function as it is designed to allow your clients to sell you any items that exsist in EVE. For this reason pre-loading all the date will take a while.
 
-### Type data
+### Preload Load Type Data
 
-To load type data run the command ```python manage.py buybackprogram_load_data```. This will start the preload of all `EveType`, `SolarSystem` and `EveTypeMaterial` objects.
+To load type data run the command ```python manage.py buybackprogram_load_data```. This will start the preload of all `EveType`, `SolarSystem`, `EveMarketGroup` and `EveTypeMaterial` objects.
 
 You can follow the progress of the load from your auth da
 
-> :warning: You will need to wait for the type data to load up before you can start to use the plugin. Trying to calculate prices for items that have not been preloaded into the database will result in 0 prices for the item degardless of your settings.
+> :warning: You will need to wait for the type data to load up before you can start to use the plugin. Trying to adjust program settings while the required data has not been yet loaded may result in failure of adjusting the settings.
 
-### Price data
+### Preload Price Data
 
 After you have preloaded the type data you can preload price data into the database. Price data preloading is not mandatory but will speed up the first buyback calculations.
 
@@ -95,7 +94,7 @@ After you have preloaded the type data you can preload price data into the datab
 
 To preload price data run ```python manage.py buybackprogram_load_prices```
 
-### Periodic tasks
+## Step 5 - Configure Auth settings
 
 Buyback program requires a few periodic tasks to operate and update its data.
 
@@ -117,7 +116,14 @@ CELERYBEAT_SCHEDULE['buybackprogram_update_all_contracts'] = {
 }
 ```
 
-## Permissions
+**Additional settings**
+You may change the following settings by adding the lines in your `local.py` setting files
+
+Name | Description | Default
+-- | -- | --
+BUYBACKPROGRAM_TRACKING_PREFILL | This is the prefill tag you will have on the tracking description for your contracts | aa-bbp.
+
+## Step 6 - Adjust Permissions
 Overview of all permissions in this program. Note that all permissions are in the "general" section.
 
 Name | Purpose | Example Target Audience
@@ -126,7 +132,7 @@ basic_access | Can access this app and see own statics. Can use buyback programs
 manage_programs | Can create new locations and buyback programs and manage their own buyback programs. Can see own buyback programs statics. | Buyback managers
 see_all_statics | Can see all statistics in all buyback programs | Leadership
 
-## Settings
+## Step 7 - Program Setup
 After you have preloaded all the needed data you can start to setup programs.
 
 Each user with `manage_programs` permission is able to setup their own buyback programs.
@@ -135,14 +141,14 @@ Each user with `manage_programs` permission is able to setup their own buyback p
 Each buyback program is operated by a manager. To add a new manager click on the `setup manager` button.
 
 ### Locations
-1. Each buyback program operates at a location that is constructed of `SolarSystem` and a `Custom name` and an optional `Structure ID`. To add a new location click on the `add location` button on the buyback page.
+Each buyback program operates at a location that is constructed of `SolarSystem` and a `Custom name` and an optional `Structure ID`. To add a new location click on the `add location` button on the buyback page.
 
-#### Solar System & Name
+**Solar System & Name**
 Find a solar system by typing in the solar system box. Then determine a name for the structure. Most often you want to use the actual ingame name of the structure so that people are able to identify the location.
 
 The solarsytem name will indicate your sellers where the program contract structure is located. The name will describe the structure name in where the contracts should be created and most often should be identical to the actual structure name ingame.
 
-#### Structure ID
+**Structure ID**
 Structure ID is optional and will enable contract location tracking in the program statistics page. If a program location has been given a structure ID the statistics page will display a warning if the user has made the actual contract from some other structure than the one that was determined in the buyback program.
 
 The easiest way to find the actual structure id is to link the structure name into any chat box and post the structure name into the chat. This can be dont in any channel or the structure name can be also copied from any MOTDs.
@@ -153,13 +159,8 @@ After you have posted the structure name in the chat right click it and press co
 ```
 The unique structure ID for your structure is then `1037962518481`. Adding the ID to the location ID field will check if the contract creation location matches this ID.
 
-### Additional settings
-Name | Description | Default
--- | -- | --
-BUYBACKPROGRAM_TRACKING_PREFILL | This is the prefill tag you will have on the tracking description for your contracts | aa-bbp.
-
-## Program
-Once you have created a location you can setup the actual program. Click on the `create program` button to create a new program.
+## Step 8 - Create Program
+Once you have created a location and added at least one manager you can setup the actual program. Click on the `create program` button to create a new program.
 
 ### Program settings
 
@@ -180,7 +181,6 @@ General tax is applied on all items sold via the buyback. You can add additional
 You can add a fuel cost expense that is applied on each item sold via this program based on the volume of the item.
 
 > :information_source: This setting is aimed more to null sec buyback programs to make it easier to calculate your taxes and display your members the expenses you have when selling.
-
 
 #### Price density modifier
 You can use a price density modifier which will add a additional tax on items with low price per volume ratio such as T1 ships.
@@ -249,9 +249,35 @@ You can send notifications about new contracts directly into the discord channel
 
 > :information_source: Requires the [aa-discordbot plugin](https://github.com/pvyParts/allianceauth-discordbot) to work
 
-## Program item settings
+## Step 9 - Special Taxes
 You can modify individual item settings or allow items for a program that has set `allow all items = False` via the `special taxes` menu for each program.
 
 Set a item specific tax for each item. The tax wil be applied on top of the default tax for the program. You can also disallow an item from beeing accepted in the contract completely.
 
 > :information_source: The item specific tax can also be a negative value allowing you to decrease taxes on certain items.
+
+To adjust individual item taxes inside a program click on the `Special taxes` button next to your program.
+
+You can either add items one by one with the `add item` button or add all items that belongs to a market group and every subchild market group of that group with `add market group`
+
+You can edit an item on the taxation table simply by adding it again. To delete the item press the delete button next to it or to delete all items in the program click on the delete all items button.
+
+**Market Groups**
+When you add an market group each item inside that market group, the child of the market group and the child of the child group will be added to the item taxes (3 steps down)
+
+The easiest way to check which items are under which market group is to open the market window ingame or third party programs such as [https://evemarketer.com/](https://evemarketer.com/)
+
+Example:
+
+Market group `Minerals` is the bottom market group that includes the standard minerals. Adding this market group to the taxation will add 8 items to the taxes (Tritanium, Pyerite etc.)
+
+Market group `Standard ores` is a parent gategory and there are no direct items under this category. However this category has child categories such as Veldsar, Jaspet, Scordite which each includes multiple variations of the ores. Adding the `Standard ores` category will add each ore type to the special tax section.
+
+**Most Common Groups**
+Name | Includes | Items
+-- | --
+Standard Ores | Normal ores from belts and anomalies | Veldspar, Hedbergite, Compressed Arkonor ...
+Moon Ores | Ores from moon mining | Cobaltite, Loparite, Pollucite
+Ice Ores | Ores from ice mining | Blue Ice, Dark Glitter, Compressed Blue Ice ....
+Minerals | Contains materials for refining Standard Ore | Tritanium, Pyerite ....
+Salvage Materials | Salvage from loot | Armor Plates, Trigger Unit, Ancient Radar Decorrelator ...

@@ -61,7 +61,7 @@ def program_edit_item(request, program_pk):
                 )
 
             if disallow_item:
-                messages_plus.success(
+                messages_plus.warning(
                     request,
                     format_html(
                         "Disallowed <strong>{}</strong> in program",
@@ -109,6 +109,7 @@ def program_edit_marketgroup(request, program_pk):
         if form.is_valid():
 
             item_types = []
+            item_count = 0
 
             item_tax = form.cleaned_data["item_tax"]
             disallow_item = form.cleaned_data["disallow_item"]
@@ -121,27 +122,17 @@ def program_edit_marketgroup(request, program_pk):
                 eve_market_group=form.cleaned_data["marketgroup"]
             )
 
-            logger.debug("Adding %s to market items" % item_type)
-
             item_types.append(item_type)
 
             for m in marketgroups.market_group_children.all():
 
-                logger.debug("Got market child groups: %s" % m)
-
                 item_type = EveType.objects.filter(eve_market_group=m)
-
-                logger.debug("Adding %s to market items" % item_type)
 
                 item_types.append(item_type)
 
                 for m2 in m.market_group_children.all():
 
-                    logger.debug("Got market child groups: %s" % m)
-
                     item_type = EveType.objects.filter(eve_market_group=m2)
-
-                    logger.debug("Adding %s to market items" % item_type)
 
                     item_types.append(item_type)
 
@@ -155,35 +146,28 @@ def program_edit_marketgroup(request, program_pk):
                         program=program,
                         defaults={
                             "item_tax": item_tax,
-                            "disallow_item": False,
+                            "disallow_item": disallow_item,
                         },
                     )
 
-            if disallow_item:
-                messages_plus.success(
-                    request,
-                    format_html(
-                        "Disallowed <strong>{}</strong> in program",
-                        item_type[0].name,
-                    ),
-                )
+                    item_count += 1
 
-            elif len(item_types) == 1:
-                messages_plus.success(
+            if disallow_item:
+                messages_plus.warning(
                     request,
                     format_html(
-                        "Adjusted <strong>{}</strong> tax in program with <strong>{}</strong> %, tax is now set at {} %",
-                        item_types,
-                        item_tax,
-                        program.tax + item_tax,
+                        "Disallowed <strong>{}</strong> items from market group {} in program",
+                        item_count,
+                        form.cleaned_data["marketgroup"],
                     ),
                 )
             else:
                 messages_plus.success(
                     request,
                     format_html(
-                        "Added <strong>{}</strong> items to program with <strong>{}</strong> % tax",
-                        len(item_types),
+                        "Added <strong>{}</strong> items from market group {} to program with <strong>{}</strong> % tax",
+                        item_count,
+                        form.cleaned_data["marketgroup"],
                         item_tax,
                     ),
                 )

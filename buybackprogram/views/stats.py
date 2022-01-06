@@ -49,18 +49,20 @@ def my_stats(request):
                 values["finished"] += contract.price
                 values["finished_count"] += 1
 
+            contract.notes = []
+
             contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
 
             logger.debug("Issuer name for contract is %s" % contract.issuer_name)
 
             contract.items = ContractItem.objects.filter(contract=contract)
 
-            structure_id = tracking.program.location.structure_id
+            if tracking.program:
+                structure_id = tracking.program.location.structure_id
+            else:
+                structure_id = False
 
-            if (
-                contract.start_location_id
-                and structure_id != contract.start_location_id
-            ):
+            if structure_id and structure_id != contract.start_location_id:
                 note = {
                     "icon": "fa-compass",
                     "color": "red",
@@ -177,12 +179,12 @@ def program_stats(request):
 
             contract.items = ContractItem.objects.filter(contract=contract)
 
-            structure_id = tracking.program.location.structure_id
+            if tracking.program:
+                structure_id = tracking.program.location.structure_id
+            else:
+                structure_id = False
 
-            if (
-                contract.start_location_id
-                and structure_id != contract.start_location_id
-            ):
+            if structure_id and structure_id != contract.start_location_id:
                 note = {
                     "icon": "fa-compass",
                     "color": "red",
@@ -215,18 +217,19 @@ def program_stats(request):
 
                 contract.notes.append(note)
 
-            if (
-                contract.assignee_id not in corporations
-                and tracking.program.is_corporation
-            ):
-                note = {
-                    "icon": "fa-user",
-                    "color": "orange",
-                    "message": "Contract %s is made for your character while they should be made to your corporation in this program."
-                    % tracking.tracking_number,
-                }
+            if tracking.program:
+                if (
+                    contract.assignee_id not in corporations
+                    and tracking.program.is_corporation
+                ):
+                    note = {
+                        "icon": "fa-user",
+                        "color": "orange",
+                        "message": "Contract %s is made for your character while they should be made to your corporation in this program."
+                        % tracking.tracking_number,
+                    }
 
-                contract.notes.append(note)
+                    contract.notes.append(note)
 
             if not tracking.tracking_number == contract.title:
                 note = {
@@ -313,12 +316,12 @@ def program_stats_all(request):
 
             contract.items = ContractItem.objects.filter(contract=contract)
 
-            structure_id = tracking.program.location.structure_id
+            if tracking.program:
+                structure_id = tracking.program.location.structure_id
+            else:
+                structure_id = False
 
-            if (
-                contract.start_location_id
-                and structure_id != contract.start_location_id
-            ):
+            if structure_id and structure_id != contract.start_location_id:
                 note = {
                     "icon": "fa-compass",
                     "color": "red",

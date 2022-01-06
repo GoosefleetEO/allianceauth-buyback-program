@@ -12,6 +12,7 @@ from buybackprogram.app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
 from buybackprogram.constants import (
     BLUE_LOOT_TYPE_IDS,
     MOON_ORE_EVE_GROUPS,
+    OPE_EVE_GROUPS,
     ORE_EVE_GROUPS,
     RED_LOOT_TYPE_IDS,
 )
@@ -44,10 +45,12 @@ def get_item_tax(program, item_id):
         return False
 
 
-def use_npc_price(item_id, program):
-    if item_id in BLUE_LOOT_TYPE_IDS and program.blue_loot_npc_price:
+def use_npc_price(item, program):
+    if item.id in BLUE_LOOT_TYPE_IDS and program.blue_loot_npc_price:
         return True
-    elif item_id in RED_LOOT_TYPE_IDS and program.red_loot_npc_price:
+    elif item.id in RED_LOOT_TYPE_IDS and program.red_loot_npc_price:
+        return True
+    elif item.eve_group.id in OPE_EVE_GROUPS and program.ope_npc_price:
         return True
     else:
         return False
@@ -288,7 +291,7 @@ def get_item_prices(item_type, name, quantity, program):
             compressed_type_prices = False
 
         # Get NPC prices
-        if use_npc_price(item_type.id, program):
+        if use_npc_price(item_type, program):
             item_npc_price = get_npc_price(item_type.id)
 
             npc_type_prices = {

@@ -14,7 +14,7 @@
     <form class="form" action="{% url 'buybackprogram:program_edit_marketgroup' program_pk=program.id %}" method="POST">
       {% csrf_token %}
       {{ form|bootstrap }}
-      <button type="submit" class="btn btn-primary">Add item</button>
+      <button type="submit" class="btn btn-primary">Add items</button>
     </form>
     <a class="btn btn-default navbar-btn btn-warning" href="{% url 'buybackprogram:program_special_taxes' program_pk=program.id %}"><i class="fas fa-long-arrow-alt-left">Item taxes</i></a>
   </div>

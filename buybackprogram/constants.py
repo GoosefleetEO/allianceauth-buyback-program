@@ -32,6 +32,8 @@ MOON_ORE_EVE_GROUPS = [
     4094,
 ]
 
+OPE_EVE_GROUPS = [493]
+
 BLUE_LOOT_TYPE_IDS = [
     30744,
     30745,

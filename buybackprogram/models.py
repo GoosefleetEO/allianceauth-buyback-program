@@ -122,8 +122,10 @@ class Owner(models.Model):
                             contract_id=contract["contract_id"]
                         )
 
-                    except ProgramItem.DoesNotExist:
-                        old_contract = False
+                    except Contract.DoesNotExist:
+                        logger.debug("No matching contracts found")
+                        old_contract = Contract.objects.none()
+                        old_contract.status = False
 
                     if old_contract.status not in ["finished", "rejected"]:
                         obj, created = Contract.objects.update_or_create(
@@ -255,8 +257,10 @@ class Owner(models.Model):
                             contract_id=contract["contract_id"]
                         )
 
-                    except ProgramItem.DoesNotExist:
-                        old_contract = False
+                    except Contract.DoesNotExist:
+                        logger.debug("No matching contracts found")
+                        old_contract = Contract.objects.none()
+                        old_contract.status = False
 
                     if old_contract.status not in ["finished", "rejected"]:
                         obj, created = Contract.objects.update_or_create(
@@ -594,13 +598,21 @@ class Program(models.Model):
     )
 
     blue_loot_npc_price = models.BooleanField(
+        verbose_name="NPC price for: Sleeper Components",
         default=False,
-        help_text="Valuate blue loot (Sleeper loot) by NPC buy order prices instead of Jita prices",
+        help_text="Use NPC price as value for blue loot",
     )
 
     red_loot_npc_price = models.BooleanField(
+        verbose_name="NPC price for: Triglavian Survey Database",
         default=False,
-        help_text="Valuate red loot (Triglavian loot) by NPC buy order prices instead of Jita prices",
+        help_text="Use NPC price as value for red loot",
+    )
+
+    ope_npc_price = models.BooleanField(
+        verbose_name="NPC price for: Overseer's Personal Effects",
+        default=False,
+        help_text="Use NPC price as value for OPEs",
     )
 
     restricted_to_group = models.ManyToManyField(

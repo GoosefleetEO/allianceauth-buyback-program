@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from django.urls import path
 
-from buybackprogram.views import calculate, common, programs, stats
+from buybackprogram.views import calculate, common, programs, special_taxes, stats
 
 app_name = "buybackprogram"
 
@@ -17,9 +17,19 @@ urlpatterns = [
         name="location_remove",
     ),
     url(
+        r"^program/(?P<program_pk>[0-9]+)/special_taxes$",
+        special_taxes.program_special_taxes,
+        name="program_special_taxes",
+    ),
+    url(
         r"^program/(?P<program_pk>[0-9]+)/edit_item$",
-        programs.program_edit_item,
+        special_taxes.program_edit_item,
         name="program_edit_item",
+    ),
+    url(
+        r"^program/(?P<program_pk>[0-9]+)/edit_marketgroup$",
+        special_taxes.program_edit_marketgroup,
+        name="program_edit_marketgroup",
     ),
     url(
         r"^program/(?P<program_pk>[0-9]+)/edit",
@@ -33,8 +43,13 @@ urlpatterns = [
     ),
     url(
         r"^program/(?P<program_pk>[0-9]+)/program_item/(?P<item_pk>[0-9]+)/remove$",
-        programs.program_item_remove,
+        special_taxes.program_item_remove,
         name="program_item_remove",
+    ),
+    url(
+        r"^program/(?P<program_pk>[0-9]+)/remove_all$",
+        special_taxes.program_item_remove_all,
+        name="program_item_remove_all",
     ),
     url(
         r"^program/(?P<program_pk>[0-9]+)/calculate$",
@@ -58,5 +73,10 @@ urlpatterns = [
         r"^solarsystem_autocomplete/$",
         common.solarsystem_autocomplete,
         name="solarsystem_autocomplete",
+    ),
+    url(
+        r"^marketgroup_autocomplete/$",
+        common.marketgroup_autocomplete,
+        name="marketgroup_autocomplete",
     ),
 ]

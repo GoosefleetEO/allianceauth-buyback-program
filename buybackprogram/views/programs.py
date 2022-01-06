@@ -6,14 +6,13 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy
 from esi.decorators import token_required
-from eveuniverse.models import EveType
 
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 
-from buybackprogram.forms import LocationForm, ProgramForm, ProgramItemForm
-from buybackprogram.models import Location, Owner, Program, ProgramItem
+from buybackprogram.forms import LocationForm, ProgramForm
+from buybackprogram.models import Location, Owner, Program
 from buybackprogram.utils import messages_plus
 
 logger = get_extension_logger(__name__)
@@ -251,79 +250,6 @@ def location_remove(request, location_pk):
 
 
 @login_required
-@permission_required("buybackprogram.basic_access")
-def program_edit_item(request, program_pk):
-    program = Program.objects.get(pk=program_pk)
-
-    program_items = ProgramItem.objects.filter(program=program)
-
-    if request.method != "POST":
-        form = ProgramItemForm()
-    else:
-        form = ProgramItemForm(
-            request.POST,
-            value=int(request.POST["item_type"]),
-        )
-
-        if form.is_valid():
-
-            item_tax = form.cleaned_data["item_tax"]
-            disallow_item = form.cleaned_data["disallow_item"]
-
-            if form.cleaned_data["marketgroup"]:
-                logger.debug(
-                    "Adding %s items to special taxation"
-                    % form.cleaned_data["marketgroup"]
-                )
-
-                item_type = EveType.objects.filter(
-                    eve_market_group=form.cleaned_data["marketgroup"]
-                )
-
-            item_type = [form.cleaned_data["item_type"]]
-
-            for item in item_type:
-
-                ProgramItem.objects.update_or_create(
-                    item_type=item,
-                    program=program,
-                    defaults={
-                        "item_tax": item_tax,
-                        "disallow_item": disallow_item,
-                    },
-                )
-
-            if len(item_type) == 1:
-                messages_plus.success(
-                    request,
-                    format_html(
-                        "Added <strong>{}</strong> to program with <strong>{}</strong> % tax",
-                        item_type[0].name,
-                        item_tax,
-                    ),
-                )
-            else:
-                messages_plus.success(
-                    request,
-                    format_html(
-                        "Added <strong>{}</strong> items to program with <strong>{}</strong> % tax",
-                        len(item_type),
-                        item_tax,
-                    ),
-                )
-
-            return HttpResponseRedirect(request.path_info)
-
-    context = {
-        "program": program,
-        "program_items": program_items,
-        "form": form,
-    }
-
-    return render(request, "buybackprogram/program_edit_item.html", context)
-
-
-@login_required
 @permission_required("buybackprogram.manage_programs")
 def program_remove(request, program_pk):
 
@@ -353,24 +279,3 @@ def program_remove(request, program_pk):
         )
 
     return redirect("buybackprogram:index")
-
-
-@login_required
-@permission_required("buybackprogram.manage_programs")
-def program_item_remove(request, item_pk, program_pk):
-
-    program_item = ProgramItem.objects.get(item_type=item_pk)
-
-    name = program_item.item_type
-
-    program_item.delete()
-
-    messages_plus.warning(
-        request,
-        format_html(
-            "Deleted <strong>{}</strong> from program",
-            name,
-        ),
-    )
-
-    return redirect("buybackprogram:program_edit_item", program_pk)

@@ -34,14 +34,9 @@ class ProgramItemForm(forms.Form):
         help_text="Add the name of item which you want to determine an tax on. Once you start typing, we offer suggestions",
         empty_label=None,
     )
-    marketgroup = forms.ModelChoiceField(
-        queryset=EveMarketGroup.objects.all(),
-        label="Item Group",
-        help_text="Select a group to be added to special taxation. Each item in the group will be added with the same",
-        required=False,
-    )
     item_tax = forms.IntegerField(
         label="Tax amount",
+        initial=0,
         validators=[MaxValueValidator(100), MinValueValidator(-100)],
         help_text="Set an tax on the item. If program default tax is defined this tax will be added on top of the program tax. If program does not allow all items this tax is used to calculate the tax for the product.",
     )
@@ -61,6 +56,36 @@ class ProgramItemForm(forms.Form):
                 pk=value,
                 published=True,
             ).exclude(eve_group__eve_category__id=9)
+
+
+class ProgramMarketGroupForm(forms.Form):
+    marketgroup = forms.ModelChoiceField(
+        queryset=EveMarketGroup.objects.none(),
+        label="Item type",
+        help_text="Add the name of item which you want to determine an tax on. Once you start typing, we offer suggestions",
+        empty_label=None,
+    )
+    item_tax = forms.IntegerField(
+        label="Tax amount",
+        initial=0,
+        validators=[MaxValueValidator(100), MinValueValidator(-100)],
+        help_text="Set an tax on the item. If program default tax is defined this tax will be added on top of the program tax. If program does not allow all items this tax is used to calculate the tax for the product.",
+    )
+    disallow_item = forms.BooleanField(
+        label="Disallow item in this program",
+        help_text="If you want to prevent any prices to be given for this item in this program you can check this box.",
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        value = kwargs.pop("value", None)
+
+        super(ProgramMarketGroupForm, self).__init__(*args, **kwargs)
+
+        if value is not None:
+            self.fields["marketgroup"].queryset = EveMarketGroup.objects.filter(
+                pk=value,
+            )
 
 
 class LocationForm(forms.Form):

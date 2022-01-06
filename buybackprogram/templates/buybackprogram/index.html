@@ -43,7 +43,7 @@
                     <a class="btn btn-success btn-sm" href="{% url 'buybackprogram:program_calculate' program_pk=program.id %}">
                         Use
                     </a>
-                    <a class="btn btn-sm btn-warning" href="{% url 'buybackprogram:program_edit_item' program_pk=program.id %}">Special taxes</a>
+                    <a class="btn btn-sm btn-warning" href="{% url 'buybackprogram:program_special_taxes' program_pk=program.id %}">Special taxes</a>
                     {% if perms.buybackprogram.manage_programs and program.owner.user == request.user %}
                         <a class="btn btn-sm btn-warning" href="{% url 'buybackprogram:program_edit' program_pk=program.id %}">Edit program</a>
                         <a class="btn btn-danger btn-sm" href="{% url 'buybackprogram:program_remove' program_pk=program.id %}">

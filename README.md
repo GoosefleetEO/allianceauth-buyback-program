@@ -70,6 +70,11 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 1. Reload supervisor
 1. Run the management commands in the next section
 
+## Update EVE Online API Application
+Update the Eve Online API app used for authentication in your AA installation to include the following scopes:
+- `esi-contracts.read_character_contracts.v1`
+- `esi-contracts.read_corporation_contracts.v1`
+
 ## Setup
 
 Buybackprogram requires a lot of data to function as it is designed to allow your clients to sell you any items that exsist in EVE. For this reason pre-loading all the date will take a while.

@@ -11,7 +11,7 @@
 <div class="panel-body" style="min-height: 100px;">
   {% if perms.buybackprogram.manage_programs and program.owner.user == request.user %}
   <div>
-    <form class="form" action="{% url 'buybackprogram:program_edit_item' program_pk=program.id %}" method="POST">
+    <form class="form" action="{% url 'buybackprogram:program_edit_marketgroup' program_pk=program.id %}" method="POST">
       {% csrf_token %}
       {{ form|bootstrap }}
       <button type="submit" class="btn btn-primary">Add item</button>

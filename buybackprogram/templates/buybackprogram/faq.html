@@ -1,0 +1,37 @@
+{% extends 'buybackprogram/page.html' %}
+{% load i18n %}
+{% load humanize %}
+{% load bootstrap %}
+{% load static %}
+
+{% block body %}
+<div class="panel-heading">
+  <h2 class="panel-title">Frequently Asked Questions</h2>
+</div>
+<div class="panel-body" style="min-height: 100px;">
+  <div>
+    <h3>Where can i sell my items?</h3>
+    <p>Each program has a system and a structure mentioned on the program page. The manager for this program will most likely only accept items if the contract has been created at this exact location.</p>
+
+    <h3>How can i sell my items?</h3>
+    <ul>
+      <li>Have your items at the program location</li>
+      <li>Click <b>Use</b> on the program you wish to use</li>
+      <li>Copy paste your items from your inventory into the calculator</li>
+      <li>Follow the settings given by the calculator when creating the contract</li>
+    </ul>
+
+    <h3>How can i disable discord notifications for my contracts?</h3>
+    <p>You can disable notifications about your contracts via the <a href="user_settings_edit">My Settings</a> page</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_javascript %}
+{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block extra_script %}
+{% endblock %}

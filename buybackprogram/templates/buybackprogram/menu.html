@@ -16,6 +16,11 @@
 
         <div class="collapse navbar-collapse" id="bs-buybackprogram-navbar-collapse-1">
             <ul class="nav navbar-nav">
+                <li class="{% navactive request 'buybackprogram:faq' %}">
+                    <a href="{% url 'buybackprogram:faq' %}">
+                        FAQ
+                    </a>
+                </li>
                 <li class="{% navactive request 'buybackprogram:my_stats' %}">
                     <a href="{% url 'buybackprogram:my_stats' %}">
                         My Statistics
@@ -38,21 +43,18 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if perms.buybackprogram.manage_programs %}
+                    <a class="btn btn-default navbar-btn" href="{% url 'buybackprogram:setup' %}">
+                        1. Setup Manager
+                    </a>
                     <a class="btn btn-default navbar-btn" href="{% url 'buybackprogram:location_add' %}">
-                        Add location
+                        2. Add/edit location
                     </a>
                     <a class="btn btn-default navbar-btn" href="{% url 'buybackprogram:program_add' %}">
-                        Create Program
+                        3. Create Program
                     </a>
                 {% endif %}
-                {% if perms.buybackprogram.manage_programs %}
-                    <a class="btn btn-default navbar-btn" href="{% url 'buybackprogram:setup' %}">
-                        Setup Manager
-                    </a>
-                {% endif %}
-                <a class="btn btn-default navbar-btn" href="{% url 'buybackprogram:user_settings_edit' %}">
-                        My Settings
-                </a>
+
+                <a class="btn btn-default navbar-btn" href="{% url 'buybackprogram:user_settings_edit' %}">My Settings</a>
             </ul>
         </div>
     </div>

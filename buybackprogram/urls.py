@@ -7,6 +7,7 @@ app_name = "buybackprogram"
 
 urlpatterns = [
     path("", common.index, name="index"),
+    path("faq", common.faq, name="faq"),
     path("setup", programs.setup, name="setup"),
     path("program_add", programs.program_add, name="program_add"),
     path("location_add", programs.location_add, name="location_add"),

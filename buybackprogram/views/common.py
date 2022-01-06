@@ -57,6 +57,12 @@ def index(request):
 
 
 @login_required
+@permission_required("buybackprogram.basic_access")
+def faq(request):
+    return render(request, "buybackprogram/faq.html")
+
+
+@login_required
 @permission_required("buybackprogram.manage_programs")
 def item_autocomplete(request):
     items = EveType.objects.filter(published=True).exclude(

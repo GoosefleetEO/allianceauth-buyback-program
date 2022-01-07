@@ -479,6 +479,7 @@ class Location(models.Model):
 
     eve_solar_system = models.ForeignKey(
         EveSolarSystem,
+        verbose_name="Solar system",
         help_text="System where the buyback structure is located",
         blank=True,
         default=None,
@@ -489,12 +490,14 @@ class Location(models.Model):
 
     owner = models.ForeignKey(
         Owner,
-        help_text="Player that created the location",
+        verbose_name="Manager",
+        help_text="Player managing this location",
         null=True,
         on_delete=models.deletion.CASCADE,
     )
 
     structure_id = models.BigIntegerField(
+        verbose_name="Ingame unique ID for structure",
         default=None,
         blank=True,
         null=True,
@@ -517,51 +520,57 @@ class Program(models.Model):
 
     owner = models.ForeignKey(
         Owner,
-        help_text="Player that the contracts will be created for",
+        verbose_name="Manager",
+        help_text="Character that is used to manage this program.",
         on_delete=models.deletion.CASCADE,
         related_name="+",
     )
 
     is_corporation = models.BooleanField(
         default=False,
-        help_text="Tick if contracts should be made to corporation instead of player.",
+        help_text="If we should use the corporation of the manager as the contract receiver instead of the character.",
     )
 
     location = models.ForeignKey(
         Location,
-        help_text="Solarystem and station name for contracts.",
+        help_text="The location where contracts should be created at.",
         on_delete=models.deletion.CASCADE,
         related_name="+",
     )
 
     tax = models.IntegerField(
+        verbose_name="Default tax",
         default=0,
         blank=False,
         null=False,
-        help_text="Default tax is applied on all items unless an item spesific tax is assigned",
+        help_text="A default tax rate in this program that is applied on all items.",
         validators=[MaxValueValidator(100), MinValueValidator(0)],
     )
 
     hauling_fuel_cost = models.IntegerField(
+        verbose_name="Hauling fuel cost per m³",
         default=0,
         help_text="ISK per m³ that will be removed from the buy price ie. to cover jump freighet fuel costs. <b>Should not be used with price dencity modifier</b>",
     )
 
     price_dencity_modifier = models.BooleanField(
+        verbose_name="Price density modifier",
         default=False,
         help_text="Should we modify buy prices for items with high volume and low value ie. T1 industrial hulls. <b>Should not be used with hauling fuel cost</b>",
     )
 
     price_dencity_treshold = models.IntegerField(
+        verbose_name="Price density threshold",
         default=0,
         null=True,
         help_text="At what ISK/m3 do we start to apply the low isk dencity tax. Tritanium is 500 ISK/m³ @ 5 ISK per unit price. PLEX is 14,5Trillion ISK/m³ @2.9M per unit price.",
     )
 
     price_dencity_tax = models.IntegerField(
+        verbose_name="Price density tax",
         default=0,
         null=True,
-        help_text="How much tax do we apply on the low isk dencity items.",
+        help_text="How much tax do we apply on the low isk density items.",
         validators=[MaxValueValidator(100), MinValueValidator(0)],
     )
 
@@ -571,29 +580,34 @@ class Program(models.Model):
     )
 
     use_refined_value = models.BooleanField(
+        verbose_name="Ore: Use refined value",
         default=False,
         help_text="Take refined value into account when calculating prices for ore, ice and moon goo",
     )
 
     use_compressed_value = models.BooleanField(
+        verbose_name="Ore: Use compressed value",
         default=False,
         help_text="Take compressed value into account when calculating prices for ore, ice and moon goo",
     )
 
     use_raw_ore_value = models.BooleanField(
+        verbose_name="Ore: Use raw value",
         default=True,
         help_text="Take raw ore value into account when calculating prices for ore, ice and moon goo",
     )
 
     allow_unpacked_items = models.BooleanField(
+        verbose_name="Allow unpacked items",
         default=False,
         help_text="Do you want to allow unpacked items in this program such as assembled ship hulls?",
     )
 
     refining_rate = models.IntegerField(
+        verbose="Refining rate",
         default=0,
         null=True,
-        help_text="Refining rate to be used if refined value is active",
+        help_text="Refining rate to be used if ore refined value is active",
         validators=[MaxValueValidator(100), MinValueValidator(0)],
     )
 
@@ -683,13 +697,15 @@ class ProgramItem(models.Model):
         help_text="Select item for special tax",
     )
     item_tax = models.IntegerField(
+        verbose_name="Item tax adjustment",
         default=0,
         null=True,
-        help_text="How much tax do we add on top of the base tax for this item. Can also be negative.",
-        validators=[MaxValueValidator(100), MinValueValidator(0)],
+        help_text="How much do you want to adjust the default tax on this item. Can be a positive or a negative value.",
+        validators=[MaxValueValidator(100), MinValueValidator(-100)],
     )
 
     disallow_item = models.BooleanField(
+        verbose_name="Disallow item in program",
         default=False,
         help_text="You can disallow an item from a buyback location. It will return 0 price if disallowed.",
     )

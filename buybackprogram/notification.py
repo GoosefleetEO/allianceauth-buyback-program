@@ -32,7 +32,7 @@ def send_user_notification(
         # If user has the discord service activated
         if hasattr(user, "discord"):
 
-            from discordproxy.client import DiscordClient, DiscordProxyException
+            from discordproxy.client import DiscordClient
             from discordproxy.discord_api_pb2 import Embed
 
             client = DiscordClient()
@@ -45,10 +45,8 @@ def send_user_notification(
 
             try:
                 client.create_direct_message(user_id=user.discord.uid, embed=embed)
-            except DiscordProxyException as ex:
-                logger.error(
-                    "An error occured when trying to create a message: %s" % ex
-                )
+            except Exception:
+                logger.error("An error occured when trying to create a message")
 
     # If discordproxy app is not active we will check if aa-discordbot is active
     elif allianceauth_discordbot_active():
@@ -69,7 +67,7 @@ def send_message_to_discord_channel(
 
     if aa_discordproxy_active():
 
-        from discordproxy.client import DiscordClient, DiscordProxyException
+        from discordproxy.client import DiscordClient
         from discordproxy.discord_api_pb2 import Embed
 
         client = DiscordClient()
@@ -81,10 +79,8 @@ def send_message_to_discord_channel(
         try:
             client.create_channel_message(channel_id=channel_id, embed=embed)
             logger.debug("Sent contract notification to channel %s" % channel_id)
-        except DiscordProxyException as ex:
-            logger.error(
-                "An error occured when trying to send a channel message: %s" % ex
-            )
+        except Exception:
+            logger.error("An error occured when trying to send a channel message")
 
     elif allianceauth_discordbot_active():
         import aadiscordbot.tasks

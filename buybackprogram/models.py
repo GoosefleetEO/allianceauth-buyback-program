@@ -1,7 +1,5 @@
 from typing import Tuple
 
-from aadiscordbot.app_settings import get_site_url
-
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -21,6 +19,7 @@ from buybackprogram.notification import (
     send_message_to_discord_channel,
     send_user_notification,
 )
+from buybackprogram.utils import get_site_url
 
 from .decorators import fetch_token_for_owner
 from .providers import esi

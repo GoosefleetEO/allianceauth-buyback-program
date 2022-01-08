@@ -199,6 +199,7 @@ class Owner(models.Model):
                             message += f"**Tracking:** {tracking.tracking_number}\n"
                             message += f'**Value:** {contract["price"]}\n\n'
 
+                            # If tracking is active and we should send a message for our users
                             if tracking.program.discord_dm_notification:
 
                                 send_user_notification(
@@ -206,6 +207,8 @@ class Owner(models.Model):
                                     level="success",
                                     title=_("New buyback contract"),
                                     message=message,
+                                    tracking=tracking,
+                                    contract=contract,
                                 )
 
                             if tracking.program.discord_channel_notification:
@@ -243,6 +246,8 @@ class Owner(models.Model):
                                     level="success",
                                     title=_("Buyback contract accepted"),
                                     message=message,
+                                    tracking=tracking,
+                                    contract=contract,
                                 )
 
         logger.debug("Fetching corporation contracts for %s" % self.user)
@@ -342,6 +347,8 @@ class Owner(models.Model):
                                     level="success",
                                     title=_("New buyback contract"),
                                     message=message,
+                                    tracking=tracking,
+                                    contract=contract,
                                 )
 
                             if tracking.program.discord_channel_notification:
@@ -382,6 +389,8 @@ class Owner(models.Model):
                                     level="success",
                                     title=_("Buyback contract accepted"),
                                     message=message,
+                                    tracking=tracking,
+                                    contract=contract,
                                 )
 
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
@@ -604,7 +613,7 @@ class Program(models.Model):
     )
 
     refining_rate = models.IntegerField(
-        verbose="Refining rate",
+        verbose_name="Refining rate",
         default=0,
         null=True,
         help_text="Refining rate to be used if ore refined value is active",
@@ -645,14 +654,14 @@ class Program(models.Model):
     discord_dm_notification = models.BooleanField(
         verbose_name="Discord direct messages for new contracts",
         default=False,
-        help_text="Check if you want to receive a direct message notification each time a new contract is created. <b>Requires aa-discordbot app to work</b>",
+        help_text="Check if you want to receive a direct message notification each time a new contract is created. <b>Requires aa-discordbot app or discordproxy app to work</b>",
     )
 
     discord_channel_notification = models.BigIntegerField(
         verbose_name="Discord channel ID for notifications",
         null=True,
         blank=True,
-        help_text="Check if you want to feed new contracts to a discord channel. <b>Requires aa-discordbot app to work</b>",
+        help_text="Check if you want to feed new contracts to a discord channel. <b>Requires aa-discordbot app or discordproxy app to work</b>",
     )
 
     class Meta:

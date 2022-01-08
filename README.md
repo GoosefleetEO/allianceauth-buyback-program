@@ -242,12 +242,12 @@ If no options are selected the program will be visible for everyone with the `ba
 ### Discord DM messages
 If you want to receive messages over discord for every new contract you can tick this box.
 
-> :information_source: Requires the [aa-discordbot plugin](https://github.com/pvyParts/allianceauth-discordbot) to work
+> :information_source: Requires the [aa-discordbot plugin](https://github.com/pvyParts/allianceauth-discordbot) or [discordproxy app](https://gitlab.com/ErikKalkoken/discordproxy) to work
 
 ### Discord channel messages
 You can send notifications about new contracts directly into the discord channel which is linked to AUTH,
 
-> :information_source: Requires the [aa-discordbot plugin](https://github.com/pvyParts/allianceauth-discordbot) to work
+> :information_source: Requires the [aa-discordbot plugin](https://github.com/pvyParts/allianceauth-discordbot) or [discordproxy app](https://gitlab.com/ErikKalkoken/discordproxy) to work
 
 ## Step 9 - Special Taxes
 You can modify individual item settings or allow items for a program that has set `allow all items = False` via the `special taxes` menu for each program.

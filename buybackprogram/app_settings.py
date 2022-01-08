@@ -1,4 +1,3 @@
-from django.apps import apps
 from django.conf import settings
 
 from .utils import clean_setting
@@ -23,14 +22,14 @@ def allianceauth_discordbot_active():
     check if allianceauth-dicordbot is installed and active
     :return:
     """
+    return "aadiscordbot" in settings.INSTALLED_APPS
 
-    return apps.is_installed("aadiscordbot")
 
-
-def aa_discordnotify_active():
+def aa_discordproxy_active():
     """
-    check if allianceauth-dicordbot is installed and active
+    check if discordproxy is installed and active
     :return:
     """
 
-    return apps.is_installed("discordnotify")
+    # TODO: add check for discordproxy
+    return True

@@ -193,7 +193,7 @@
 
                         {% if item.item_values.refined.value %}
                             <tr>
-                                <td colspan="6" data-toggle="collapse" data-target="{% for x in item.item_values.refined.materials %}#{{ item.item_values.normal.id }}-refined{{ forloop.counter }}{% if not forloop.last %}, {% endif %} {% endfor %}" class="accordion-toggle">
+                                <td colspan="6" data-toggle="collapse" data-target="{% for x in item.item_values.refined.materials %}#{{ item.item_values.normal.id }}-refined{{ forloop.counter }}{% if not forloop.last %}, {% endif %} {% endfor %},#{{ item.item_values.normal.id }}-refined-total" class="accordion-toggle">
                                    <i style="padding-left: 10px;" class="fas fa-angle-down"> Refined</i>
                                 </td>
                             </tr>
@@ -205,8 +205,8 @@
                                     <td>{{material.sell|floatformat:0|intcomma|price}}</td>
                                     <td>{{material.buy|floatformat:0|intcomma|price}}</td>
                                     <td>{{material.total_tax|tax}}</td>
-                                    <td class="buy-value-{{item.item_values.refined.is_buy_value}}">{{material.unit_value|floatformat:0|intcomma|price}}</td>
-                                    <td class="buy-value-{{item.item_values.refined.is_buy_value}}">{{material.value|floatformat:0|intcomma|price}}</td>
+                                    <td>{{material.unit_value|floatformat:0|intcomma|price}}</td>
+                                    <td>{{material.value|floatformat:0|intcomma|price}}</td>
                                     <td>
                                     {% for note in material.notes%}
                                         <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
@@ -214,6 +214,10 @@
                                 </td>
                                 </tr>
                             {% endfor %}
+                            <tr class="collapse" id="{{ item.item_values.normal.id }}-refined-total">
+                                <td colspan="6" style="padding-left: 30px;border-top:1px dotted grey;">Total value</td>
+                                <td class="buy-value-{{item.item_values.refined.is_buy_value}}" style="border-top:1px dotted grey;">{{item.item_values.refined.value|floatformat:0|intcomma|price}}</td>
+                            </tr>
                         {% endif %}
                         <tr>
                             <td colspan="7"></td>

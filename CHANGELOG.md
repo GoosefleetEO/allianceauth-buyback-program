@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed #15, added mention of scopes into readme file
 - Fixes #12, added requirement for eveuniverse in readme
 - Fixes #8, added the ability to add special taxes via market groups
+- Added total refined value row for refined prices
 
 ### Changed
 - Fixes #11, now also tracking contracts that have extra characters in the description such as extra spaces.

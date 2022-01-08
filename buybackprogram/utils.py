@@ -1,3 +1,4 @@
+import re
 from typing import Any
 
 from django.conf import settings
@@ -133,3 +134,14 @@ class messages_plus:
         messages.error(
             request, cls._add_messages_icon(ERROR, message), extra_tags, fail_silently
         )
+
+
+def get_site_url():  # regex sso url
+    regex = r"^(.+)\/s.+"
+    matches = re.finditer(regex, settings.ESI_SSO_CALLBACK_URL, re.MULTILINE)
+    url = "http://"
+
+    for m in matches:
+        url = m.groups()[0]  # first match
+
+    return url

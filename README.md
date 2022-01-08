@@ -38,6 +38,7 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 	- Item specified tax
 	- Hauling fuel cost
 	- Dynamic low price density tax
+	- NPC price for NPC buy orders
 - Best price variant for ore:
 	- Supports raw, compressed, refined and any combination of the 3.
 	- Will calculate price by the best available pricing method
@@ -54,6 +55,11 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 	- Total bought value
 	- Alerts for mistakes in contracts such as missmatching price
 - Contract tracking history
+- Supports discord notifications
+	- Notifications for accepted contracts
+	- Notifications for new contracts
+	- For [aa-discordbot](https://github.com/pvyParts/allianceauth-discordbot)
+	- For [discordproxy](https://gitlab.com/ErikKalkoken/discordproxy)
 
 ## Step 1 - Prerequisites
 

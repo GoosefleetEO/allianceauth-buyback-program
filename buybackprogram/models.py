@@ -215,6 +215,8 @@ class Owner(models.Model):
                                 send_message_to_discord_channel(
                                     channel_id=tracking.program.discord_channel_notification,
                                     message=message,
+                                    tracking=tracking,
+                                    contract=contract,
                                 )
 
                         else:
@@ -355,6 +357,8 @@ class Owner(models.Model):
                                 send_message_to_discord_channel(
                                     channel_id=tracking.program.discord_channel_notification,
                                     message=message,
+                                    tracking=tracking,
+                                    contract=contract,
                                 )
 
                         else:

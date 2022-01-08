@@ -23,13 +23,3 @@ def allianceauth_discordbot_active():
     :return:
     """
     return "aadiscordbot" in settings.INSTALLED_APPS
-
-
-def aa_discordproxy_active():
-    """
-    check if discordproxy is installed and active
-    :return:
-    """
-
-    # TODO: add check for discordproxy
-    return True

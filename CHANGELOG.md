@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed #10, added ability to delete own locations
 - Fixes #9, added ability to track contract locations per structure ID
 - Fixes #13, added ability to praisal blue and red loot by npc buy orders
-- Fixes #5, added the ability to receive notifications for new contracts and for sellers notifications about completed contracts
+- Fixes #5, added the ability to receive notifications for new contracts and for sellers notifications about completed contracts, supports both aa-discordbot and discordproxy.
 - Fixed #15, added mention of scopes into readme file
 - Fixes #12, added requirement for eveuniverse in readme
 - Fixes #8, added the ability to add special taxes via market groups

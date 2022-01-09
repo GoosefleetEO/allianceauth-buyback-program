@@ -47,25 +47,23 @@ def program_edit_item(request, program_pk):
             item_tax = form.cleaned_data["item_tax"]
             disallow_item = form.cleaned_data["disallow_item"]
 
-            item_type = [form.cleaned_data["item_type"]]
+            item_type = form.cleaned_data["item_type"]
 
-            for item in item_type:
-
-                ProgramItem.objects.update_or_create(
-                    item_type=item,
-                    program=program,
-                    defaults={
-                        "item_tax": item_tax,
-                        "disallow_item": disallow_item,
-                    },
-                )
+            ProgramItem.objects.update_or_create(
+                item_type=item_type,
+                program=program,
+                defaults={
+                    "item_tax": item_tax,
+                    "disallow_item": disallow_item,
+                },
+            )
 
             if disallow_item:
                 messages_plus.warning(
                     request,
                     format_html(
                         "Disallowed <strong>{}</strong> in program",
-                        item_type[0].name,
+                        item_type.name,
                     ),
                 )
 
@@ -74,7 +72,7 @@ def program_edit_item(request, program_pk):
                     request,
                     format_html(
                         "Adjusted <strong>{}</strong> tax in program with <strong>{}</strong> %, tax is now set at {} %",
-                        item_type[0].name,
+                        item_type.name,
                         item_tax,
                         program.tax + item_tax,
                     ),

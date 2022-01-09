@@ -256,13 +256,12 @@ def get_item_prices(item_type, name, quantity, program):
             logger.debug("Prices: No refined value used for %s" % name)
 
         # Get compressed versions of the ores that are not yet compressed
-        if (
-            is_ore(item_type.eve_group.id)
-            and program.use_compressed_value
-            and "Compressed" not in name
-        ):
+        if is_ore(item_type.eve_group.id) and program.use_compressed_value:
 
-            compresed_name = "Compressed " + name
+            if "Compressed" in name:
+                compresed_name = name
+            else:
+                compresed_name = "Compressed " + name
 
             compresed_type = EveType.objects.filter(name=compresed_name).first()
             compression_ratio = item_type.portion_size

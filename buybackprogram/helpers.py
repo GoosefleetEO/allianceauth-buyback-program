@@ -231,14 +231,15 @@ def get_item_prices(item_type, name, quantity, program):
             for material in type_materials:
                 material_price = get_or_create_prices(material.material_eve_type.id)
 
-                refining_ratio = item_type.portion_size
-
                 # Quantity of refined materials
-                material_quantity = (material.quantity * quantity) / refining_ratio
+                material_quantity = (
+                    material.quantity * quantity
+                ) / item_type.portion_size
 
                 material_type_prices = {
                     "id": material.material_eve_type.id,
                     "quantity": material_quantity,
+                    "unit_quantity": material.quantity,
                     "buy": material_price.buy,
                     "sell": material_price.sell,
                 }
@@ -460,7 +461,9 @@ def get_item_values(item_type, item_prices, program):
             refined["value"] += value
             refined["raw_value"] += raw_value
             refined["total_tax"] += r["total_tax"] / material_count
-            refined["unit_value"] += value / quantity
+            refined["unit_value"] += (
+                price * tax_multiplier * material["unit_quantity"] * refining_rate
+            )
 
     else:
         refined = {

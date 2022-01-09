@@ -508,7 +508,7 @@ def get_item_values(item_type, item_prices, program):
             "price_dencity_tax": price_dencity_tax,
             "total_tax": program_tax + item_tax + price_dencity_tax,
             "price_dencity": price_dencity,
-            "unit_value": price * tax_multiplier / item_type.portion_size,
+            "unit_value": price * tax_multiplier,
             "raw_value": compression_raw_value,
             "value": compression_value,
             "is_buy_value": False,

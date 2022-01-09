@@ -436,7 +436,7 @@ def get_item_values(item_type, item_prices, program):
             r = {
                 "id": material["id"],
                 "name": materials.name,
-                "quantity": quantity * program.refining_rate / item_type.portion_size,
+                "quantity": quantity * refining_rate,
                 "buy": buy,
                 "sell": sell,
                 "program_tax": program_tax,

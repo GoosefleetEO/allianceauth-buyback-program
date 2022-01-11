@@ -33,7 +33,7 @@
                         </a>
                     </li>
                 {% endif %}
-                {% if perms.buybackprogram.manage_all_programs %}
+                {% if perms.buybackprogram.see_all_statics %}
                     <li class="{% navactive request 'buybackprogram:program_stats_all' %}">
                         <a href="{% url 'buybackprogram:program_stats_all' %}">
                             All Program Statistics

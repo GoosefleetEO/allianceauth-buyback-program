@@ -253,7 +253,7 @@ def program_stats(request):
 
 
 @login_required
-@permission_required("buybackprogram.manage_all_programs")
+@permission_required("buybackprogram.see_all_statics")
 def program_stats_all(request):
 
     valid_contracts = []

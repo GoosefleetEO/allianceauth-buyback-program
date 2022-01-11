@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Fixed
-- #18, compressed variant not used on already compressed ores
+- Fixes #18, compressed variant not used on already compressed ores
+- Fixes #19, fixes view all statistics permission issue
 
 ## [1.0.0] - 2022-01-09
 

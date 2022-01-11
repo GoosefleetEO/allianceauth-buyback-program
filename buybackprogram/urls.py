@@ -59,7 +59,7 @@ urlpatterns = [
     ),
     path("my_stats", stats.my_stats, name="my_stats"),
     path(
-        "my_stats/<str:contract_title>/details/",
+        "tracking/<str:contract_title>/",
         stats.contract_details,
         name="contract_details",
     ),

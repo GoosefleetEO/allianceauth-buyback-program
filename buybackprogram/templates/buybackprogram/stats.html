@@ -65,7 +65,7 @@
                                                 <i style="color: {{contract.note.color}};" class="fas {{contract.note.icon}}" title="{{contract.note.message}}"></i>
                                             </td>
 
-                                            <td><a class="btn btn-info btn-sm" href="{% url 'buybackprogram:contract_details' contract_title=contract.title %}">
+                                            <td><a class="btn btn-info btn-sm" href="{% url 'buybackprogram:contract_details' contract_title=contract.tracking.tracking_number %}">
                                             Details
                                         </a></td>
                                         </tr>

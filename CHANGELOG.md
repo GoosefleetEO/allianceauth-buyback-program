@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [1.0.1] - yyyy-mm-dd
+
+### Added
+
+### Changed
+
+### Fixed
+- Fixes #18, compressed variant not used on already compressed ores
+- Fixes #19, fixes view all statistics permission issue
+
 ## [1.0.0] - 2022-01-09
 
 ** THIS RELEASE CONTAINS MAJOR CHANGES THAT REQUIRE A CLEAN REINSTALL OF THE APP. ALL PREVIOUS DATA INSIDE THIS APP WILL BE LOST **

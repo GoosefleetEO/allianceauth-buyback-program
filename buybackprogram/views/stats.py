@@ -38,6 +38,8 @@ def my_stats(request):
 
         if contract:
 
+            contract.tracking = tracking
+
             logger.debug(
                 "Contract %s has a match in tracking numbers" % contract.contract_id
             )
@@ -137,6 +139,8 @@ def program_stats(request):
         ).first()
 
         if contract:
+
+            contract.tracking = tracking
 
             logger.debug(
                 "Contract %s has a match in tracking numbers" % contract.contract_id
@@ -253,7 +257,7 @@ def program_stats(request):
 
 
 @login_required
-@permission_required("buybackprogram.manage_all_programs")
+@permission_required("buybackprogram.see_all_statics")
 def program_stats_all(request):
 
     valid_contracts = []
@@ -274,6 +278,8 @@ def program_stats_all(request):
         ).first()
 
         if contract:
+
+            contract.tracking = tracking
 
             logger.debug(
                 "Contract %s has a match in tracking numbers" % contract.contract_id
@@ -369,7 +375,7 @@ def contract_details(request, contract_title):
 
         notes = []
 
-        contract = Contract.objects.get(title=contract_title)
+        contract = Contract.objects.get(title__contains=contract_title)
 
         contract_items = ContractItem.objects.filter(contract=contract)
 

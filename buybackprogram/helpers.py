@@ -426,7 +426,7 @@ def get_item_values(item_type, item_prices, program):
                 program, price, materials.volume, quantity
             )
             program_tax = program.tax
-            item_tax = get_item_tax(program, material["id"])
+            item_tax = get_item_tax(program, item_type.id)
             refining_rate = program.refining_rate / 100
             tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
@@ -488,7 +488,7 @@ def get_item_values(item_type, item_prices, program):
             program, price, compressed_version.volume, quantity
         )
         program_tax = program.tax
-        item_tax = get_item_tax(program, compressed_version.id)
+        item_tax = get_item_tax(program, item_type.id)
         tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
         logger.debug("Values: Calculating compression value for %s" % item_type.id)

@@ -13,11 +13,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-## [1.0.1] - yyyy-mm-dd
+## [1.0.2] - yyyy-mm-dd
 
 ### Added
+- Closes #21, added parent group mentions for market group item tax fields
 
 ### Changed
+
+### Fixed
+- Item tax not applying on price variants correctly
+- Fixes #20, allow to set 0% item taxes
+
+## [1.0.1] - yyyy-mm-dd
 
 ### Fixed
 - Fixes #18, compressed variant not used on already compressed ores

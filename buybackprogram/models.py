@@ -625,11 +625,6 @@ class ProgramItem(models.Model):
         default_permissions = ()
         unique_together = ["program", "item_type"]
 
-    def save(self, *args, **kwargs):
-        if not self.item_tax:
-            self.item_tax = self.program.tax
-        super(ProgramItem, self).save(*args, **kwargs)
-
 
 class ItemPrices(models.Model):
     eve_type = models.OneToOneField(

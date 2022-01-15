@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required, permission_required
-from django.db.models import F, Q
+from django.db.models import F, Q, Value
+from django.db.models.functions import Concat
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.html import format_html
@@ -108,12 +109,20 @@ def marketgroup_autocomplete(request):
     q = request.GET.get("q", None)
 
     if q is not None:
-        items = items.filter(name__icontains=q)
+        items = items.prefetch_related("parent_market_group").filter(name__icontains=q)
 
     items = items.annotate(
         value=F("id"),
-        text=F("name"),
+        text=Concat(
+            F("parent_market_group__parent_market_group__name"),
+            Value(" -> "),
+            F("parent_market_group__name"),
+            Value(" -> "),
+            F("name"),
+        ),
     ).values("value", "text")
+
+    print(items)
 
     return JsonResponse(list(items), safe=False)
 

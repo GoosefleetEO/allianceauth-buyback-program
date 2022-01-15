@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [1.0.2] - yyyy-mm-dd
 
 ### Added
+- Closes #21, added parent group mentions for market group item tax fields
 
 ### Changed
 

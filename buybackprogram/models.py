@@ -120,180 +120,203 @@ class Owner(models.Model):
 
         # Start looping for all stored tracking objects
         for tracking in tracking_numbers:
-            # Start checking if we find any matches from our ESI contracts
-            for contract in all_contracts:
 
-                # Only get contracts with the correct prefill ticker
-                if tracking.tracking_number in contract["title"]:
+            # If the tracking has an active program (not deleted)
+            if tracking.program:
 
-                    logger.debug(
-                        "Found a matching contract from tracking for %s "
-                        % contract["contract_id"]
-                    )
+                # Start checking if we find any matches from our ESI contracts
+                for contract in all_contracts:
 
-                    # Check if we already have the contract stored
-                    try:
-                        old_contract = Contract.objects.get(
-                            contract_id=contract["contract_id"]
+                    # Only get contracts with the correct prefill ticker
+                    if tracking.tracking_number in contract["title"]:
+
+                        logger.debug(
+                            "Found a matching contract from tracking for %s "
+                            % contract["contract_id"]
                         )
 
-                    except Contract.DoesNotExist:
-                        logger.debug("No matching contracts found")
-                        old_contract = Contract.objects.none()
-                        old_contract.status = False
-
-                    # If we have found a contract from database that is not yet finished
-                    if old_contract.status not in ["finished", "rejected"]:
-
-                        # Create or update the found contract
-                        obj, created = Contract.objects.update_or_create(
-                            contract_id=contract["contract_id"],
-                            defaults={
-                                "contract_id": contract["contract_id"],
-                                "assignee_id": contract["assignee_id"],
-                                "availability": contract["availability"],
-                                "date_completed": contract["date_completed"],
-                                "date_expired": contract["date_expired"],
-                                "date_issued": contract["date_issued"],
-                                "for_corporation": contract["for_corporation"],
-                                "issuer_corporation_id": contract[
-                                    "issuer_corporation_id"
-                                ],
-                                "issuer_id": contract["issuer_id"],
-                                "start_location_id": contract["start_location_id"],
-                                "price": contract["price"],
-                                "status": contract["status"],
-                                "title": contract["title"],
-                                "volume": contract["volume"],
-                            },
-                        )
-
-                        # If we have created a new contract
-                        if created:
-                            logger.debug(
-                                "New contract %s created. Starting item fetch"
-                                % contract["contract_id"]
+                        # Check if we already have the contract stored
+                        try:
+                            old_contract = Contract.objects.get(
+                                contract_id=contract["contract_id"]
                             )
 
-                            character_id = self.character.character.character_id
+                        except Contract.DoesNotExist:
+                            logger.debug("No matching contracts found")
+                            old_contract = Contract.objects.none()
+                            old_contract.status = False
 
-                            # Get all items in the contract
-                            contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
-                                character_id=character_id,
+                        # If we have found a contract from database that is not yet finished
+                        if old_contract.status not in ["finished", "rejected"]:
+
+                            # Create or update the found contract
+                            obj, created = Contract.objects.update_or_create(
                                 contract_id=contract["contract_id"],
-                                token=token.valid_access_token(),
-                            ).results()
+                                defaults={
+                                    "contract_id": contract["contract_id"],
+                                    "assignee_id": contract["assignee_id"],
+                                    "availability": contract["availability"],
+                                    "date_completed": contract["date_completed"],
+                                    "date_expired": contract["date_expired"],
+                                    "date_issued": contract["date_issued"],
+                                    "for_corporation": contract["for_corporation"],
+                                    "issuer_corporation_id": contract[
+                                        "issuer_corporation_id"
+                                    ],
+                                    "issuer_id": contract["issuer_id"],
+                                    "start_location_id": contract["start_location_id"],
+                                    "price": contract["price"],
+                                    "status": contract["status"],
+                                    "title": contract["title"],
+                                    "volume": contract["volume"],
+                                },
+                            )
 
-                            objs = []
-
-                            # Prepare objects for bulk create
-                            for item in contract_items:
-
-                                cont = Contract.objects.get(
-                                    contract_id=contract["contract_id"]
-                                )
-                                itm = EveType.objects.get(pk=item["type_id"])
-
-                                contract_item = ContractItem(
-                                    contract=cont,
-                                    eve_type=itm,
-                                    quantity=item["quantity"],
-                                )
-
-                                objs.append(contract_item)
-
-                            try:
-                                ContractItem.objects.bulk_create(objs)
+                            # If we have created a new contract
+                            if created:
                                 logger.debug(
-                                    "Succesfully added items for contract %s into database"
+                                    "New contract %s created. Starting item fetch"
                                     % contract["contract_id"]
                                 )
-                            except Error as e:
-                                logger.error(
-                                    "Error adding items for contract %s: %s"
-                                    % (contract["contract_id"], e)
+
+                                character_id = self.character.character.character_id
+
+                                # Get all items in the contract
+                                contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
+                                    character_id=character_id,
+                                    contract_id=contract["contract_id"],
+                                    token=token.valid_access_token(),
+                                ).results()
+
+                                corporations = CharacterOwnership.objects.filter(
+                                    user=tracking.program.owner.user
+                                ).values_list("character__corporation_id", flat=True)
+
+                                logger.debug(
+                                    "Got corporations for contract owner: %s"
+                                    % corporations
                                 )
 
-                            """
-                            Notifications for users who have the notifications enabled
-                            """
+                                objs = []
 
-                            disablation_hint = "*You can disable these notifications from your program settings*"
+                                # Prepare objects for bulk create
+                                for item in contract_items:
 
-                            user_message = {
-                                "title": "New contract assigned",
-                                "description": "A new buyback contract {0} with a value of {1} ISK has been assigned to you.\n\n{2}".format(
-                                    tracking.tracking_number,
-                                    intcomma(int(contract["price"])),
-                                    disablation_hint,
-                                ),
-                                "footer": "AA Buyback Program",
-                            }
+                                    cont = Contract.objects.get(
+                                        contract_id=contract["contract_id"]
+                                    )
+                                    itm = EveType.objects.get(pk=item["type_id"])
 
-                            # If tracking is active and we should send a message for our users
-                            if tracking.program.discord_dm_notification:
+                                    contract_item = ContractItem(
+                                        contract=cont,
+                                        eve_type=itm,
+                                        quantity=item["quantity"],
+                                    )
 
-                                send_user_notification(
-                                    user=self.user,
-                                    level="success",
-                                    message=user_message,
+                                    objs.append(contract_item)
+
+                                try:
+                                    ContractItem.objects.bulk_create(objs)
+                                    logger.debug(
+                                        "Succesfully added items for contract %s into database"
+                                        % contract["contract_id"]
+                                    )
+                                except Error as e:
+                                    logger.error(
+                                        "Error adding items for contract %s: %s"
+                                        % (contract["contract_id"], e)
+                                    )
+
+                                # Check and see if any notifications/warnings should be set on the contract
+                                contract_notifications = (
+                                    self._set_contract_notifications(
+                                        tracking, obj, corporations
+                                    )
                                 )
 
-                            # Notifications for the discord channel
-                            if tracking.program.discord_channel_notification:
-                                send_message_to_discord_channel(
-                                    channel_id=tracking.program.discord_channel_notification,
-                                    message=user_message,
+                                logger.debug(
+                                    "Got contract notifications %s"
+                                    % contract_notifications
                                 )
 
-                        # If contract was updated instead of created
-                        else:
-                            logger.debug("Contract %s updated." % obj.contract_id)
+                                # Notifications for users who have the notifications enabled
 
-                        # Check if the contract status has changed from ongoing to finished.
-                        if (
-                            old_contract.status == "outstanding"
-                            and obj.status == "finished"
-                        ):
-                            # Get notification settings for the contract issuer
-                            user_settings = UserSettings.objects.get(
-                                user=tracking.issuer_user
-                            )
-
-                            # If user has not disabled notifications
-                            if user_settings.disable_notifications is False:
-
-                                disablation_hint = "*You can disable these notifications from [My Settings]({0}/buybackprogram/user_settings_edit)*".format(
-                                    get_site_url()
-                                )
-
-                                # Check if the contract was accepted or rejected
-                                if contract["status"] == "finished":
-                                    status = "accepted"
-                                elif contract["status"] == "rejected":
-                                    status = "rejected"
-                                else:
-                                    status = contract["status"]
+                                disablation_hint = "*You can disable these notifications from your program settings*"
 
                                 user_message = {
-                                    "title": "Buyback contract {0}".format(status),
-                                    "description": "Your outstanding buyback contract {0} with a value of {1} ISK has been {2} by {3}.\n\n{4}".format(
+                                    "title": "New contract assigned",
+                                    "description": "A new buyback contract {0} with a value of {1} ISK has been assigned to you.\n\n{2}".format(
                                         tracking.tracking_number,
                                         intcomma(int(contract["price"])),
-                                        status,
-                                        self.character.character,
                                         disablation_hint,
                                     ),
                                     "footer": "AA Buyback Program",
                                 }
 
-                                send_user_notification(
-                                    user=tracking.issuer_user,
-                                    level="success",
-                                    message=user_message,
+                                # If tracking is active and we should send a message for our users
+                                if tracking.program.discord_dm_notification:
+
+                                    send_user_notification(
+                                        user=self.user,
+                                        level="success",
+                                        message=user_message,
+                                    )
+
+                                # Notifications for the discord channel
+                                if tracking.program.discord_channel_notification:
+                                    send_message_to_discord_channel(
+                                        channel_id=tracking.program.discord_channel_notification,
+                                        message=user_message,
+                                    )
+
+                            # If contract was updated instead of created
+                            else:
+                                logger.debug("Contract %s updated." % obj.contract_id)
+
+                            # Check if the contract status has changed from ongoing to finished.
+                            if (
+                                old_contract.status == "outstanding"
+                                and obj.status == "finished"
+                            ):
+                                # Get notification settings for the contract issuer
+                                user_settings = UserSettings.objects.get(
+                                    user=tracking.issuer_user
                                 )
 
-                    break  # If we have found a match from our ESI contracts wi will stop looping on the contracts
+                                # If user has not disabled notifications
+                                if user_settings.disable_notifications is False:
+
+                                    disablation_hint = "*You can disable these notifications from [My Settings]({0}/buybackprogram/user_settings_edit)*".format(
+                                        get_site_url()
+                                    )
+
+                                    # Check if the contract was accepted or rejected
+                                    if contract["status"] == "finished":
+                                        status = "accepted"
+                                    elif contract["status"] == "rejected":
+                                        status = "rejected"
+                                    else:
+                                        status = contract["status"]
+
+                                    user_message = {
+                                        "title": "Buyback contract {0}".format(status),
+                                        "description": "Your outstanding buyback contract {0} with a value of {1} ISK has been {2} by {3}.\n\n{4}".format(
+                                            tracking.tracking_number,
+                                            intcomma(int(contract["price"])),
+                                            status,
+                                            self.character.character,
+                                            disablation_hint,
+                                        ),
+                                        "footer": "AA Buyback Program",
+                                    }
+
+                                    send_user_notification(
+                                        user=tracking.issuer_user,
+                                        level="success",
+                                        message=user_message,
+                                    )
+
+                        break  # If we have found a match from our ESI contracts wi will stop looping on the contracts
 
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
     def _fetch_contracts(self, token) -> list:
@@ -318,6 +341,109 @@ class Owner(models.Model):
         ).results()
 
         return contracts
+
+    def _set_contract_notifications(self, tracking, contract, corporations):
+
+        # List for all notes
+        notes = []
+
+        # Get structure id for tracked contract
+        structure_id = tracking.program.location.structure_id
+
+        # If our tracked price is different than the actual contract price
+        if tracking.net_price != contract.price:
+
+            # If contract price is bellow tracked price
+            if contract.price > tracking.net_price:
+
+                note = ContractNotification(
+                    contract=contract,
+                    icon="fa-dollar-sign",
+                    color="red",
+                    message="Ask price is above the calculated price for this contract",
+                )
+
+                notes.append(note)
+
+            else:
+
+                note = ContractNotification(
+                    contract=contract,
+                    icon="fa-dollar-sign",
+                    color="orange",
+                    message="Ask price is bellow the calculated price for this contract",
+                )
+
+                notes.append(note)
+
+        if structure_id and structure_id != contract.start_location_id:
+
+            note = ContractNotification(
+                contract=contract,
+                icon="fa-compass",
+                color="red",
+                message="Contract location does not match program location",
+            )
+
+            notes.append(note)
+
+        if contract.assignee_id in corporations and not tracking.program.is_corporation:
+
+            note = ContractNotification(
+                contract=contract,
+                icon="fa-home",
+                color="orange",
+                message="Contract is made for corporation while it should be made directly to the program managers character",
+            )
+
+            notes.append(note)
+
+        if contract.assignee_id not in corporations and tracking.program.is_corporation:
+
+            note = ContractNotification(
+                contract=contract,
+                icon="fa-user",
+                color="orange",
+                message="Contract is made for the program managers character while it should be made to the managers corporation",
+            )
+
+            notes.append(note)
+
+        if not tracking.tracking_number == contract.title:
+
+            note = ContractNotification(
+                contract=contract,
+                icon="fa-exclamation",
+                color="orange",
+                message="Contract description contains extra characterse besides the tracking number. The description should be: '%s', instead it is: '%s'"
+                % (tracking.tracking_number, contract.title),
+            )
+
+            notes.append(note)
+
+        if not tracking.donation:
+
+            note = ContractNotification(
+                contract=contract,
+                icon="fa-hand-holding-usd",
+                color="green",
+                message="Contact contains a donation",
+            )
+
+            notes.append(note)
+
+        try:
+            ContractNotification.objects.bulk_create(notes)
+
+            logger.debug(
+                "Succesfully added items for contract %s into database"
+                % contract.contract_id
+            )
+
+        except Error as e:
+            logger.error(
+                "Error adding items for contract %s: %s" % (contract.contract_id, e)
+            )
 
     def token(self, scopes=None) -> Tuple[Token, int]:
         """returns a valid Token for the owner"""
@@ -709,6 +835,26 @@ class ContractItem(models.Model):
     )
 
     quantity = models.IntegerField()
+
+
+class ContractNotification(models.Model):
+
+    contract = models.ForeignKey(
+        Contract,
+        on_delete=models.deletion.CASCADE,
+    )
+
+    icon = models.CharField(
+        max_length=64,
+    )
+
+    color = models.CharField(
+        max_length=32,
+    )
+
+    message = models.CharField(
+        max_length=1024,
+    )
 
 
 class UserSettings(models.Model):

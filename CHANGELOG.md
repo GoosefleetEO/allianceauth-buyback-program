@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Reconstructed how notifications work. Greatly improved speed for statistics pages
 
 ### Fixed
 
@@ -108,3 +109,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Multiple typos
+
+## [Unreleased] - yyyy-mm-dd
+
+### Added
+
+### Changed
+
+### Fixed

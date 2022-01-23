@@ -8,11 +8,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased] - yyyy-mm-dd
 
 ### Added
+- Added check for discordnotify app to prevent multiple notifications
+- Improvent error hanlding on when discordproxy was installed but not running
 
 ### Changed
-- Reconstructed how notifications work. Greatly improved speed for statistics pages
+- Reconstructed how notifications work. Greatly improved speed for statistics pages.
 
 ### Fixed
+- Fixes #24
+- Fixes #22
 
 ## [1.0.2] - yyyy-mm-dd
 

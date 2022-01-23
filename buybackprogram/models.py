@@ -141,13 +141,21 @@ class Owner(models.Model):
                                 contract_id=contract["contract_id"]
                             )
 
+                            logger.debug("Contract is already stored in database")
+
                         except Contract.DoesNotExist:
-                            logger.debug("No matching contracts found")
+                            logger.debug(
+                                "No matching contracts stored in database, new contract."
+                            )
                             old_contract = Contract.objects.none()
                             old_contract.status = False
 
                         # If we have found a contract from database that is not yet finished
                         if old_contract.status not in ["finished", "rejected"]:
+                            logger.debug(
+                                "Contract %s status is still pending, starting updates"
+                                % contract["contract_id"]
+                            )
 
                             # Create or update the found contract
                             obj, created = Contract.objects.update_or_create(
@@ -175,7 +183,7 @@ class Owner(models.Model):
                             # If we have created a new contract
                             if created:
                                 logger.debug(
-                                    "New contract %s created. Starting item fetch"
+                                    "New contract %s has been created. Starting item fetch"
                                     % contract["contract_id"]
                                 )
 
@@ -254,6 +262,10 @@ class Owner(models.Model):
                                         level="success",
                                         message=user_message,
                                     )
+                                else:
+                                    logger.debug(
+                                        "Program owner does not want DM notifications, passing"
+                                    )
 
                                 # Notifications for the discord channel
                                 if tracking.program.discord_channel_notification:
@@ -261,16 +273,28 @@ class Owner(models.Model):
                                         channel_id=tracking.program.discord_channel_notification,
                                         message=user_message,
                                     )
+                                else:
+                                    logger.debug(
+                                        "Program owner does not want channel notifications, passing"
+                                    )
 
                             # If contract was updated instead of created
                             else:
-                                logger.debug("Contract %s updated." % obj.contract_id)
+                                logger.debug(
+                                    "Contract %s is not new, updated old contract."
+                                    % obj.contract_id
+                                )
 
                             # Check if the contract status has changed from ongoing to finished.
                             if (
                                 old_contract.status == "outstanding"
                                 and obj.status == "finished"
                             ):
+                                logger.debug(
+                                    "Contract %s has been completed. Status has changed to %s"
+                                    % (obj.contract_id, obj.status)
+                                )
+
                                 # Get notification settings for the contract issuer
                                 user_settings = UserSettings.objects.get(
                                     user=tracking.issuer_user
@@ -308,6 +332,16 @@ class Owner(models.Model):
                                         level="success",
                                         message=user_message,
                                     )
+                                else:
+                                    logger.debug(
+                                        "Contract assigner has notifications set to %s, passing"
+                                        % user_settings.disable_notifications
+                                    )
+                            else:
+                                logger.debug(
+                                    "No changes to the status of contract %s, update completed"
+                                    % obj.contract_id
+                                )
 
                         break  # If we have found a match from our ESI contracts wi will stop looping on the contracts
 

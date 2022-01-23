@@ -11,6 +11,20 @@ from buybackprogram.app_settings import allianceauth_discordbot_active
 logger = get_extension_logger(__name__)
 
 
+def send_aa_discordbot_notification(user, message):
+    # If discordproxy app is not active we will check if aa-discordbot is active
+    if allianceauth_discordbot_active():
+        import aadiscordbot.tasks
+
+        aadiscordbot.tasks.send_direct_message_by_user_id.delay(user, message)
+
+        logger.debug("Sent discord DM to user %s" % user)
+    else:
+        logger.debug(
+            "No discord notification modules active. Will not send user notifications"
+        )
+
+
 def send_user_notification(user: User, level: str, message: dict) -> None:
 
     # Send AA text notification
@@ -26,7 +40,7 @@ def send_user_notification(user: User, level: str, message: dict) -> None:
 
         from discordproxy.client import DiscordClient
         from discordproxy.discord_api_pb2 import Embed
-        from discordproxy.exceptions import DiscordProxyException
+        from discordproxy.exceptions import DiscordProxyException, DiscordProxyGrpcError
 
         logger.debug("User has a active discord account")
 
@@ -41,23 +55,17 @@ def send_user_notification(user: User, level: str, message: dict) -> None:
         try:
             logger.debug("Sending notification for discord user %s" % user.discord.uid)
             client.create_direct_message(user_id=user.discord.uid, embed=embed)
+        except DiscordProxyGrpcError:
+            logger.debug(
+                "Discordprox is installed but not running, failed to send message. Attempting to send via aa-discordbot instead."
+            )
+            send_aa_discordbot_notification(user.pk, message["description"])
+
         except DiscordProxyException as ex:
             logger.error("An error occured when trying to create a message: %s" % ex)
 
     except ModuleNotFoundError:
-        # If discordproxy app is not active we will check if aa-discordbot is active
-        if allianceauth_discordbot_active():
-            import aadiscordbot.tasks
-
-            aadiscordbot.tasks.send_direct_message_by_user_id.delay(
-                user.pk, message["description"]
-            )
-
-            logger.debug("Sent discord DM to user %s" % user.pk)
-        else:
-            logger.debug(
-                "No discord notification modules active. Will not send user notifications"
-            )
+        send_aa_discordbot_notification(user.pk, message["description"])
 
 
 def send_message_to_discord_channel(

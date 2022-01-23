@@ -185,7 +185,7 @@ def program_edit_marketgroup(request, program_pk):
 @permission_required("buybackprogram.manage_programs")
 def program_item_remove(request, item_pk, program_pk):
 
-    program_item = ProgramItem.objects.get(item_type=item_pk)
+    program_item = ProgramItem.objects.get(item_type=item_pk, program=program_pk)
 
     name = program_item.item_type
 
@@ -206,7 +206,7 @@ def program_item_remove(request, item_pk, program_pk):
 @permission_required("buybackprogram.manage_programs")
 def program_item_remove_all(request, program_pk):
 
-    program_item = ProgramItem.objects.all()
+    program_item = ProgramItem.objects.filter(program=program_pk)
 
     program_item.delete()
 

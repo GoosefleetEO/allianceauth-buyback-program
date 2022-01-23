@@ -5,13 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased] - yyyy-mm-dd
+## [1.1.0] - 2022-22-01
 
 ### Added
+- Added check for discordnotify app to prevent multiple notifications
+- Improvent error hanlding on when discordproxy was installed but not running
 
 ### Changed
+- Reconstructed how notifications work. Greatly improved speed for statistics pages.
 
 ### Fixed
+- Fixes #24
+- Fixes #22
 
 ## [1.0.2] - yyyy-mm-dd
 
@@ -108,3 +113,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Multiple typos
+
+## [Unreleased] - yyyy-mm-dd
+
+### Added
+
+### Changed
+
+### Fixed

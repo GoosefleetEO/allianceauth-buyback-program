@@ -23,3 +23,11 @@ def allianceauth_discordbot_active():
     :return:
     """
     return "aadiscordbot" in settings.INSTALLED_APPS
+
+
+def aa_discordnotify_active():
+    """
+    check if allianceauth-dicordbot is installed and active
+    :return:
+    """
+    return "discordnotify" in settings.INSTALLED_APPS

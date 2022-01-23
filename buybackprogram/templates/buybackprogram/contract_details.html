@@ -7,7 +7,9 @@
 <div class="panel-body" style="min-height: 100px;">
     <div>
     {% for note in notes %}
-          <i style="color:{{note.color}}" class="fas {{note.icon}}"> {{note.message}}</i>
+        <div>
+            <i style="color:{{note.color}}" class="fas {{note.icon}}"> {{note.message}}</i>
+        </div>
     {% endfor %}
     </div>
 

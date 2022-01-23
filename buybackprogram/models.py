@@ -228,15 +228,8 @@ class Owner(models.Model):
                                     )
 
                                 # Check and see if any notifications/warnings should be set on the contract
-                                contract_notifications = (
-                                    self._set_contract_notifications(
-                                        tracking, obj, corporations
-                                    )
-                                )
-
-                                logger.debug(
-                                    "Got contract notifications %s"
-                                    % contract_notifications
+                                self._set_contract_notifications(
+                                    tracking, obj, corporations
                                 )
 
                                 # Notifications for users who have the notifications enabled

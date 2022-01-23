@@ -6,7 +6,10 @@ from django.contrib.auth.models import User
 from allianceauth.notifications import notify
 from allianceauth.services.hooks import get_extension_logger
 
-from buybackprogram.app_settings import allianceauth_discordbot_active
+from buybackprogram.app_settings import (
+    aa_discordnotify_active,
+    allianceauth_discordbot_active,
+)
 
 logger = get_extension_logger(__name__)
 
@@ -35,37 +38,49 @@ def send_user_notification(user: User, level: str, message: dict) -> None:
         message=message["description"],
     )
 
-    # Check if the discordproxy module is active. We will use it as our priority app for notifications
-    try:
-
-        from discordproxy.client import DiscordClient
-        from discordproxy.discord_api_pb2 import Embed
-        from discordproxy.exceptions import DiscordProxyException, DiscordProxyGrpcError
-
-        logger.debug("User has a active discord account")
-
-        client = DiscordClient()
-
-        embed = Embed(
-            description=message["description"],
-            title=message["title"],
-            footer=Embed.Footer(text=message["footer"]),
-        )
-
+    if not aa_discordnotify_active():
+        # Check if the discordproxy module is active. We will use it as our priority app for notifications
         try:
-            logger.debug("Sending notification for discord user %s" % user.discord.uid)
-            client.create_direct_message(user_id=user.discord.uid, embed=embed)
-        except DiscordProxyGrpcError:
-            logger.debug(
-                "Discordprox is installed but not running, failed to send message. Attempting to send via aa-discordbot instead."
+
+            from discordproxy.client import DiscordClient
+            from discordproxy.discord_api_pb2 import Embed
+            from discordproxy.exceptions import (
+                DiscordProxyException,
+                DiscordProxyGrpcError,
             )
+
+            logger.debug("User has a active discord account")
+
+            client = DiscordClient()
+
+            embed = Embed(
+                description=message["description"],
+                title=message["title"],
+                footer=Embed.Footer(text=message["footer"]),
+            )
+
+            try:
+                logger.debug(
+                    "Sending notification for discord user %s" % user.discord.uid
+                )
+                client.create_direct_message(user_id=user.discord.uid, embed=embed)
+            except DiscordProxyGrpcError:
+                logger.debug(
+                    "Discordprox is installed but not running, failed to send message. Attempting to send via aa-discordbot instead."
+                )
+                send_aa_discordbot_notification(user.pk, message["description"])
+
+            except DiscordProxyException as ex:
+                logger.error(
+                    "An error occured when trying to create a message: %s" % ex
+                )
+
+        except ModuleNotFoundError:
             send_aa_discordbot_notification(user.pk, message["description"])
-
-        except DiscordProxyException as ex:
-            logger.error("An error occured when trying to create a message: %s" % ex)
-
-    except ModuleNotFoundError:
-        send_aa_discordbot_notification(user.pk, message["description"])
+    else:
+        logger.debug(
+            "Aadiscordnotify is already active, passing notification sending to prevent multiple notifications"
+        )
 
 
 def send_message_to_discord_channel(

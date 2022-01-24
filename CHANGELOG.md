@@ -6,9 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
-## [Unreleased] - yyyy-mm-dd
-
-### Added
+## [1.1.1] - 2022-24-01
 
 ### Changed
 - Changed notification layouts for discordproxy

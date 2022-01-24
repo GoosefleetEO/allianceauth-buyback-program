@@ -98,12 +98,14 @@ class Owner(models.Model):
     )
     def update_contracts_esi(self, token):
 
-        logger.debug("Fetching contracts for %s" % self.user)
+        logger.debug("Fetching contracts for %s" % self.character)
 
         # Get all contracts for owner
         contracts = self._fetch_contracts()
 
         logger.debug("Got %s character contracts" % len(contracts))
+
+        logger.debug("Fetching corporation contracts for %s" % self.corporation)
 
         # Get all contracts for owner corporation
         corporation_contracts = self._fetch_corporation_contracts()
@@ -118,8 +120,11 @@ class Owner(models.Model):
         # Get all tracking objects from the database
         tracking_numbers = Tracking.objects.all()
 
+        logger.debug("Got %s tracking numbers from database" % len(tracking_numbers))
+
         # Start looping for all stored tracking objects
         for tracking in tracking_numbers:
+            logger.debug("Processing tracking number %s" % tracking.tracking_number)
 
             # If the tracking has an active program (not deleted)
             if tracking.program:
@@ -131,7 +136,7 @@ class Owner(models.Model):
                     if tracking.tracking_number in contract["title"]:
 
                         logger.debug(
-                            "Found a matching contract from tracking for %s "
+                            "Found a matching tracking for %s "
                             % contract["contract_id"]
                         )
 
@@ -141,11 +146,15 @@ class Owner(models.Model):
                                 contract_id=contract["contract_id"]
                             )
 
-                            logger.debug("Contract is already stored in database")
+                            logger.debug(
+                                "Contract %s is already stored in database"
+                                % contract["contract_id"]
+                            )
 
                         except Contract.DoesNotExist:
                             logger.debug(
-                                "No matching contracts stored in database, new contract."
+                                "No matching contracts stored for %s in database, new contract."
+                                % contract["contract_id"]
                             )
                             old_contract = Contract.objects.none()
                             old_contract.status = False
@@ -189,12 +198,44 @@ class Owner(models.Model):
 
                                 character_id = self.character.character.character_id
 
-                                # Get all items in the contract
-                                contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
-                                    character_id=character_id,
-                                    contract_id=contract["contract_id"],
-                                    token=token.valid_access_token(),
-                                ).results()
+                                corporation_id = self.character.character.corporation_id
+
+                                logger.debug(
+                                    "Fetching items for %s with character %s. Corporation contract: %s"
+                                    % (
+                                        contract["contract_id"],
+                                        character_id,
+                                        contract["is_corporation"],
+                                    )
+                                )
+
+                                if not contract["is_corporation"]:
+                                    logger.debug(
+                                        "Looking up items for %s via character endpoint"
+                                        % contract["contract_id"]
+                                    )
+                                    # Get all items in the contract
+                                    contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
+                                        character_id=character_id,
+                                        contract_id=contract["contract_id"],
+                                        token=token.valid_access_token(),
+                                    ).results()
+
+                                else:
+                                    logger.debug(
+                                        "Looking up items for %s via corporation endpoint"
+                                        % contract["contract_id"]
+                                    )
+                                    contract_items = esi.client.Contracts.get_corporations_corporation_id_contracts_contract_id_items(
+                                        corporation_id=corporation_id,
+                                        contract_id=contract["contract_id"],
+                                        token=token.valid_access_token(),
+                                    ).results()
+
+                                logger.debug(
+                                    "%s items found in contract %s"
+                                    % (len(contract_items), contract["contract_id"])
+                                )
 
                                 corporations = CharacterOwnership.objects.filter(
                                     user=tracking.program.owner.user
@@ -226,8 +267,8 @@ class Owner(models.Model):
                                 try:
                                     ContractItem.objects.bulk_create(objs)
                                     logger.debug(
-                                        "Succesfully added items for contract %s into database"
-                                        % contract["contract_id"]
+                                        "Succesfully added %s items for contract %s into database"
+                                        % (len(objs), contract["contract_id"])
                                     )
                                 except Error as e:
                                     logger.error(
@@ -281,7 +322,7 @@ class Owner(models.Model):
                             # If contract was updated instead of created
                             else:
                                 logger.debug(
-                                    "Contract %s is not new, updated old contract."
+                                    "Contract %s is not new, updated the old contract."
                                     % obj.contract_id
                                 )
 
@@ -343,17 +384,26 @@ class Owner(models.Model):
                                     % obj.contract_id
                                 )
 
-                        break  # If we have found a match from our ESI contracts wi will stop looping on the contracts
+                        break  # If we have found a match from our ESI contracts wi will stop looping on the contract
 
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
     def _fetch_contracts(self, token) -> list:
 
         character_id = self.character.character.character_id
 
-        contracts = esi.client.Contracts.get_characters_character_id_contracts(
+        esi_contracts = esi.client.Contracts.get_characters_character_id_contracts(
             character_id=character_id,
             token=token.valid_access_token(),
         ).results()
+
+        contracts = []
+
+        for esi_contract in esi_contracts:
+
+            contract = esi_contract
+            contract["is_corporation"] = False
+
+            contracts.append(contract)
 
         return contracts
 
@@ -362,10 +412,19 @@ class Owner(models.Model):
 
         corporation_id = self.character.character.corporation_id
 
-        contracts = esi.client.Contracts.get_corporations_corporation_id_contracts(
+        esi_contracts = esi.client.Contracts.get_corporations_corporation_id_contracts(
             corporation_id=corporation_id,
             token=token.valid_access_token(),
         ).results()
+
+        contracts = []
+
+        for esi_contract in esi_contracts:
+
+            contract = esi_contract
+            contract["is_corporation"] = True
+
+            contracts.append(contract)
 
         return contracts
 
@@ -448,7 +507,7 @@ class Owner(models.Model):
 
             notes.append(note)
 
-        if not tracking.donation:
+        if tracking.donation:
 
             note = ContractNotification(
                 contract=contract,

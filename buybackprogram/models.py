@@ -383,9 +383,11 @@ class Owner(models.Model):
                                     if contract["status"] == "finished":
                                         status = "accepted"
                                         color = 0x5CB85C
+                                        level = "success"
                                     elif contract["status"] == "rejected":
                                         status = "rejected"
                                         color = 0xD9534F
+                                        level = "danger"
                                     else:
                                         status = contract["status"]
 
@@ -421,7 +423,7 @@ class Owner(models.Model):
 
                                     send_user_notification(
                                         user=tracking.issuer_user,
-                                        level="success",
+                                        level=level,
                                         message=user_message,
                                     )
                                 else:

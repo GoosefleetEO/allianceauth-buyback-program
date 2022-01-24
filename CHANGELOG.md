@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Changed notification layouts for discordproxy
 
 ### Fixed
 - Fixed contracts showing donation icons only if contract had no donations.
 - Fixees #25, fixed issue with notifications when an alt corp was used as manager
+- Fixed rejected notifications not going out to sellers
 
 ## [1.1.0] - 2022-22-01
 

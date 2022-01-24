@@ -125,6 +125,7 @@ def update_contracts_for_owner(self, owner_pk):
 def update_all_contracts():
     logger.debug("Starting all contract updates")
     for owner in Owner.objects.all():
+        logger.debug("Updating contracts for %s" % owner)
         update_contracts_for_owner.apply_async(
             kwargs={"owner_pk": owner.pk},
             priority=NORMAL_TASK_PRIORITY,

@@ -8,7 +8,7 @@ from django.db import Error, models
 from django.utils.translation import gettext as _
 from esi.errors import TokenExpiredError, TokenInvalidError
 from esi.models import Token
-from eveuniverse.models import EveSolarSystem, EveType
+from eveuniverse.models import EveEntity, EveSolarSystem, EveType
 
 from allianceauth.authentication.models import CharacterOwnership, State
 
@@ -20,7 +20,6 @@ from buybackprogram.notification import (
     send_message_to_discord_channel,
     send_user_notification,
 )
-from buybackprogram.utils import get_site_url
 
 from .decorators import fetch_token_for_owner
 from .providers import esi
@@ -98,12 +97,14 @@ class Owner(models.Model):
     )
     def update_contracts_esi(self, token):
 
-        logger.debug("Fetching contracts for %s" % self.user)
+        logger.debug("Fetching contracts for %s" % self.character)
 
         # Get all contracts for owner
         contracts = self._fetch_contracts()
 
         logger.debug("Got %s character contracts" % len(contracts))
+
+        logger.debug("Fetching corporation contracts for %s" % self.corporation)
 
         # Get all contracts for owner corporation
         corporation_contracts = self._fetch_corporation_contracts()
@@ -118,8 +119,11 @@ class Owner(models.Model):
         # Get all tracking objects from the database
         tracking_numbers = Tracking.objects.all()
 
+        logger.debug("Got %s tracking numbers from database" % len(tracking_numbers))
+
         # Start looping for all stored tracking objects
         for tracking in tracking_numbers:
+            logger.debug("Processing tracking number %s" % tracking.tracking_number)
 
             # If the tracking has an active program (not deleted)
             if tracking.program:
@@ -131,7 +135,7 @@ class Owner(models.Model):
                     if tracking.tracking_number in contract["title"]:
 
                         logger.debug(
-                            "Found a matching contract from tracking for %s "
+                            "Found a matching tracking for %s "
                             % contract["contract_id"]
                         )
 
@@ -141,11 +145,15 @@ class Owner(models.Model):
                                 contract_id=contract["contract_id"]
                             )
 
-                            logger.debug("Contract is already stored in database")
+                            logger.debug(
+                                "Contract %s is already stored in database"
+                                % contract["contract_id"]
+                            )
 
                         except Contract.DoesNotExist:
                             logger.debug(
-                                "No matching contracts stored in database, new contract."
+                                "No matching contracts stored for %s in database, new contract."
+                                % contract["contract_id"]
                             )
                             old_contract = Contract.objects.none()
                             old_contract.status = False
@@ -189,12 +197,44 @@ class Owner(models.Model):
 
                                 character_id = self.character.character.character_id
 
-                                # Get all items in the contract
-                                contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
-                                    character_id=character_id,
-                                    contract_id=contract["contract_id"],
-                                    token=token.valid_access_token(),
-                                ).results()
+                                corporation_id = self.character.character.corporation_id
+
+                                logger.debug(
+                                    "Fetching items for %s with character %s. Corporation contract: %s"
+                                    % (
+                                        contract["contract_id"],
+                                        character_id,
+                                        contract["is_corporation"],
+                                    )
+                                )
+
+                                if not contract["is_corporation"]:
+                                    logger.debug(
+                                        "Looking up items for %s via character endpoint"
+                                        % contract["contract_id"]
+                                    )
+                                    # Get all items in the contract
+                                    contract_items = esi.client.Contracts.get_characters_character_id_contracts_contract_id_items(
+                                        character_id=character_id,
+                                        contract_id=contract["contract_id"],
+                                        token=token.valid_access_token(),
+                                    ).results()
+
+                                else:
+                                    logger.debug(
+                                        "Looking up items for %s via corporation endpoint"
+                                        % contract["contract_id"]
+                                    )
+                                    contract_items = esi.client.Contracts.get_corporations_corporation_id_contracts_contract_id_items(
+                                        corporation_id=corporation_id,
+                                        contract_id=contract["contract_id"],
+                                        token=token.valid_access_token(),
+                                    ).results()
+
+                                logger.debug(
+                                    "%s items found in contract %s"
+                                    % (len(contract_items), contract["contract_id"])
+                                )
 
                                 corporations = CharacterOwnership.objects.filter(
                                     user=tracking.program.owner.user
@@ -226,8 +266,8 @@ class Owner(models.Model):
                                 try:
                                     ContractItem.objects.bulk_create(objs)
                                     logger.debug(
-                                        "Succesfully added items for contract %s into database"
-                                        % contract["contract_id"]
+                                        "Succesfully added %s items for contract %s into database"
+                                        % (len(objs), contract["contract_id"])
                                     )
                                 except Error as e:
                                     logger.error(
@@ -242,16 +282,42 @@ class Owner(models.Model):
 
                                 # Notifications for users who have the notifications enabled
 
-                                disablation_hint = "*You can disable these notifications from your program settings*"
+                                if not contract["is_corporation"]:
+
+                                    assigned_to = (
+                                        self.character.character.character_name
+                                    )
+                                else:
+                                    assigned_to = (
+                                        self.character.character.corporation_name
+                                    )
+
+                                notifications = ContractNotification.objects.filter(
+                                    contract__contract_id=contract["contract_id"]
+                                )
+
+                                notes = str()
+
+                                if notifications:
+                                    notes += "\n\n**Notes**:\n\n"
+                                    for note in notifications:
+
+                                        notes += str(note.message)
+                                        notes += "\n\n"
 
                                 user_message = {
-                                    "title": "New contract assigned",
-                                    "description": "A new buyback contract {0} with a value of {1} ISK has been assigned to you.\n\n{2}".format(
+                                    "title": "New buyback contract assigned",
+                                    "description": "A new buyback contract with tracking number {0} has been assigned to you.{1}".format(
                                         tracking.tracking_number,
-                                        intcomma(int(contract["price"])),
-                                        disablation_hint,
+                                        notes,
                                     ),
-                                    "footer": "AA Buyback Program",
+                                    "color": 0x5BC0DE,
+                                    "value": intcomma(int(contract["price"])),
+                                    "assigned_to": assigned_to,
+                                    "assigned_from": EveEntity.objects.resolve_name(
+                                        contract["issuer_id"]
+                                    ),
+                                    "footer": "Hint: You can disable these notifications from your program settings",
                                 }
 
                                 # If tracking is active and we should send a message for our users
@@ -281,15 +347,15 @@ class Owner(models.Model):
                             # If contract was updated instead of created
                             else:
                                 logger.debug(
-                                    "Contract %s is not new, updated old contract."
+                                    "Contract %s is not new, updated the old contract."
                                     % obj.contract_id
                                 )
 
                             # Check if the contract status has changed from ongoing to finished.
-                            if (
-                                old_contract.status == "outstanding"
-                                and obj.status == "finished"
-                            ):
+                            if old_contract.status == "outstanding" and obj.status in [
+                                "finished",
+                                "rejected",
+                            ]:
                                 logger.debug(
                                     "Contract %s has been completed. Status has changed to %s"
                                     % (obj.contract_id, obj.status)
@@ -303,33 +369,61 @@ class Owner(models.Model):
                                 # If user has not disabled notifications
                                 if user_settings.disable_notifications is False:
 
-                                    disablation_hint = "*You can disable these notifications from [My Settings]({0}/buybackprogram/user_settings_edit)*".format(
-                                        get_site_url()
-                                    )
+                                    if not contract["is_corporation"]:
+
+                                        assigned_to = (
+                                            self.character.character.character_name
+                                        )
+                                    else:
+                                        assigned_to = (
+                                            self.character.character.corporation_name
+                                        )
 
                                     # Check if the contract was accepted or rejected
                                     if contract["status"] == "finished":
                                         status = "accepted"
+                                        color = 0x5CB85C
+                                        level = "success"
                                     elif contract["status"] == "rejected":
                                         status = "rejected"
+                                        color = 0xD9534F
+                                        level = "danger"
                                     else:
                                         status = contract["status"]
 
+                                    notifications = ContractNotification.objects.filter(
+                                        contract__contract_id=contract["contract_id"]
+                                    )
+
+                                    notes = str()
+
+                                    if notifications:
+                                        notes += "\n\n**Notes**:\n\n"
+                                        for note in notifications:
+
+                                            notes += str(note.message)
+                                            notes += "\n\n"
+
                                     user_message = {
                                         "title": "Buyback contract {0}".format(status),
-                                        "description": "Your outstanding buyback contract {0} with a value of {1} ISK has been {2} by {3}.\n\n{4}".format(
+                                        "description": "Your outstanding buyback contract {0} has been {1} by {2}.{3}".format(
                                             tracking.tracking_number,
-                                            intcomma(int(contract["price"])),
                                             status,
                                             self.character.character,
-                                            disablation_hint,
+                                            notes,
                                         ),
-                                        "footer": "AA Buyback Program",
+                                        "color": color,
+                                        "value": intcomma(int(contract["price"])),
+                                        "assigned_to": assigned_to,
+                                        "assigned_from": EveEntity.objects.resolve_name(
+                                            contract["issuer_id"]
+                                        ),
+                                        "footer": "Hint: You can disable these notifications from your buybackprogram settings",
                                     }
 
                                     send_user_notification(
                                         user=tracking.issuer_user,
-                                        level="success",
+                                        level=level,
                                         message=user_message,
                                     )
                                 else:
@@ -343,17 +437,26 @@ class Owner(models.Model):
                                     % obj.contract_id
                                 )
 
-                        break  # If we have found a match from our ESI contracts wi will stop looping on the contracts
+                        break  # If we have found a match from our ESI contracts wi will stop looping on the contract
 
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
     def _fetch_contracts(self, token) -> list:
 
         character_id = self.character.character.character_id
 
-        contracts = esi.client.Contracts.get_characters_character_id_contracts(
+        esi_contracts = esi.client.Contracts.get_characters_character_id_contracts(
             character_id=character_id,
             token=token.valid_access_token(),
         ).results()
+
+        contracts = []
+
+        for esi_contract in esi_contracts:
+
+            contract = esi_contract
+            contract["is_corporation"] = False
+
+            contracts.append(contract)
 
         return contracts
 
@@ -362,10 +465,19 @@ class Owner(models.Model):
 
         corporation_id = self.character.character.corporation_id
 
-        contracts = esi.client.Contracts.get_corporations_corporation_id_contracts(
+        esi_contracts = esi.client.Contracts.get_corporations_corporation_id_contracts(
             corporation_id=corporation_id,
             token=token.valid_access_token(),
         ).results()
+
+        contracts = []
+
+        for esi_contract in esi_contracts:
+
+            contract = esi_contract
+            contract["is_corporation"] = True
+
+            contracts.append(contract)
 
         return contracts
 
@@ -448,7 +560,7 @@ class Owner(models.Model):
 
             notes.append(note)
 
-        if not tracking.donation:
+        if tracking.donation:
 
             note = ContractNotification(
                 contract=contract,

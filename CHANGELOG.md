@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Fixed contracts showing donation icons only if contract had no donations.
+- Fixees #25, fixed issue with notifications when an alt corp was used as manager
 
 ## [1.1.0] - 2022-22-01
 

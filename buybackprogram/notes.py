@@ -76,7 +76,7 @@ def note_item_specific_tax(name, item_tax):
             note = {
                 "icon": "fa-percentage",
                 "color": "orange",
-                "message": "%s has an additional %s %s item spesific tax applied on it"
+                "message": "%s has an additional %s %s item specific tax applied on it"
                 % (name, item_tax, "%"),
             }
             return note
@@ -84,7 +84,7 @@ def note_item_specific_tax(name, item_tax):
             note = {
                 "icon": "fa-percentage",
                 "color": "green",
-                "message": "%s has an decreased %s %s item spesific tax applied on it"
+                "message": "%s has an decreased %s %s item specific tax applied on it"
                 % (name, item_tax, "%"),
             }
         return note

@@ -53,10 +53,29 @@ def send_user_notification(user: User, level: str, message: dict) -> None:
 
             client = DiscordClient()
 
+            fields = []
+
+            fields.append(
+                Embed.Field(name="Value", value=message["value"], inline=True)
+            )
+            fields.append(
+                Embed.Field(
+                    name="Assigned to", value=message["assigned_to"], inline=True
+                )
+            )
+            fields.append(
+                Embed.Field(
+                    name="Assigned from", value=message["assigned_from"], inline=True
+                )
+            )
+
             embed = Embed(
                 description=message["description"],
                 title=message["title"],
+                color=message["color"],
                 footer=Embed.Footer(text=message["footer"]),
+                fields=fields,
+                author=Embed.Author(name="AA Buyback Program"),
             )
 
             try:

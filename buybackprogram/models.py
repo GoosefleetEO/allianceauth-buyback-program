@@ -8,7 +8,7 @@ from django.db import Error, models
 from django.utils.translation import gettext as _
 from esi.errors import TokenExpiredError, TokenInvalidError
 from esi.models import Token
-from eveuniverse.models import EveSolarSystem, EveType
+from eveuniverse.models import EveEntity, EveSolarSystem, EveType
 
 from allianceauth.authentication.models import CharacterOwnership, State
 
@@ -20,7 +20,6 @@ from buybackprogram.notification import (
     send_message_to_discord_channel,
     send_user_notification,
 )
-from buybackprogram.utils import get_site_url
 
 from .decorators import fetch_token_for_owner
 from .providers import esi
@@ -283,16 +282,42 @@ class Owner(models.Model):
 
                                 # Notifications for users who have the notifications enabled
 
-                                disablation_hint = "*You can disable these notifications from your program settings*"
+                                if not contract["is_corporation"]:
+
+                                    assigned_to = (
+                                        self.character.character.character_name
+                                    )
+                                else:
+                                    assigned_to = (
+                                        self.character.character.corporation_name
+                                    )
+
+                                notifications = ContractNotification.objects.filter(
+                                    contract__contract_id=contract["contract_id"]
+                                )
+
+                                notes = str()
+
+                                if notifications:
+                                    notes += "\n\n**Notes**:\n\n"
+                                    for note in notifications:
+
+                                        notes += str(note.message)
+                                        notes += "\n\n"
 
                                 user_message = {
-                                    "title": "New contract assigned",
-                                    "description": "A new buyback contract {0} with a value of {1} ISK has been assigned to you.\n\n{2}".format(
+                                    "title": "New buyback contract assigned",
+                                    "description": "A new buyback contract with tracking number {0} has been assigned to you.{1}".format(
                                         tracking.tracking_number,
-                                        intcomma(int(contract["price"])),
-                                        disablation_hint,
+                                        notes,
                                     ),
-                                    "footer": "AA Buyback Program",
+                                    "color": 0x5BC0DE,
+                                    "value": intcomma(int(contract["price"])),
+                                    "assigned_to": assigned_to,
+                                    "assigned_from": EveEntity.objects.resolve_name(
+                                        contract["issuer_id"]
+                                    ),
+                                    "footer": "Hint: You can disable these notifications from your program settings",
                                 }
 
                                 # If tracking is active and we should send a message for our users
@@ -327,10 +352,10 @@ class Owner(models.Model):
                                 )
 
                             # Check if the contract status has changed from ongoing to finished.
-                            if (
-                                old_contract.status == "outstanding"
-                                and obj.status == "finished"
-                            ):
+                            if old_contract.status == "outstanding" and obj.status in [
+                                "finished",
+                                "rejected",
+                            ]:
                                 logger.debug(
                                     "Contract %s has been completed. Status has changed to %s"
                                     % (obj.contract_id, obj.status)
@@ -344,28 +369,54 @@ class Owner(models.Model):
                                 # If user has not disabled notifications
                                 if user_settings.disable_notifications is False:
 
-                                    disablation_hint = "*You can disable these notifications from [My Settings]({0}/buybackprogram/user_settings_edit)*".format(
-                                        get_site_url()
-                                    )
+                                    if not contract["is_corporation"]:
+
+                                        assigned_to = (
+                                            self.character.character.character_name
+                                        )
+                                    else:
+                                        assigned_to = (
+                                            self.character.character.corporation_name
+                                        )
 
                                     # Check if the contract was accepted or rejected
                                     if contract["status"] == "finished":
                                         status = "accepted"
+                                        color = 0x5CB85C
                                     elif contract["status"] == "rejected":
                                         status = "rejected"
+                                        color = 0xD9534F
                                     else:
                                         status = contract["status"]
 
+                                    notifications = ContractNotification.objects.filter(
+                                        contract__contract_id=contract["contract_id"]
+                                    )
+
+                                    notes = str()
+
+                                    if notifications:
+                                        notes += "\n\n**Notes**:\n\n"
+                                        for note in notifications:
+
+                                            notes += str(note.message)
+                                            notes += "\n\n"
+
                                     user_message = {
                                         "title": "Buyback contract {0}".format(status),
-                                        "description": "Your outstanding buyback contract {0} with a value of {1} ISK has been {2} by {3}.\n\n{4}".format(
+                                        "description": "Your outstanding buyback contract {0} has been {1} by {2}.{3}".format(
                                             tracking.tracking_number,
-                                            intcomma(int(contract["price"])),
                                             status,
                                             self.character.character,
-                                            disablation_hint,
+                                            notes,
                                         ),
-                                        "footer": "AA Buyback Program",
+                                        "color": color,
+                                        "value": intcomma(int(contract["price"])),
+                                        "assigned_to": assigned_to,
+                                        "assigned_from": EveEntity.objects.resolve_name(
+                                            contract["issuer_id"]
+                                        ),
+                                        "footer": "Hint: You can disable these notifications from your buybackprogram settings",
                                     }
 
                                     send_user_notification(

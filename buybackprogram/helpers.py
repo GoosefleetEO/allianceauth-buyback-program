@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 import requests
@@ -827,6 +828,7 @@ def get_tracking_number(
         donation=contract_price_data["total_donation_amount"],
         net_price=round(contract_price_data["contract_net_total"]),
         tracking_number=tracking_number,
+        created_at=datetime.datetime.now(),
     )
 
     tracking.save()
@@ -850,4 +852,4 @@ def get_tracking_number(
     except Error as e:
         logger.error("Error creating tracking items: %s" % e)
 
-    return tracking_number
+    return tracking

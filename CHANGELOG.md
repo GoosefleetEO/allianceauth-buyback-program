@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased] - yyyy-mm-dd
+
+### Added
+- Added ForeignKey to tracking objects to link them with actual contracts
+- Added datetime field for tracking objects for creation time
+- Closes #26, added name/description field for programs
+- Closes #23, added program location row to contract details
+
+### Changed
+- Performace increase for databses with a lot of tracking objects to the statistics pages
+
+### Fixed
 
 ## [1.1.1] - 2022-24-01
 

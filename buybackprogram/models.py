@@ -191,6 +191,28 @@ class Owner(models.Model):
                             # If we have created a new contract
                             if created:
                                 logger.debug(
+                                    "Contract %s created, linking tracking object %s"
+                                    % (
+                                        contract["contract_id"],
+                                        tracking.tracking_number,
+                                    )
+                                )
+
+                                try:
+                                    Tracking.objects.filter(pk=tracking.id).update(
+                                        contract=obj
+                                    )
+                                except Error as e:
+                                    logger.error(
+                                        "Error linking contract %s with tracking %s: %s"
+                                        % (
+                                            contract["contract_id"],
+                                            tracking.tracking_number,
+                                            e,
+                                        )
+                                    )
+
+                                logger.debug(
                                     "New contract %s has been created. Starting item fetch"
                                     % contract["contract_id"]
                                 )
@@ -299,7 +321,7 @@ class Owner(models.Model):
                                 notes = str()
 
                                 if notifications:
-                                    notes += "\n\n**Notes**:\n\n"
+                                    notes += "\n\n**Notes**:\n"
                                     for note in notifications:
 
                                         notes += str(note.message)
@@ -398,7 +420,7 @@ class Owner(models.Model):
                                     notes = str()
 
                                     if notifications:
-                                        notes += "\n\n**Notes**:\n\n"
+                                        notes += "\n\n**Notes**:\n"
                                         for note in notifications:
 
                                             notes += str(note.message)
@@ -694,6 +716,14 @@ class Location(models.Model):
 class Program(models.Model):
     """An Eve Online buyback program"""
 
+    name = models.CharField(
+        verbose_name="Name/description",
+        max_length=64,
+        help_text="A name or a description for this program",
+        blank=True,
+        default="",
+    )
+
     owner = models.ForeignKey(
         Owner,
         verbose_name="Manager",
@@ -902,45 +932,6 @@ class ItemPrices(models.Model):
     updated = models.DateTimeField()
 
 
-class Tracking(models.Model):
-    program = models.ForeignKey(
-        Program,
-        null=True,
-        on_delete=models.deletion.SET_NULL,
-        related_name="+",
-    )
-    issuer_user = models.ForeignKey(
-        User,
-        on_delete=models.deletion.CASCADE,
-        related_name="+",
-    )
-    value = models.BigIntegerField(null=False)
-    taxes = models.BigIntegerField(null=False)
-    hauling_cost = models.BigIntegerField(null=False)
-    donation = models.BigIntegerField(null=True, blank=True)
-    net_price = models.BigIntegerField(null=False)
-    tracking_number = models.CharField(max_length=20)
-
-
-class TrackingItem(models.Model):
-
-    tracking = models.ForeignKey(
-        Tracking,
-        on_delete=models.deletion.CASCADE,
-        help_text="What tracking do these items belong to",
-    )
-
-    eve_type = models.ForeignKey(
-        EveType,
-        on_delete=models.deletion.CASCADE,
-        help_text="Item type information",
-    )
-
-    buy_value = models.BigIntegerField(null=False)
-
-    quantity = models.IntegerField()
-
-
 class Contract(models.Model):
 
     assignee_id = models.IntegerField()
@@ -994,6 +985,52 @@ class ContractNotification(models.Model):
     message = models.CharField(
         max_length=1024,
     )
+
+
+class Tracking(models.Model):
+    program = models.ForeignKey(
+        Program,
+        null=True,
+        on_delete=models.deletion.SET_NULL,
+        related_name="+",
+    )
+    contract = models.ForeignKey(
+        Contract,
+        null=True,
+        blank=True,
+        on_delete=models.deletion.SET_NULL,
+    )
+    issuer_user = models.ForeignKey(
+        User,
+        on_delete=models.deletion.CASCADE,
+        related_name="+",
+    )
+    value = models.BigIntegerField(null=False)
+    taxes = models.BigIntegerField(null=False)
+    hauling_cost = models.BigIntegerField(null=False)
+    donation = models.BigIntegerField(null=True, blank=True)
+    net_price = models.BigIntegerField(null=False)
+    tracking_number = models.CharField(max_length=20)
+    created_at = models.DateTimeField(null=True, blank=True)
+
+
+class TrackingItem(models.Model):
+
+    tracking = models.ForeignKey(
+        Tracking,
+        on_delete=models.deletion.CASCADE,
+        help_text="What tracking do these items belong to",
+    )
+
+    eve_type = models.ForeignKey(
+        EveType,
+        on_delete=models.deletion.CASCADE,
+        help_text="Item type information",
+    )
+
+    buy_value = models.BigIntegerField(null=False)
+
+    quantity = models.IntegerField()
 
 
 class UserSettings(models.Model):

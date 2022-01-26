@@ -123,7 +123,6 @@ class Owner(models.Model):
 
         # Start looping for all stored tracking objects
         for tracking in tracking_numbers:
-            logger.debug("Processing tracking number %s" % tracking.tracking_number)
 
             # If the tracking has an active program (not deleted)
             if tracking.program:
@@ -133,11 +132,6 @@ class Owner(models.Model):
 
                     # Only get contracts with the correct prefill ticker
                     if tracking.tracking_number in contract["title"]:
-
-                        logger.debug(
-                            "Found a matching tracking for %s "
-                            % contract["contract_id"]
-                        )
 
                         # Check if we already have the contract stored
                         try:
@@ -510,6 +504,40 @@ class Owner(models.Model):
 
         # Get structure id for tracked contract
         structure_id = tracking.program.location.structure_id
+
+        logger.debug(
+            "Checking if items in contract %s match items in tracking %s "
+            % (contract.id, tracking.tracking_number)
+        )
+
+        # Get items related to tracking object
+        tracking_items = list(
+            TrackingItem.objects.filter(tracking=tracking).values(
+                "eve_type", "quantity"
+            )
+        )
+
+        logger.debug("Got tracking items: %s" % (tracking_items))
+
+        # Get actual contract items
+        contract_items = list(
+            ContractItem.objects.filter(contract=contract).values(
+                "eve_type", "quantity"
+            )
+        )
+
+        logger.debug("Got contract items: %s" % (contract_items))
+
+        if tracking_items != contract_items:
+
+            note = ContractNotification(
+                contract=contract,
+                icon="fa-unlink",
+                color="red",
+                message="Tracked items do not match the actual items in the contract. See details for more info.",
+            )
+
+            notes.append(note)
 
         # If our tracked price is different than the actual contract price
         if tracking.net_price != contract.price:

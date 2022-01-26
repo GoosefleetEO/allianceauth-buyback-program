@@ -222,7 +222,7 @@ def contract_details(request, contract_title):
     notes = ContractNotification.objects.filter(contract=contract)
 
     # Get items for this contract
-    contract_items = ContractItem.objects.filter(contract=contract)
+    contract_items = ContractItem.objects.filter(contract=contract).order_by("eve_type")
 
     # Get tracking object for this contract
     tracking = Tracking.objects.get(
@@ -230,7 +230,7 @@ def contract_details(request, contract_title):
     )
 
     # Get tracked items
-    tracking_items = TrackingItem.objects.filter(tracking=tracking)
+    tracking_items = TrackingItem.objects.filter(tracking=tracking).order_by("eve_type")
 
     # Get the name for the issuer
     contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)

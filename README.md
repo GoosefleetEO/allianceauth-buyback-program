@@ -53,7 +53,13 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 - Program tracking for owners:
 	- Outstanding contracts
 	- Total bought value
-	- Alerts for mistakes in contracts such as missmatching price
+- Contract abuse checker and notifications
+	- Check if items do not match the calcualted contract
+	- Check if price does not match the calculated contract
+	- Check if contract is made at wrong location
+	- Check if contract is made incorrectly to corporation or character
+	- Check extra characters in contract title
+	- Check if contract contains donations
 - Contract tracking history
 - Supports discord notifications
 	- Notifications for accepted contracts

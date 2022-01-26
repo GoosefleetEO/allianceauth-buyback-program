@@ -241,7 +241,7 @@ def program_calculate(request, program_pk):
         "donation": form_donation,
         "buyback_data": buyback_data,
         "contract_price_data": contract_price_data,
-        "tracking_number": tracking,
+        "tracking_number": tracking.tracking_number,
     }
 
     return render(request, "buybackprogram/program_calculate.html", context)

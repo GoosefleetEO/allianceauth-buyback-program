@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Location, Owner, Program
+from .models import Contract, Location, Owner, Program
 
 # Register your models here.
 
@@ -26,7 +26,8 @@ class ProgramAdmin(admin.ModelAdmin):
 
 admin.site.register(Program, ProgramAdmin)
 
-
 admin.site.register(Owner)
+
+admin.site.register(Contract)
 
 admin.site.register(Location)

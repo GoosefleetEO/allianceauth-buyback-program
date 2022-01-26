@@ -5,8 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.0] - 2022-01-26
 
-## [1.1.1] - 2022-24-01
+### Added
+- Added ForeignKey to tracking objects to link them with actual contracts
+- Added datetime field for tracking objects for creation time
+- Closes #26, added name/description field for programs
+- Closes #23, added program location row to contract details
+
+### Changed
+- Performace increase for databses with a lot of tracking objects to the statistics pages
+
+### Fixed
+
+## [1.1.1] - 2022-01-24
 
 ### Changed
 - Changed notification layouts for discordproxy
@@ -16,7 +28,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixees #25, fixed issue with notifications when an alt corp was used as manager
 - Fixed rejected notifications not going out to sellers
 
-## [1.1.0] - 2022-22-01
+## [1.1.0] - 2022-01-22
 
 ### Added
 - Added check for discordnotify app to prevent multiple notifications

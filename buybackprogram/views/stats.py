@@ -37,43 +37,41 @@ def my_stats(request):
         "character__character_id", flat=True
     )
 
-    # All tracking objects
-    tracking_numbers = Tracking.objects.all()
+    # Get all tracking objects that have a linked contract to them for the user
+    tracking_numbers = (
+        Tracking.objects.filter(contract__isnull=False)
+        .filter(contract__issuer_id__in=characters)
+        .prefetch_related("contract")
+    )
 
     # Loop tracking objects to see if we have any contracts
     for tracking in tracking_numbers:
 
-        # Get contracts matching tracking numbers
-        contract = Contract.objects.filter(
-            issuer_id__in=characters, title__contains=tracking.tracking_number
-        ).first()
+        # Get notes for this contract
+        tracking.contract.notes = ContractNotification.objects.filter(
+            contract=tracking.contract
+        )
 
-        # If we have matching contracts
-        if contract:
+        # Walk the tracker values for contracts
+        if tracking.contract.status == "outstanding":
+            values["outstanding"] += tracking.contract.price
+            values["outstanding_count"] += 1
+        if tracking.contract.status == "finished":
+            values["finished"] += tracking.contract.price
+            values["finished_count"] += 1
 
-            # Get notes for this contract
-            contract.notes = ContractNotification.objects.filter(contract=contract)
+        # Get the name for the issuer
+        tracking.contract.issuer_name = EveEntity.objects.resolve_name(
+            tracking.contract.issuer_id
+        )
 
-            contract.tracking = tracking
+        # Get the name for the assignee
+        tracking.contract.assignee_name = EveEntity.objects.resolve_name(
+            tracking.contract.assignee_id
+        )
 
-            # Walk the tracker values for contracts
-            if contract.status == "outstanding":
-                values["outstanding"] += contract.price
-                values["outstanding_count"] += 1
-            if contract.status == "finished":
-                values["finished"] += contract.price
-                values["finished_count"] += 1
-
-            # Get the name for the issuer
-            contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
-
-            # Get the name for the assignee
-            contract.assignee_name = EveEntity.objects.resolve_name(
-                contract.assignee_id
-            )
-
-            # Add contract to the valid contract list
-            valid_contracts.append(contract)
+        # Add contract to the valid contract list
+        valid_contracts.append(tracking)
 
     context = {
         "contracts": valid_contracts,
@@ -109,44 +107,44 @@ def program_stats(request):
         "character__corporation_id", flat=True
     )
 
-    # All tracking objects
-    tracking_numbers = Tracking.objects.all()
+    # Get all tracking objects that have a linked contract to them for the user
+    tracking_numbers = (
+        Tracking.objects.filter(contract__isnull=False)
+        .filter(
+            Q(contract__assignee_id__in=characters)
+            | Q(contract__assignee_id__in=corporations)
+        )
+        .prefetch_related("contract")
+    )
 
     # Loop tracking objects to see if we have any contracts
     for tracking in tracking_numbers:
 
-        # Get contracts matching tracking numbers
-        contract = Contract.objects.filter(
-            Q(assignee_id__in=characters) | Q(assignee_id__in=corporations),
-            title__contains=tracking.tracking_number,
-        ).first()
+        # Get notes for this contract
+        tracking.contract.notes = ContractNotification.objects.filter(
+            contract=tracking.contract
+        )
 
-        # If we have matching contracts
-        if contract:
+        # Walk the tracker values for contracts
+        if tracking.contract.status == "outstanding":
+            values["outstanding"] += tracking.contract.price
+            values["outstanding_count"] += 1
+        if tracking.contract.status == "finished":
+            values["finished"] += tracking.contract.price
+            values["finished_count"] += 1
 
-            # Get notes for this contract
-            contract.notes = ContractNotification.objects.filter(contract=contract)
+        # Get the name for the issuer
+        tracking.contract.issuer_name = EveEntity.objects.resolve_name(
+            tracking.contract.issuer_id
+        )
 
-            contract.tracking = tracking
+        # Get the name for the assignee
+        tracking.contract.assignee_name = EveEntity.objects.resolve_name(
+            tracking.contract.assignee_id
+        )
 
-            # Walk the tracker values for contracts
-            if contract.status == "outstanding":
-                values["outstanding"] += contract.price
-                values["outstanding_count"] += 1
-            if contract.status == "finished":
-                values["finished"] += contract.price
-                values["finished_count"] += 1
-
-            # Get the name for the issuer
-            contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
-
-            # Get the name for the assignee
-            contract.assignee_name = EveEntity.objects.resolve_name(
-                contract.assignee_id
-            )
-
-            # Add contract to the valid contract list
-            valid_contracts.append(contract)
+        # Add contract to the valid contract list
+        valid_contracts.append(tracking)
 
     context = {
         "contracts": valid_contracts,
@@ -172,42 +170,38 @@ def program_stats_all(request):
         "finished_count": 0,
     }
 
-    # All tracking objects
-    tracking_numbers = Tracking.objects.all()
+    # Get all tracking objects that have a linked contract to them for the user
+    tracking_numbers = Tracking.objects.filter(contract__isnull=False).prefetch_related(
+        "contract"
+    )
 
     # Loop tracking objects to see if we have any contracts
     for tracking in tracking_numbers:
 
-        # Get contracts matching tracking numbers
-        contract = Contract.objects.filter(
-            title__contains=tracking.tracking_number
-        ).first()
+        # Get notes for this contract
+        tracking.contract.notes = ContractNotification.objects.filter(
+            contract=tracking.contract
+        )
 
-        # If we have matching contracts
-        if contract:
+        # Walk the tracker values for contracts
+        if tracking.contract.status == "outstanding":
+            values["outstanding"] += tracking.contract.price
+            values["outstanding_count"] += 1
+        if tracking.contract.status == "finished":
+            values["finished"] += tracking.contract.price
+            values["finished_count"] += 1
 
-            # Get notes for this contract
-            contract.notes = ContractNotification.objects.filter(contract=contract)
+        # Get the name for the issuer
+        tracking.contract.issuer_name = EveEntity.objects.resolve_name(
+            tracking.contract.issuer_id
+        )
 
-            contract.tracking = tracking
+        # Get the name for the assignee
+        tracking.contract.assignee_name = EveEntity.objects.resolve_name(
+            tracking.contract.assignee_id
+        )
 
-            # Walk the tracker values for contracts
-            if contract.status == "outstanding":
-                values["outstanding"] += contract.price
-                values["outstanding_count"] += 1
-            if contract.status == "finished":
-                values["finished"] += contract.price
-                values["finished_count"] += 1
-
-            # Get the name for the issuer
-            contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
-
-            # Get the name for the assignee
-            contract.assignee_name = EveEntity.objects.resolve_name(
-                contract.assignee_id
-            )
-
-            valid_contracts.append(contract)
+        valid_contracts.append(tracking)
 
     context = {
         "contracts": valid_contracts,

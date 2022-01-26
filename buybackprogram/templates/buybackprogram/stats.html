@@ -100,7 +100,7 @@
                             <tbody>
 
                                 {% for tracking in contracts %}
-                                    {% if tracking.contract.status == 'outstanding' %}
+                                    {% if tracking.contract.status == 'finished' %}
                                         <tr>
                                             <td>{{tracking.contract.issuer_name}}</td>
                                             <td>{{tracking.contract.assignee_name}}</td>

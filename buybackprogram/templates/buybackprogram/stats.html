@@ -87,27 +87,36 @@
                             <thead>
                                 <tr>
                                     <th >{% trans "Issuer" %}</th>
+                                    <th >{% trans "Assignee" %}</th>
                                     <th >{% trans "Date issued" %}</th>
-                                    <th >{% trans "Date accepted" %}</th>
-                                    <th >{% trans "Time for accepted" %}</th>
+                                    <th >{% trans "Time pending" %}</th>
                                     <th >{% trans "Status" %}</th>
                                     <th >{% trans "Tracking #" %}</th>
                                     <th >{% trans "Price" %}</th>
-                                    <th >{% trans "Action" %}</th>
+                                    <th>{% trans "Notes" %}</th>
+                                    <th>{% trans "Action" %}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for contract in contracts %}
-                                    {% if contract.status == 'finished' %}
+
+                                {% for tracking in contracts %}
+                                    {% if tracking.contract.status == 'outstanding' %}
                                         <tr>
-                                            <td>{{contract.issuer_name}}</td>
-                                            <td>{{contract.date_issued}}</td>
-                                            <td>{{contract.date_completed}}</td>
-                                            <td>{{ contract.date_completed|timeuntil:contract.date_issued }}</td>
-                                            <td>{{contract.status}}</td>
-                                            <td>{{contract.title}}</td>
-                                            <td>{{contract.price|floatformat:0|intcomma|price}}</td>
-                                            <td><a class="btn btn-info btn-sm" href="{% url 'buybackprogram:contract_details' contract_title=contract.title %}">
+                                            <td>{{tracking.contract.issuer_name}}</td>
+                                            <td>{{tracking.contract.assignee_name}}</td>
+                                            <td>{{tracking.contract.date_issued}}</td>
+                                            <td>{{tracking.contract.date_issued|timesince }}</td>
+                                            <td>{{tracking.contract.status}}</td>
+                                            <td>{{tracking.tracking_number}}</td>
+                                            <td>{{tracking.contract.price|floatformat:0|intcomma|price}}</td>
+
+                                            <td>
+                                                {% for note in tracking.contract.notes %}
+                                                <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
+                                                {% endfor %}
+                                            </td>
+
+                                            <td><a class="btn btn-info btn-sm" href="{% url 'buybackprogram:contract_details' contract_title=tracking.tracking_number %}">
                                             Details
                                         </a></td>
                                         </tr>

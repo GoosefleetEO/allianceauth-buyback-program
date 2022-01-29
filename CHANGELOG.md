@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.4] - 2022-01-29
+
+### Fixed
+- Fixed the issue where item check gave false positives when the seller had multiple items with same names and different quantities sold
+
 ## [1.2.3] - 2022-01-26
 
 ### Fixed

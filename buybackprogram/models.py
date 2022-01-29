@@ -514,7 +514,7 @@ class Owner(models.Model):
         tracking_items = list(
             TrackingItem.objects.filter(tracking=tracking)
             .values("eve_type", "quantity")
-            .order_by("eve_type")
+            .order_by("eve_type", "quantity")
         )
 
         logger.debug("Got tracking items: %s" % (tracking_items))
@@ -523,7 +523,7 @@ class Owner(models.Model):
         contract_items = list(
             ContractItem.objects.filter(contract=contract)
             .values("eve_type", "quantity")
-            .order_by("eve_type")
+            .order_by("eve_type", "quantity")
         )
 
         logger.debug("Got contract items: %s" % (contract_items))

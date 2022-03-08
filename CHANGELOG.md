@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.7] - 2022-05-08
+
+### Changed
+
+- Changed ore, ice and moon ore compression rate to 1:1 to reflect changes in eve patch 20.03
+
+### Notes
+
+- Remember to update static files with `buybackprogram_load_data` to fetch the new compression types
+
 ## [1.2.6] - 2022-05-03
 
 ### Fixed

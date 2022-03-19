@@ -21,6 +21,7 @@ setup(
     description="Buyback program plugin app for Alliance Auth",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    url='https://gitlab.com/paulipa/allianceauth-buyback-program',
     author="Ikarus Cesaille",
     author_email="contact@eve-linknet.com",
     classifiers=[

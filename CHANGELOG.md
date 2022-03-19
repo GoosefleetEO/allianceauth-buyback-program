@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Fixed
-
+- Fixed an issue where moon ores were accepted as raw ores even when raw ore valuation was disabled
 
 ## [1.2.7] - 2022-05-08
 

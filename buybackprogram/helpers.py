@@ -197,7 +197,11 @@ def get_item_prices(item_type, name, quantity, program):
     if not item_disallowed:
 
         # If raw ore value should not be taken into account
-        if not program.use_raw_ore_value and is_ore(item_type.eve_group.id):
+        if (
+            not program.use_raw_ore_value
+            and is_ore(item_type.eve_group.id)
+            or is_moon_ore(item_type.eve_group.id)
+        ):
             item_raw_price = {
                 "id": item_type.id,
                 "quantity": quantity,
@@ -346,8 +350,10 @@ def get_item_values(item_type, item_prices, program):
     type_raw_value = False
     compression_raw_value = False
 
+    logger.debug("Values: Item raw price is %s" % item_prices["raw_prices"]["buy"])
+
     # Get values for the type prices (base prices)
-    if item_prices["raw_prices"]:
+    if item_prices["raw_prices"]["buy"]:
 
         quantity = item_prices["raw_prices"]["quantity"]
         sell = item_prices["raw_prices"]["sell"]
@@ -395,11 +401,13 @@ def get_item_values(item_type, item_prices, program):
 
     else:
         raw_item = {
-            "unite_value": False,
+            "unit_value": False,
             "value": False,
             "total_tax": False,
             "raw_value": False,
         }
+
+    logger.debug("Values: Item material price is %s" % item_prices["material_prices"])
 
     # Get values for refined variant
     if item_prices["material_prices"]:
@@ -474,6 +482,10 @@ def get_item_values(item_type, item_prices, program):
             "unit_value": False,
         }
 
+    logger.debug(
+        "Values: Item compression price is %s" % item_prices["compression_prices"]
+    )
+
     # Get values for compressed variant
     if item_prices["compression_prices"]:
 
@@ -486,6 +498,9 @@ def get_item_values(item_type, item_prices, program):
         sell = item_prices["compression_prices"]["sell"]
         price = buy
         price_dencity = price / compressed_version.volume
+
+        logger.debug("Getting price density for compressed variant")
+
         price_dencity_tax = get_price_dencity_tax(
             program, price, compressed_version.volume, quantity
         )
@@ -668,7 +683,7 @@ def get_item_values(item_type, item_prices, program):
         compressed["is_buy_value"] = True
         tax_value = compressed["total_tax"]
 
-        item_prices["notes"].append(note_compressed_price_used(raw_item["name"]))
+        item_prices["notes"].append(note_compressed_price_used(compressed["name"]))
 
         item_prices["notes"].append(
             note_price_dencity_tax(
@@ -678,7 +693,7 @@ def get_item_values(item_type, item_prices, program):
             )
         )
         item_prices["notes"].append(
-            note_item_specific_tax(raw_item["name"], compressed["item_tax"])
+            note_item_specific_tax(compressed["name"], compressed["item_tax"])
         )
     elif buy_value == npc_item["value"]:
 

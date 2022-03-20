@@ -20,8 +20,8 @@ def note_price_dencity_tax(name, price_dencity, price_dencity_tax):
         note = {
             "icon": "fa-weight-hanging",
             "color": "orange",
-            "message": "%s has price dencity of %s isk/m³, %s %s low price dencity tax applied"
-            % (name, price_dencity, price_dencity_tax, "%"),
+            "message": "%s has price density of %s isk/m³, %s %s low price dencity tax applied"
+            % (name, round(price_dencity, 2), price_dencity_tax, "%"),
         }
 
         return note
@@ -125,5 +125,14 @@ def note_npc_price(name):
         "icon": "fa-robot",
         "color": "#5858df",
         "message": "Using NPC buy price for %s instead of Jita buy prices" % name,
+    }
+    return note
+
+
+def note_raw_price_used(name):
+    note = {
+        "icon": "fa-icicles",
+        "color": "#5858df",
+        "message": "Best price: Using raw price for %s" % name,
     }
     return note

@@ -9,11 +9,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Added repo url to setup.py
+- Icon for raw price used when item has price variants
 
 ### Changed
+- Limited price density displayed decimals to 2
 
 ### Fixed
 - Fixed an issue where moon ores were accepted as raw ores even when raw ore valuation was disabled
+- Fixed raw moon ore price not displayed when program had raw values set to true
 
 ## [1.2.7] - 2022-05-08
 

@@ -27,6 +27,7 @@ from buybackprogram.notes import (
     note_no_price_data,
     note_npc_price,
     note_price_dencity_tax,
+    note_raw_price_used,
     note_refined_price_used,
     note_unpublished_item,
 )
@@ -141,13 +142,20 @@ def get_price_dencity_tax(program, item_value, item_volume, item_quantity):
 
         if item_isk_dencity < program.price_dencity_treshold and item_isk_dencity:
             logger.debug(
-                "Isk dencity under threshold value, applying extra taxes of %s"
-                % program.price_dencity_tax
+                "Isk dencity %s is under threshold value %s, applying extra taxes of %s"
+                % (
+                    item_isk_dencity,
+                    program.price_dencity_treshold,
+                    program.price_dencity_tax,
+                )
             )
 
             return program.price_dencity_tax
         else:
-            logger.debug("Isk dencity above threshold value, no extra taxes added")
+            logger.debug(
+                "Isk dencity %s is above threshold value %s, no extra taxes added"
+                % (item_isk_dencity, program.price_dencity_treshold)
+            )
             return False
     else:
         return False
@@ -198,10 +206,11 @@ def get_item_prices(item_type, name, quantity, program):
 
         # If raw ore value should not be taken into account
         if (
-            not program.use_raw_ore_value
-            and is_ore(item_type.eve_group.id)
-            or is_moon_ore(item_type.eve_group.id)
-        ):
+            is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id)
+        ) and not program.use_raw_ore_value:
+
+            logger.debug("Raw price not used for %s" % item_type.name)
+
             item_raw_price = {
                 "id": item_type.id,
                 "quantity": quantity,
@@ -221,7 +230,7 @@ def get_item_prices(item_type, name, quantity, program):
 
         # Check if we should get refined value for the item
         if (
-            is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id)
+            (is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id))
         ) and program.use_refined_value:
             item_material_price = []
             # Get all refining materials for item
@@ -262,7 +271,7 @@ def get_item_prices(item_type, name, quantity, program):
 
         # Get compressed versions of the ores that are not yet compressed
         if (
-            is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id)
+            (is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id))
         ) and program.use_compressed_value:
 
             if "Compressed" in name:
@@ -353,7 +362,7 @@ def get_item_values(item_type, item_prices, program):
     logger.debug("Values: Item raw price is %s" % item_prices["raw_prices"]["buy"])
 
     # Get values for the type prices (base prices)
-    if item_prices["raw_prices"]["buy"]:
+    if item_prices["raw_prices"]:
 
         quantity = item_prices["raw_prices"]["quantity"]
         sell = item_prices["raw_prices"]["sell"]
@@ -645,6 +654,9 @@ def get_item_values(item_type, item_prices, program):
 
         raw_item["is_buy_value"] = True
         tax_value = raw_item["total_tax"]
+
+        if item_prices["has_price_variants"]:
+            item_prices["notes"].append(note_raw_price_used(raw_item["name"]))
 
         item_prices["notes"].append(
             note_price_dencity_tax(

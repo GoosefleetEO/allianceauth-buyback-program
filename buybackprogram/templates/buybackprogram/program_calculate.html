@@ -112,7 +112,7 @@
                             <td>{{ item.item_values.quantity|intcomma }}</td>
                             <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
                             <td>{{ item.item_prices.type_prices.buy|floatformat:0|intcomma|price }}</td>
-                            <td>{{ item.item_values.tax_value|tax }}</td>
+                            <td>{{ item.item_values.tax_value|floatformat:2|tax }}</td>
                             <td>{{ item.item_values.unit_value|floatformat:0|intcomma|price }}</td>
                             <td>{{ item.item_values.buy_value|floatformat:0|intcomma|price }}</td>
                             <td>
@@ -134,7 +134,7 @@
                                 <td>{{ item.item_values.quantity|intcomma }}</td>
                                 <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
                                 <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
-                                <td>{{ item.item_values.normal.total_tax|tax }}</td>
+                                <td>{{ item.item_values.normal.total_tax|floatformat:2|tax }}</td>
                                 <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.unit_value|floatformat:0|intcomma|price }}</td>
                                 <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.value|floatformat:0|intcomma|price }}</td>
                                 <td>
@@ -157,7 +157,7 @@
                                 <td>{{item.item_values.npc.quantity|intcomma}}</td>
                                 <td>{{item.item_values.npc.sell|floatformat:0|intcomma|price}}</td>
                                 <td>{{item.item_values.npc.buy|floatformat:0|intcomma|price}}</td>
-                                <td>{{item.item_values.npc.total_tax|tax}}</td>
+                                <td>{{item.item_values.npc.total_tax|floatformat:2|tax}}</td>
                                 <td class="buy-value-{{item.item_values.npc.is_buy_value}}">{{item.item_values.npc.unit_value|floatformat:0|intcomma|price}}</td>
                                 <td class="buy-value-{{item.item_values.npc.is_buy_value}}">{{item.item_values.npc.value|floatformat:0|intcomma|price}}</td>
                                 <td>
@@ -180,7 +180,7 @@
                                 <td>{{item.item_values.compressed.quantity|intcomma}}</td>
                                 <td>{{item.item_values.compressed.sell|floatformat:0|intcomma|price}}</td>
                                 <td>{{item.item_values.compressed.buy|floatformat:0|intcomma|price}}</td>
-                                <td>{{item.item_values.compressed.total_tax|tax}}</td>
+                                <td>{{item.item_values.compressed.total_tax|floatformat:2|tax}}</td>
                                 <td class="buy-value-{{item.item_values.compressed.is_buy_value}}">{{item.item_values.compressed.unit_value|floatformat:0|intcomma|price}}</td>
                                 <td class="buy-value-{{item.item_values.compressed.is_buy_value}}">{{item.item_values.compressed.value|floatformat:0|intcomma|price}}</td>
                                 <td>
@@ -204,7 +204,7 @@
                                     <td>{{material.quantity|floatformat:2}}</td>
                                     <td>{{material.sell|floatformat:0|intcomma|price}}</td>
                                     <td>{{material.buy|floatformat:0|intcomma|price}}</td>
-                                    <td>{{material.total_tax|tax}}</td>
+                                    <td>{{material.total_tax|floatformat:2|tax}}</td>
                                     <td>{{material.unit_value|floatformat:0|intcomma|price}}</td>
                                     <td>{{material.value|floatformat:0|intcomma|price}}</td>
                                     <td>

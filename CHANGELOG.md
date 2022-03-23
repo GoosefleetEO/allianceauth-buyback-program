@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased] - yyyy-mm-dd
+
+### Added
+
+### Changed
+- Changed displayed tax amount to 2 digitals
+- Changed tracking created at time to be timezone aware
+
+### Fixed
+- Removed dublicated item tax icons from ores that used refined price as best price and had an item adjusted tax set on them. Now only displaying one icon.
+
 ## [1.2.8] - 2022-03-20
 
 ### Added

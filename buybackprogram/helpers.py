@@ -1,4 +1,3 @@
-import datetime
 import uuid
 
 import requests
@@ -432,6 +431,8 @@ def get_item_values(item_type, item_prices, program):
 
         material_count = len(item_prices["material_prices"])
 
+        item_tax = get_item_tax(program, item_type.id)
+
         for material in item_prices["material_prices"]:
 
             materials = EveType.objects.filter(id=material["id"]).first()
@@ -445,7 +446,6 @@ def get_item_values(item_type, item_prices, program):
                 program, price, materials.volume, quantity
             )
             program_tax = program.tax
-            item_tax = get_item_tax(program, item_type.id)
             refining_rate = program.refining_rate / 100
             tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
@@ -472,7 +472,6 @@ def get_item_values(item_type, item_prices, program):
             r["notes"].append(
                 note_price_dencity_tax(materials.name, price_dencity, price_dencity_tax)
             )
-            r["notes"].append(note_item_specific_tax(materials.name, item_tax))
 
             refined["materials"].append(r)
 
@@ -684,11 +683,10 @@ def get_item_values(item_type, item_prices, program):
                     material["price_dencity_tax"],
                 )
             )
-            item_prices["notes"].append(
-                note_item_specific_tax(
-                    material["name"] + " material", material["item_tax"]
-                )
-            )
+
+        item_prices["notes"].append(
+            note_item_specific_tax(raw_item["name"], raw_item["item_tax"])
+        )
 
     elif buy_value == compressed["value"]:
 
@@ -856,7 +854,7 @@ def get_tracking_number(
         donation=contract_price_data["total_donation_amount"],
         net_price=round(contract_price_data["contract_net_total"]),
         tracking_number=tracking_number,
-        created_at=datetime.datetime.now(),
+        created_at=timezone.now(),
     )
 
     tracking.save()

@@ -10,7 +10,7 @@ class ProgramAdmin(admin.ModelAdmin):
 
     list_display = (
         "owner",
-        "location",
+        "_location",
         "is_corporation",
         "hauling_fuel_cost",
         "tax",
@@ -22,6 +22,18 @@ class ProgramAdmin(admin.ModelAdmin):
         "use_raw_ore_value",
         "allow_unpacked_items",
     )
+
+    @classmethod
+    def _location(cls, obj):
+        names = [x.name for x in obj.location.all().order_by("name")]
+
+        if names:
+            return ", ".join(names)
+        else:
+            return None
+
+    _location.short_description = "Location"
+    _location.admin_order_field = "location__name"
 
 
 admin.site.register(Program, ProgramAdmin)

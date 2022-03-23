@@ -10,8 +10,7 @@
         <thead>
             <tr>
                 <th>{% trans "Name" %}</th>
-                <th>{% trans "System" %}</th>
-                <th>{% trans "Structure" %}</th>
+                <th>{% trans "Location(s)" %}</th>
                 <th>{% trans "Tax" %}</th>
                 <th>{% trans "Manager" %}</th>
                 <th>{% trans "Settings" %}</th>
@@ -23,9 +22,11 @@
             <tr>
                 <td>{{ program.name }} </td>
 
-                <td>{{ program.location.eve_solar_system }} </td>
-
-                <td>{{ program.location.name }} </td>
+                <td>
+                {% for location in program.location.all %}
+                    <div>{{location.location_display_name}}</div>
+                {% endfor %}
+                </td>
 
                 <td>{{ program.tax }} %</td>
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased] - yyyy-mm-dd
 
 ### Added
+- Added the ability to select multiple buy locations for one program. Closes #29
 
 ### Changed
 - Changed displayed tax amount to 2 digitals

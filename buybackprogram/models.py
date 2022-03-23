@@ -293,7 +293,7 @@ class Owner(models.Model):
 
                                 # Check and see if any notifications/warnings should be set on the contract
                                 self._set_contract_notifications(
-                                    tracking, obj, corporations
+                                    tracking, obj, corporations, tracking.program
                                 )
 
                                 # Notifications for users who have the notifications enabled
@@ -497,13 +497,17 @@ class Owner(models.Model):
 
         return contracts
 
-    def _set_contract_notifications(self, tracking, contract, corporations):
+    def _set_contract_notifications(self, tracking, contract, corporations, program):
 
         # List for all notes
         notes = []
 
         # Get structure id for tracked contract
-        structure_id = tracking.program.location.structure_id
+        structure_id = Program.objects.filter(pk=program.id).values_list(
+            "location__structure_id", flat=True
+        )
+
+        logger.debug("Got valid locations for program: %s" % structure_id)
 
         logger.debug(
             "Checking if items in contract %s match items in tracking %s "
@@ -565,7 +569,7 @@ class Owner(models.Model):
 
                 notes.append(note)
 
-        if structure_id and structure_id != contract.start_location_id:
+        if structure_id and contract.start_location_id not in structure_id:
 
             note = ContractNotification(
                 contract=contract,
@@ -740,6 +744,11 @@ class Location(models.Model):
             + str(self.structure_id)
         )
 
+    @property
+    def location_display_name(self):
+
+        return self.eve_solar_system.name + ": " + self.name
+
 
 class Program(models.Model):
     """An Eve Online buyback program"""
@@ -765,10 +774,9 @@ class Program(models.Model):
         help_text="If we should use the corporation of the manager as the contract receiver instead of the character.",
     )
 
-    location = models.ForeignKey(
+    location = models.ManyToManyField(
         Location,
         help_text="The location where contracts should be created at.",
-        on_delete=models.deletion.CASCADE,
         related_name="+",
     )
 

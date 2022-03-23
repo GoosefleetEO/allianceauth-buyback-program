@@ -242,7 +242,7 @@
 
     {% endif %}
 
-    <h4>Buyback program {% if program.name %}for {{program.name}} {% endif %}at {{program.location.eve_solar_system}}, {{program.location.name}} by {% if program.is_corporation %}{{ program.owner.corporation }}{% else %}{{ program.owner.character.character }}{% endif %}</h4>
+    <h4>Buyback program {% if program.name %}: {{program.name}},{% endif %} managed by {% if program.is_corporation %}{{ program.owner.corporation }}{% else %}{{ program.owner.character.character }}{% endif %}</h4>
     <form class="form" action="{% url 'buybackprogram:program_calculate' program_pk=program.id %}" method="POST">
         {% csrf_token %}
         {{ form|bootstrap }}

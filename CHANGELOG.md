@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Removed dublicated item tax icons from ores that used refined price as best price and had an item adjusted tax set on them. Now only displaying one icon.
 
+## Updating
+- This version requires database migrations.
+- After updating make sure you re-add the accepted locations for your programs.
+
 ## [1.2.8] - 2022-03-20
 
 ### Added

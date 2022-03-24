@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased] - yyyy-mm-dd
+## [1.3.0] - 2022-02-24
 
 ### Added
 - Added the ability to select multiple buy locations for one program. Closes #29
@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Removed dublicated item tax icons from ores that used refined price as best price and had an item adjusted tax set on them. Now only displaying one icon.
+- Fixed #31, removed a tem debug line left over from development
 
 ## Updating
 - This version requires database migrations.

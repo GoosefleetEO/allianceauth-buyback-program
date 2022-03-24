@@ -358,8 +358,6 @@ def get_item_values(item_type, item_prices, program):
     type_raw_value = False
     compression_raw_value = False
 
-    logger.debug("Values: Item raw price is %s" % item_prices["raw_prices"]["buy"])
-
     # Get values for the type prices (base prices)
     if item_prices["raw_prices"]:
 

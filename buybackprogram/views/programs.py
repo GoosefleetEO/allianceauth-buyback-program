@@ -134,17 +134,23 @@ def program_edit(request, program_pk):
 
             updated_program = form.save()
 
-            messages_plus.success(
-                request,
-                format_html(
-                    gettext_lazy("Program updated at %(location)s")
-                    % {
-                        "location": format_html(
-                            "<strong>{}</strong>", updated_program.location
-                        ),
-                    }
-                ),
-            )
+            if updated_program.name:
+                messages_plus.success(
+                    request,
+                    format_html(
+                        gettext_lazy("Program %(name)s updated")
+                        % {
+                            "name": format_html(
+                                "<strong>{}</strong>", updated_program.name
+                            ),
+                        }
+                    ),
+                )
+            else:
+                messages_plus.success(
+                    request,
+                    format_html(gettext_lazy("Program updated")),
+                )
 
             return HttpResponseRedirect(reverse("buybackprogram:index"))
 

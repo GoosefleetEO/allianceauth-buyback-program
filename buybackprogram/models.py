@@ -544,7 +544,7 @@ class Owner(models.Model):
             notes.append(note)
 
         # If our tracked price is different than the actual contract price
-        if tracking.net_price != contract.price:
+        if tracking.net_price >= 0 and tracking.net_price != contract.price:
 
             # If contract price is bellow tracked price
             if contract.price > tracking.net_price:

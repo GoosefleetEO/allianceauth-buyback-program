@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixes #33, fixed faulty notification for incorrect price when donation was set to 100%
 - Fixed locations not displaying correctly on contract details page
 - Fixed updated message on editing a program, related in #32
+- Fixes #35, our buy price displayed an incorrect value when refined price method was used. Had no effect on net value.
 
 ## [1.3.0] - 2022-02-24
 

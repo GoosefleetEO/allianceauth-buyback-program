@@ -252,7 +252,7 @@ def get_item_prices(item_type, name, quantity, program):
                 material_type_prices = {
                     "id": material.material_eve_type.id,
                     "quantity": material_quantity,
-                    "unit_quantity": material.quantity,
+                    "unit_quantity": material.quantity / item_type.portion_size,
                     "buy": material_price.buy,
                     "sell": material_price.sell,
                 }

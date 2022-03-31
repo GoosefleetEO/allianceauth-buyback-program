@@ -11,7 +11,6 @@
 </div>
 <div class="panel-body" style="min-height: 100px;">
     {% if buyback_data %}
-    {{ buyback_data }}
     <div class="table-responsive" style="margin: 20px 0;">
         <p class="text-success">Based on the items we have calculated a contract price for you. Please use the following settings when creating a buyback contract:</p>
 
@@ -112,8 +111,9 @@
                     <th>Quantity</th>
                     <th>Jita sell</th>
                     <th>Jita buy</th>
-                    <th>Tax</th>
                     <th>Our price</th>
+                    <th>Our taxes</th>
+                    <th>Jita buy difference</th>
                     <th>Row total</th>
                     <th>Notes</th>
                 </tr>
@@ -125,8 +125,9 @@
                             <td>{{ item.item_values.quantity|intcomma }}</td>
                             <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
                             <td>{{ item.item_prices.type_prices.buy|floatformat:0|intcomma|price }}</td>
-                            <td>{{ item.item_values.tax_value|floatformat:2|tax }}</td>
                             <td>{{ item.item_values.unit_value|floatformat:0|intcomma|price }}</td>
+                            <td>{{ item.item_values.tax_value|floatformat:2|tax }}</td>
+                            <td>{{ item.item_values.comparison_prices.jita_buy_unit|floatformat:2|comparison }}</td>
                             <td>{{ item.item_values.buy_value|floatformat:0|intcomma|price }}</td>
                             <td>
                                 {% for note in item.item_prices.notes%}
@@ -147,8 +148,9 @@
                                 <td>{{ item.item_values.quantity|intcomma }}</td>
                                 <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
                                 <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
+                                <td>{{ item.item_values.normal.unit_value|floatformat:0|intcomma|price }}</td>
                                 <td>{{ item.item_values.normal.total_tax|floatformat:2|tax }}</td>
-                                <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.unit_value|floatformat:0|intcomma|price }}</td>
+                                <td></td>
                                 <td class="buy-value-{{item.item_values.normal.is_buy_value}}">{{ item.item_values.normal.value|floatformat:0|intcomma|price }}</td>
                                 <td>
                                     {% for note in item.item_values.normal.notes %}
@@ -170,8 +172,9 @@
                                 <td>{{item.item_values.npc.quantity|intcomma}}</td>
                                 <td>{{item.item_values.npc.sell|floatformat:0|intcomma|price}}</td>
                                 <td>{{item.item_values.npc.buy|floatformat:0|intcomma|price}}</td>
+                                <td>{{item.item_values.npc.unit_value|floatformat:0|intcomma|price}}</td>
                                 <td>{{item.item_values.npc.total_tax|floatformat:2|tax}}</td>
-                                <td class="buy-value-{{item.item_values.npc.is_buy_value}}">{{item.item_values.npc.unit_value|floatformat:0|intcomma|price}}</td>
+                                <td></td>
                                 <td class="buy-value-{{item.item_values.npc.is_buy_value}}">{{item.item_values.npc.value|floatformat:0|intcomma|price}}</td>
                                 <td>
                                     {% for note in item.item_values.npc.notes%}
@@ -193,8 +196,9 @@
                                 <td>{{item.item_values.compressed.quantity|intcomma}}</td>
                                 <td>{{item.item_values.compressed.sell|floatformat:0|intcomma|price}}</td>
                                 <td>{{item.item_values.compressed.buy|floatformat:0|intcomma|price}}</td>
+                                <td>{{item.item_values.compressed.unit_value|floatformat:0|intcomma|price}}</td>
                                 <td>{{item.item_values.compressed.total_tax|floatformat:2|tax}}</td>
-                                <td class="buy-value-{{item.item_values.compressed.is_buy_value}}">{{item.item_values.compressed.unit_value|floatformat:0|intcomma|price}}</td>
+                                <td></td>
                                 <td class="buy-value-{{item.item_values.compressed.is_buy_value}}">{{item.item_values.compressed.value|floatformat:0|intcomma|price}}</td>
                                 <td>
                                     {% for note in item.item_values.compressed.notes%}
@@ -217,8 +221,9 @@
                                     <td>{{material.quantity|floatformat:2}}</td>
                                     <td>{{material.sell|floatformat:0|intcomma|price}}</td>
                                     <td>{{material.buy|floatformat:0|intcomma|price}}</td>
-                                    <td>{{material.total_tax|floatformat:2|tax}}</td>
                                     <td>{{material.unit_value|floatformat:0|intcomma|price}}</td>
+                                    <td>{{material.total_tax|floatformat:2|tax}}</td>
+                                    <td></td>
                                     <td>{{material.value|floatformat:0|intcomma|price}}</td>
                                     <td>
                                     {% for note in material.notes%}
@@ -228,7 +233,7 @@
                                 </tr>
                             {% endfor %}
                             <tr class="collapse" id="{{ item.item_values.normal.id }}-refined-total">
-                                <td colspan="6" style="padding-left: 30px;border-top:1px dotted grey;">Total value</td>
+                                <td colspan="7" style="padding-left: 30px;border-top:1px dotted grey;">Total value</td>
                                 <td class="buy-value-{{item.item_values.refined.is_buy_value}}" style="border-top:1px dotted grey;">{{item.item_values.refined.value|floatformat:0|intcomma|price}}</td>
                             </tr>
                         {% endif %}

@@ -212,17 +212,21 @@ def get_item_prices(item_type, name, quantity, program):
 
             item_raw_price = {
                 "id": item_type.id,
+                "volume": item_type.volume,
                 "quantity": quantity,
-                "buy": False,
-                "sell": False,
+                "buy": item_price.buy,
+                "sell": item_price.sell,
+                "raw_price_used": False,
             }
 
         else:
             item_raw_price = {
                 "id": item_type.id,
+                "volume": item_type.volume,
                 "quantity": quantity,
                 "buy": item_price.buy,
                 "sell": item_price.sell,
+                "raw_price_used": True,
             }
 
         notes.append(note_missing_jita_buy(item_price.buy, name))
@@ -231,9 +235,10 @@ def get_item_prices(item_type, name, quantity, program):
         if (
             (is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id))
         ) and program.use_refined_value:
-            item_material_price = []
-            # Get all refining materials for item
 
+            item_material_price = []
+
+            # Get all refining materials for item
             type_materials = EveTypeMaterial.objects.filter(
                 eve_type_id=item_type.id
             ).prefetch_related("eve_type")
@@ -359,7 +364,7 @@ def get_item_values(item_type, item_prices, program):
     compression_raw_value = False
 
     # Get values for the type prices (base prices)
-    if item_prices["raw_prices"]:
+    if item_prices["raw_prices"]["raw_price_used"]:
 
         quantity = item_prices["raw_prices"]["quantity"]
         sell = item_prices["raw_prices"]["sell"]
@@ -423,13 +428,72 @@ def get_item_values(item_type, item_prices, program):
             "unit_value": False,
             "total_tax": False,
             "raw_value": False,
+            "item_tax": False,
             "value": False,
             "is_buy_value": False,
+            "notes": [],
         }
 
         material_count = len(item_prices["material_prices"])
 
         item_tax = get_item_tax(program, item_type.id)
+
+        # Check if compressed price is used. If yes we will use compression price density. If not we will use raw price density.
+        if item_prices["compression_prices"]:
+
+            compressed_version = EveType.objects.filter(
+                id=item_prices["compression_prices"]["id"]
+            ).first()
+
+            logger.debug(
+                "Values: Compression price model in TRUE. Checking price density for %s based on %s density"
+                % (item_type.name, compressed_version.name)
+            )
+
+            price_dencity = (
+                item_prices["compression_prices"]["buy"] / compressed_version.volume
+            )
+
+            price_dencity_tax = get_price_dencity_tax(
+                program,
+                item_prices["compression_prices"]["buy"],
+                compressed_version.volume,
+                item_prices["compression_prices"]["quantity"],
+            )
+
+            logger.debug(
+                "Values: Got price density for refined %s of %s with tax %s"
+                % (item_type.name, price_dencity, price_dencity_tax)
+            )
+
+        else:
+
+            logger.debug(
+                "Values: Compression price model is FALSE. Checking price density for %s based on raw variant"
+                % (item_type.name)
+            )
+
+            if not item_type.volume <= 0:
+                price_dencity = item_prices["raw_prices"]["buy"] / item_type.volume
+            else:
+                price_dencity = False
+
+            price_dencity_tax = get_price_dencity_tax(
+                program,
+                item_prices["raw_prices"]["buy"],
+                item_type.volume,
+                item_prices["raw_prices"]["quantity"],
+            )
+
+            logger.debug(
+                "Values: Got price density for refined %s of %s with tax %s"
+                % (item_type.name, price_dencity, price_dencity_tax)
+            )
+
+        # Add possible notes about low price density
+        refined["notes"].append(
+            note_price_dencity_tax(item_type.name, price_dencity, price_dencity_tax)
+        )
 
         for material in item_prices["material_prices"]:
 
@@ -439,10 +503,6 @@ def get_item_values(item_type, item_prices, program):
             sell = material["sell"]
             buy = material["buy"]
             price = buy
-            price_dencity = price / materials.volume
-            price_dencity_tax = get_price_dencity_tax(
-                program, price, materials.volume, quantity
-            )
             program_tax = program.tax
             refining_rate = program.refining_rate / 100
             tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
@@ -468,13 +528,14 @@ def get_item_values(item_type, item_prices, program):
             }
 
             r["notes"].append(
-                note_price_dencity_tax(materials.name, price_dencity, price_dencity_tax)
+                note_price_dencity_tax(item_type.name, price_dencity, price_dencity_tax)
             )
 
             refined["materials"].append(r)
 
             refined["value"] += value
             refined["raw_value"] += raw_value
+            refined["item_tax"] = item_tax
             refined["total_tax"] += r["total_tax"] / material_count
             refined["unit_value"] += (
                 price * tax_multiplier * material["unit_quantity"] * refining_rate
@@ -486,6 +547,7 @@ def get_item_values(item_type, item_prices, program):
             "raw_value": False,
             "total_tax": False,
             "unit_value": False,
+            "notes": False,
         }
 
     logger.debug(
@@ -646,6 +708,32 @@ def get_item_values(item_type, item_prices, program):
         raw_value = npc_item["raw_value"]
         unit_value = npc_item["unit_value"]
 
+    # Get our price compared to Jita prices
+    comparison_prices = dict()
+
+    comparison_prices["jita_buy_unit"] = int(
+        (unit_value - item_prices["raw_prices"]["buy"])
+        / item_prices["raw_prices"]["buy"]
+        * 100
+    )
+    comparison_prices["jita_sell_unit"] = int(
+        (unit_value - item_prices["raw_prices"]["sell"])
+        / item_prices["raw_prices"]["buy"]
+        * 100
+    )
+
+    logger.debug(
+        "Comparison prices for %s (%s ISK) are %s to jita buy (%s ISK) and %s to jita sell (%s ISK)"
+        % (
+            item_type.name,
+            unit_value,
+            comparison_prices["jita_buy_unit"],
+            item_prices["raw_prices"]["buy"],
+            comparison_prices["jita_sell_unit"],
+            item_prices["raw_prices"]["sell"],
+        )
+    )
+
     # Determine what value we will use for buy value
     if buy_value == raw_item["value"]:
 
@@ -671,19 +759,13 @@ def get_item_values(item_type, item_prices, program):
         refined["is_buy_value"] = True
         tax_value = refined["total_tax"]
 
-        item_prices["notes"].append(note_refined_price_used(raw_item["name"]))
+        item_prices["notes"].append(note_refined_price_used(item_type.name))
 
-        for material in refined["materials"]:
-            item_prices["notes"].append(
-                note_price_dencity_tax(
-                    material["name"],
-                    material["price_dencity"],
-                    material["price_dencity_tax"],
-                )
-            )
+        for note in refined["notes"]:
+            item_prices["notes"].append(note)
 
         item_prices["notes"].append(
-            note_item_specific_tax(raw_item["name"], raw_item["item_tax"])
+            note_item_specific_tax(item_type.name, refined["item_tax"])
         )
 
     elif buy_value == compressed["value"]:
@@ -717,6 +799,7 @@ def get_item_values(item_type, item_prices, program):
                 raw_item["price_dencity_tax"],
             )
         )
+
         item_prices["notes"].append(
             note_item_specific_tax(raw_item["name"], raw_item["item_tax"])
         )
@@ -739,6 +822,7 @@ def get_item_values(item_type, item_prices, program):
         "raw_value": raw_value,
         "tax_value": tax_value,
         "buy_value": buy_value,
+        "comparison_prices": comparison_prices,
     }
 
     return values

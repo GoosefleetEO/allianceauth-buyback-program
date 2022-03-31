@@ -17,3 +17,11 @@ def tax(value):
         return str(value) + " %"
     else:
         return "-"
+
+
+@register.filter
+def comparison(value):
+    if float(value) > 0:
+        return "+ " + str(value) + " %"
+    else:
+        return str(value) + " %"

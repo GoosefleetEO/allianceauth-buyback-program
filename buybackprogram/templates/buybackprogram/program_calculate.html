@@ -66,7 +66,7 @@
     </div>
 
     <div class="table-responsive" style="margin: 20px 0;">
-    <p>You will gain a total of {{contract_price_data.contract_net_total|floatformat:0|intcomma}} ISK if you sell your items via this buyback program. If you sell your items at Jita directly to the buy orders you would gain {{contract_price_data.total_all_items_jita_buy|floatformat:0|intcomma}}</p>
+    <p>You will gain a total of {{contract_price_data.contract_net_total|floatformat:0|intcomma}} ISK if you sell your items via this buyback program. If you instead would decide to sell your items at Jita directly for buy orders you would net {{contract_price_data.total_all_items_jita_buy.min_skills|floatformat:0|intcomma}} without any market skills and {{contract_price_data.total_all_items_jita_buy.max_skills|floatformat:0|intcomma}} with maximum marketing skills after the sales taxes. The total volume of your items is {{contract_price_data.total_all_items_volume|floatformat:0|intcomma}} m³</p>
     </div>
 
     <div class="table-responsive" style="margin: 20px 0;">

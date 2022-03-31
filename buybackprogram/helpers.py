@@ -835,21 +835,25 @@ def get_item_buy_value(buyback_data, program, donation):
     contract_net_total = False
     total_donation = False
     tota_all_items_raw = 0
-    total_all_items_jita_buy = 0
+    total_all_items_jita_buy = {"raw": 0, "min_skills": 0, "max_skills": 0}
     total_all_items_volume = 0
 
     # Get a grand total value of all buy prices
     for item in buyback_data:
         tota_all_items_raw += item["item_values"]["raw_value"]
         total_all_items += item["item_values"]["buy_value"]
-        total_all_items_jita_buy += (
+        total_all_items_jita_buy["raw"] += (
             item["item_prices"]["raw_prices"]["buy"]
             * item["item_prices"]["raw_prices"]["quantity"]
         )
+
         total_all_items_volume += (
             item["item_prices"]["raw_prices"]["volume"]
             * item["item_prices"]["raw_prices"]["quantity"]
         )
+
+    total_all_items_jita_buy["min_skills"] += total_all_items_jita_buy["raw"] * 0.92
+    total_all_items_jita_buy["max_skills"] += total_all_items_jita_buy["raw"] * 0.964
 
     logger.debug(
         "Final: Total buy value for all items before expenses is %s ISK"
@@ -858,7 +862,7 @@ def get_item_buy_value(buyback_data, program, donation):
 
     logger.debug(
         "Final: Total jita buy value for all items before NPC taxes is %s ISK with a total volume of %s m³"
-        % (total_all_items_jita_buy, total_all_items_volume)
+        % (total_all_items_jita_buy["raw"], total_all_items_volume)
     )
 
     if donation > 0:
@@ -900,7 +904,7 @@ def get_item_buy_value(buyback_data, program, donation):
     contract_net_prices = {
         "total_all_items_raw": tota_all_items_raw,
         "total_all_items": total_all_items,
-        "total_all_items_jita_buy": total_all_items_jita_buy * 0.964,
+        "total_all_items_jita_buy": total_all_items_jita_buy,
         "total_all_items_volume": total_all_items_volume,
         "total_tax_amount": tota_all_items_raw - total_all_items,
         "total_donation_amount": total_donation,

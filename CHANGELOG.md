@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.3.1] - yyyy-mm-dd
+## [1.4.0a0] - yyyy-mm-dd
 
 This version changes how ore price variant density tax is calculated. Prior to this version the price density for the best price variant was caulculated based on the attributes for the best price variant. Ie. Some moon ores would inherit partial increased taxes as their minerals in the refined price variant could have low price density. After this patch all items that can be compressed get their price density based on the compressed variant no matter what settings are used. Items that can't be compressed use always the raw item value for this calculation.
 
@@ -19,6 +19,7 @@ This version changes how ore price variant density tax is calculated. Prior to t
 - Fixed locations not displaying correctly on contract details page
 - Fixed #32, Fixed updated message on editing a program
 - Fixes #35, our buy price displayed an incorrect value when refined price method was used. Had no effect on net value.
+- Fixed raw value jita buy column showing jita sell price
 
 ## [1.3.0] - 2022-02-24
 

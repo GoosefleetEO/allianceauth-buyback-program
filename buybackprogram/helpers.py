@@ -418,6 +418,7 @@ def get_item_values(item_type, item_prices, program):
 
         refined = {
             "materials": [],
+            "buy": False,
             "unit_value": False,
             "total_tax": False,
             "raw_value": False,
@@ -426,8 +427,6 @@ def get_item_values(item_type, item_prices, program):
             "is_buy_value": False,
             "notes": [],
         }
-
-        material_count = len(item_prices["material_prices"])
 
         item_tax = get_item_tax(program, item_type.id)
 
@@ -526,10 +525,11 @@ def get_item_values(item_type, item_prices, program):
 
             refined["materials"].append(r)
 
+            refined["buy"] += buy
             refined["value"] += value
             refined["raw_value"] += raw_value
             refined["item_tax"] = item_tax
-            refined["total_tax"] += r["total_tax"] / material_count
+            refined["total_tax"] = program_tax + item_tax + price_dencity_tax
             refined["unit_value"] += (
                 price * tax_multiplier * material["unit_quantity"] * refining_rate
             )
@@ -537,6 +537,7 @@ def get_item_values(item_type, item_prices, program):
     else:
         refined = {
             "value": False,
+            "buy": False,
             "raw_value": False,
             "total_tax": False,
             "unit_value": False,

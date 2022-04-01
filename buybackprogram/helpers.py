@@ -274,9 +274,7 @@ def get_item_prices(item_type, name, quantity, program):
             logger.debug("Prices: No refined value used for %s" % name)
 
         # Get compressed versions of the ores that are not yet compressed
-        if (
-            (is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id))
-        ) and program.use_compressed_value:
+        if is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id):
 
             if "Compressed" in name:
                 compresed_name = name
@@ -286,10 +284,6 @@ def get_item_prices(item_type, name, quantity, program):
             compresed_type = EveType.objects.filter(name=compresed_name).first()
 
             compression_price = get_or_create_prices(compresed_type.id)
-
-            logger.debug(
-                "Got prices %s ISK for %s" % (compression_price.buy, compresed_name)
-            )
 
             compressed_type_prices = {
                 "id": compression_price.eve_type_id,
@@ -301,8 +295,8 @@ def get_item_prices(item_type, name, quantity, program):
             has_price_variants = True
 
             logger.debug(
-                "Prices: Got compression prices for %s based on original item %s"
-                % (compresed_name, name)
+                "Prices: Got compression prices %s ISK for %s based on original item %s"
+                % (compression_price.buy, compresed_name, name)
             )
 
         # If item can't or should not be compressed
@@ -338,6 +332,7 @@ def get_item_prices(item_type, name, quantity, program):
             "has_price_variants": has_price_variants,
             "notes": notes,
         }
+
     else:
         prices = {
             "quantity": quantity,
@@ -363,7 +358,7 @@ def get_item_values(item_type, item_prices, program):
     type_raw_value = False
     compression_raw_value = False
 
-    # Get values for the type prices (base prices)
+    # RAW VARIANT VALUES
     if item_prices["raw_prices"]["raw_price_used"]:
 
         quantity = item_prices["raw_prices"]["quantity"]
@@ -418,10 +413,8 @@ def get_item_values(item_type, item_prices, program):
             "raw_value": False,
         }
 
-    logger.debug("Values: Item material price is %s" % item_prices["material_prices"])
-
-    # Get values for refined variant
-    if item_prices["material_prices"]:
+    # REFINED VARIANT VALUES
+    if item_prices["material_prices"] and program.use_refined_value:
 
         refined = {
             "materials": [],
@@ -550,12 +543,10 @@ def get_item_values(item_type, item_prices, program):
             "notes": False,
         }
 
-    logger.debug(
-        "Values: Item compression price is %s" % item_prices["compression_prices"]
-    )
+    logger.debug("Values: Item refined value is %s" % refined["unit_value"])
 
-    # Get values for compressed variant
-    if item_prices["compression_prices"]:
+    # COMPRESSION VARIANT VALUES
+    if item_prices["compression_prices"] and program.use_compressed_value:
 
         compressed_version = EveType.objects.filter(
             id=item_prices["compression_prices"]["id"]
@@ -614,6 +605,8 @@ def get_item_values(item_type, item_prices, program):
             "total_tax": False,
             "unit_value": False,
         }
+
+    logger.debug("Values: Item compressed unit value is %s" % compressed["unit_value"])
 
     # Get value for NPC price
     if item_prices["npc_prices"]:
@@ -754,6 +747,11 @@ def get_item_values(item_type, item_prices, program):
             note_item_specific_tax(raw_item["name"], raw_item["item_tax"])
         )
 
+        logger.debug(
+            "Values: Best buy value with raw price for %s is %s ISK"
+            % (item_type, buy_value)
+        )
+
     elif buy_value == refined["value"]:
 
         refined["is_buy_value"] = True
@@ -766,6 +764,11 @@ def get_item_values(item_type, item_prices, program):
 
         item_prices["notes"].append(
             note_item_specific_tax(item_type.name, refined["item_tax"])
+        )
+
+        logger.debug(
+            "Values: Best buy value with refined price for %s is %s ISK"
+            % (item_type, buy_value)
         )
 
     elif buy_value == compressed["value"]:
@@ -785,6 +788,12 @@ def get_item_values(item_type, item_prices, program):
         item_prices["notes"].append(
             note_item_specific_tax(compressed["name"], compressed["item_tax"])
         )
+
+        logger.debug(
+            "Values: Best buy value with compressed price for %s is %s ISK"
+            % (item_type, buy_value)
+        )
+
     elif buy_value == npc_item["value"]:
 
         npc_item["is_buy_value"] = True
@@ -804,7 +813,10 @@ def get_item_values(item_type, item_prices, program):
             note_item_specific_tax(raw_item["name"], raw_item["item_tax"])
         )
 
-    logger.debug("Values: Best buy value for %s is %s ISK" % (item_type, buy_value))
+        logger.debug(
+            "Values: Best buy value with NPC price for %s is %s ISK"
+            % (item_type, buy_value)
+        )
 
     # Final values for this item
     values = {
@@ -835,34 +847,15 @@ def get_item_buy_value(buyback_data, program, donation):
     contract_net_total = False
     total_donation = False
     tota_all_items_raw = 0
-    total_all_items_jita_buy = {"raw": 0, "min_skills": 0, "max_skills": 0}
-    total_all_items_volume = 0
 
     # Get a grand total value of all buy prices
     for item in buyback_data:
         tota_all_items_raw += item["item_values"]["raw_value"]
         total_all_items += item["item_values"]["buy_value"]
-        total_all_items_jita_buy["raw"] += (
-            item["item_prices"]["raw_prices"]["buy"]
-            * item["item_prices"]["raw_prices"]["quantity"]
-        )
-
-        total_all_items_volume += (
-            item["item_prices"]["raw_prices"]["volume"]
-            * item["item_prices"]["raw_prices"]["quantity"]
-        )
-
-    total_all_items_jita_buy["min_skills"] += total_all_items_jita_buy["raw"] * 0.92
-    total_all_items_jita_buy["max_skills"] += total_all_items_jita_buy["raw"] * 0.964
 
     logger.debug(
         "Final: Total buy value for all items before expenses is %s ISK"
         % total_all_items
-    )
-
-    logger.debug(
-        "Final: Total jita buy value for all items before NPC taxes is %s ISK with a total volume of %s m³"
-        % (total_all_items_jita_buy["raw"], total_all_items_volume)
     )
 
     if donation > 0:
@@ -904,8 +897,6 @@ def get_item_buy_value(buyback_data, program, donation):
     contract_net_prices = {
         "total_all_items_raw": tota_all_items_raw,
         "total_all_items": total_all_items,
-        "total_all_items_jita_buy": total_all_items_jita_buy,
-        "total_all_items_volume": total_all_items_volume,
         "total_tax_amount": tota_all_items_raw - total_all_items,
         "total_donation_amount": total_donation,
         "hauling_cost": program.hauling_fuel_cost,

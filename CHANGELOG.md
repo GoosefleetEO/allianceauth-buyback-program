@@ -12,7 +12,7 @@ This version changes how ore price variant density tax is calculated. Prior to t
 ### Added
 
 ### Changed
-- Changed how price density is calculated on ore variant prices. Now using compression value for ore, raw for everything else.
+- Fixes #36, Changed how price density is calculated on ore variant prices. Now using compression value for ore, raw for everything else.
 
 ### Fixed
 - Fixes #33, fixed faulty notification for incorrect price when donation was set to 100%

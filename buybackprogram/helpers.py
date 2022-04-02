@@ -702,32 +702,6 @@ def get_item_values(item_type, item_prices, program):
         raw_value = npc_item["raw_value"]
         unit_value = npc_item["unit_value"]
 
-    # Get our price compared to Jita prices
-    comparison_prices = dict()
-
-    comparison_prices["jita_buy_unit"] = int(
-        (unit_value - item_prices["raw_prices"]["buy"])
-        / item_prices["raw_prices"]["buy"]
-        * 100
-    )
-    comparison_prices["jita_sell_unit"] = int(
-        (unit_value - item_prices["raw_prices"]["sell"])
-        / item_prices["raw_prices"]["buy"]
-        * 100
-    )
-
-    logger.debug(
-        "Comparison prices for %s (%s ISK) are %s to jita buy (%s ISK) and %s to jita sell (%s ISK)"
-        % (
-            item_type.name,
-            unit_value,
-            comparison_prices["jita_buy_unit"],
-            item_prices["raw_prices"]["buy"],
-            comparison_prices["jita_sell_unit"],
-            item_prices["raw_prices"]["sell"],
-        )
-    )
-
     # Determine what value we will use for buy value
     if buy_value == raw_item["value"]:
 
@@ -835,7 +809,6 @@ def get_item_values(item_type, item_prices, program):
         "raw_value": raw_value,
         "tax_value": tax_value,
         "buy_value": buy_value,
-        "comparison_prices": comparison_prices,
     }
 
     return values

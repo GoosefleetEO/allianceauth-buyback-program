@@ -6,20 +6,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
-## [Unreleased] - yyyy-mm-dd
+## [1.4.1] - 2022-04-03
 
-### Added
+This version changes how ore price variant density tax is calculated. Prior to this version the price density for the best price variant was caulculated based on the attributes for the best price variant. Ie. Some moon ores would inherit partial increased taxes as their minerals in the refined price variant could have low price density. After this patch all items that can be compressed get their price density based on the compressed variant no matter what settings are used. Items that can't be compressed use always the raw item value for this calculation.
 
 ### Changed
+- Fixes #36, Changed how price density is calculated on ore variant prices. Now using compression value for ore, raw for everything else.
 
 ### Fixed
 - Removed comparison price (that was not displayed anywhere) to remove errors when jita buy price is 0
+- Fixes #33, fixed faulty notification for incorrect price when donation was set to 100%
+- Fixed locations not displaying correctly on contract details page
+- Fixed #32, Fixed updated message on editing a program
+- Fixes #35, our buy price displayed an incorrect value when refined price method was used. Had no effect on net value.
+- Fixed raw value jita buy column showing jita sell price
 
 ## [1.4.0b] - 2022-04-02
 
 This version changes how ore price variant density tax is calculated. Prior to this version the price density for the best price variant was caulculated based on the attributes for the best price variant. Ie. Some moon ores would inherit partial increased taxes as their minerals in the refined price variant could have low price density. After this patch all items that can be compressed get their price density based on the compressed variant no matter what settings are used. Items that can't be compressed use always the raw item value for this calculation.
-
-### Added
 
 ### Changed
 - Fixes #36, Changed how price density is calculated on ore variant prices. Now using compression value for ore, raw for everything else.

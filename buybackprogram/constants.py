@@ -1,3 +1,4 @@
+# Includes all asteroids, moon ore and ice. All items that can be compressed or refined for minerals*
 ORE_EVE_GROUPS = [
     450,
     451,
@@ -16,9 +17,6 @@ ORE_EVE_GROUPS = [
     467,
     468,
     469,
-]
-
-MOON_ORE_EVE_GROUPS = [
     1884,
     1911,
     1920,

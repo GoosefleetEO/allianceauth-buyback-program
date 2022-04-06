@@ -801,6 +801,12 @@ class Program(models.Model):
         help_text="Should we modify buy prices for items with high volume and low value ie. T1 industrial hulls. <b>Should not be used with hauling fuel cost</b>",
     )
 
+    compression_price_dencity_modifier = models.BooleanField(
+        verbose_name="Price density modifier for compressable items",
+        default=False,
+        help_text="Should we apply price density calculations for items that can be compressed such as ore and ice. If set to False price density tax is not applied on any items that can be compressed.",
+    )
+
     price_dencity_treshold = models.IntegerField(
         verbose_name="Price density threshold",
         default=0,

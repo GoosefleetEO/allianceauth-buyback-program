@@ -199,6 +199,9 @@ You can use a price density modifier which will add a additional tax on items wi
 
 > :information_source: This setting is aimer more at high sec buyback programs.
 
+#### Compressable price density modifier
+You can select to ignore price density calculations for items that can be compressed. This is helpful when the compressed variants do not have proper buy orders in Jita. If you set this to True then the compressable item density will be calculated based on the isk / volume of the compression variant of the sold item.
+
 #### Price density threshold
 This is the lowest isk/m^3 ratio for items that are accepted to the program without the price density tax. Finding your own limits depends on your logistical department.
 

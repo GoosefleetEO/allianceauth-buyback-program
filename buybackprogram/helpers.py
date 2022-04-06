@@ -11,7 +11,6 @@ from allianceauth.services.hooks import get_extension_logger
 from buybackprogram.app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
 from buybackprogram.constants import (
     BLUE_LOOT_TYPE_IDS,
-    MOON_ORE_EVE_GROUPS,
     OPE_EVE_GROUPS,
     ORE_EVE_GROUPS,
     RED_LOOT_TYPE_IDS,
@@ -106,13 +105,6 @@ def is_ore(item_id):
         return False
 
 
-def is_moon_ore(item_id):
-    if item_id in MOON_ORE_EVE_GROUPS:
-        return True
-    else:
-        return False
-
-
 def has_buy_price(item):
     if (
         not item["raw_prices"]
@@ -125,23 +117,39 @@ def has_buy_price(item):
         return True
 
 
-def get_price_dencity_tax(program, item_value, item_volume, item_quantity):
+def get_price_dencity_tax(
+    program, item_value, item_volume, item_quantity, is_ore=False
+):
     # If price dencity tax should be applied
     if program.price_dencity_modifier:
 
+        # Check that the item has a volume and the volume is positive. Some items do not have volumes
         if not item_volume <= 0:
-            item_isk_dencity = item_value / item_volume
+
+            # Check if the item should be excluded from density tax (compressable ore)
+            if not program.compression_price_dencity_modifier and is_ore:
+                item_isk_dencity = False
+                logger.debug(
+                    "ISK density: Our item is type ORE and compression_price_dencity_modifier is set to %s, no density tax applied."
+                    % (program.compression_price_dencity_modifier)
+                )
+            else:
+                item_isk_dencity = item_value / item_volume
+
+                logger.debug(
+                    "ISK density: Our item isk dencity is at %s ISK/m³ with value: %s, volume: %s"
+                    % (item_isk_dencity, item_value, item_volume)
+                )
         else:
             item_isk_dencity = False
 
-        logger.debug(
-            "Values: Our item isk dencity is at %s ISK/m³ with value: %s, volume: %s"
-            % (item_isk_dencity, item_value, item_volume)
-        )
+            logger.debug(
+                "ISK density: Item has no volume, no density calculations applied"
+            )
 
         if item_isk_dencity < program.price_dencity_treshold and item_isk_dencity:
             logger.debug(
-                "Isk dencity %s is under threshold value %s, applying extra taxes of %s"
+                "ISK density: Isk dencity %s is under threshold value %s, applying extra taxes of %s"
                 % (
                     item_isk_dencity,
                     program.price_dencity_treshold,
@@ -152,11 +160,15 @@ def get_price_dencity_tax(program, item_value, item_volume, item_quantity):
             return program.price_dencity_tax
         else:
             logger.debug(
-                "Isk dencity %s is above threshold value %s, no extra taxes added"
+                "ISK density: Isk dencity %s is above threshold value %s, no extra taxes added"
                 % (item_isk_dencity, program.price_dencity_treshold)
             )
             return False
     else:
+        logger.debug(
+            "ISK density: Program price density modifier is set to %s, no density calculations applied"
+            % (program.price_dencity_modifier)
+        )
         return False
 
 
@@ -167,7 +179,6 @@ def get_item_prices(item_type, name, quantity, program):
     has_price_variants = False
 
     # Get special taxes and see if our item belongs to this table
-
     program_item_settings = ProgramItem.objects.filter(
         program=program, item_type__id=item_type.id
     ).first()
@@ -204,9 +215,7 @@ def get_item_prices(item_type, name, quantity, program):
     if not item_disallowed:
 
         # If raw ore value should not be taken into account
-        if (
-            is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id)
-        ) and not program.use_raw_ore_value:
+        if is_ore(item_type.eve_group.id) and not program.use_raw_ore_value:
 
             logger.debug("Raw price not used for %s" % item_type.name)
 
@@ -232,9 +241,7 @@ def get_item_prices(item_type, name, quantity, program):
         notes.append(note_missing_jita_buy(item_price.buy, name))
 
         # Check if we should get refined value for the item
-        if (
-            (is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id))
-        ) and program.use_refined_value:
+        if is_ore(item_type.eve_group.id) and program.use_refined_value:
 
             item_material_price = []
 
@@ -274,7 +281,7 @@ def get_item_prices(item_type, name, quantity, program):
             logger.debug("Prices: No refined value used for %s" % name)
 
         # Get compressed versions of the ores that are not yet compressed
-        if is_ore(item_type.eve_group.id) or is_moon_ore(item_type.eve_group.id):
+        if is_ore(item_type.eve_group.id):
 
             if "Compressed" in name:
                 compresed_name = name
@@ -371,7 +378,7 @@ def get_item_values(item_type, item_prices, program):
         else:
             price_dencity = False
         price_dencity_tax = get_price_dencity_tax(
-            program, price, item_type.volume, quantity
+            program, price, item_type.volume, quantity, is_ore(item_type.eve_group.id)
         )
         program_tax = program.tax
         item_tax = get_item_tax(program, item_type.id)
@@ -451,6 +458,7 @@ def get_item_values(item_type, item_prices, program):
                 item_prices["compression_prices"]["buy"],
                 compressed_version.volume,
                 item_prices["compression_prices"]["quantity"],
+                is_ore(item_type.eve_group.id),
             )
 
             logger.debug(
@@ -475,6 +483,7 @@ def get_item_values(item_type, item_prices, program):
                 item_prices["raw_prices"]["buy"],
                 item_type.volume,
                 item_prices["raw_prices"]["quantity"],
+                is_ore(item_type.eve_group.id),
             )
 
             logger.debug(
@@ -562,7 +571,11 @@ def get_item_values(item_type, item_prices, program):
         logger.debug("Getting price density for compressed variant")
 
         price_dencity_tax = get_price_dencity_tax(
-            program, price, compressed_version.volume, quantity
+            program,
+            price,
+            compressed_version.volume,
+            quantity,
+            is_ore(item_type.eve_group.id),
         )
         program_tax = program.tax
         item_tax = get_item_tax(program, item_type.id)
@@ -622,7 +635,7 @@ def get_item_values(item_type, item_prices, program):
         else:
             price_dencity = False
         price_dencity_tax = get_price_dencity_tax(
-            program, price, item_type.volume, quantity
+            program, price, item_type.volume, quantity, is_ore(item_type.eve_group.id)
         )
         program_tax = program.tax
         item_tax = get_item_tax(program, item_type.id)

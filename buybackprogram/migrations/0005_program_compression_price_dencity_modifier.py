@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('buybackprogram', '0004_auto_20220323_1331'),
+        ("buybackprogram", "0004_auto_20220323_1331"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='program',
-            name='compression_price_dencity_modifier',
-            field=models.BooleanField(default=False, help_text='Should we apply price density calculations for items that can be compressed such as ore and ice. If set to False price density tax is not applied on any items that can be compressed.', verbose_name='Price density modifier for compressable items'),
+            model_name="program",
+            name="compression_price_dencity_modifier",
+            field=models.BooleanField(
+                default=False,
+                help_text="Should we apply price density calculations for items that can be compressed such as ore and ice. If set to False price density tax is not applied on any items that can be compressed.",
+                verbose_name="Price density modifier for compressable items",
+            ),
         ),
     ]

@@ -366,7 +366,7 @@ def get_item_values(item_type, item_prices, program):
     compression_raw_value = False
 
     # RAW VARIANT VALUES
-    if item_prices["raw_prices"]["raw_price_used"]:
+    if item_prices["raw_prices"] and item_prices["raw_prices"]["raw_price_used"]:
 
         quantity = item_prices["raw_prices"]["quantity"]
         sell = item_prices["raw_prices"]["sell"]

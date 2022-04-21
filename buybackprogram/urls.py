@@ -1,4 +1,3 @@
-from django.conf.urls import url
 from django.urls import path
 
 from buybackprogram.views import calculate, common, programs, special_taxes, stats
@@ -12,48 +11,48 @@ urlpatterns = [
     path("program_add", programs.program_add, name="program_add"),
     path("location_add", programs.location_add, name="location_add"),
     path("user_settings_edit", common.user_settings_edit, name="user_settings_edit"),
-    url(
-        r"^location(?P<location_pk>[0-9]+)/remove$",
+    path(
+        "location<location_pk>/remove",
         programs.location_remove,
         name="location_remove",
     ),
-    url(
-        r"^program/(?P<program_pk>[0-9]+)/special_taxes$",
+    path(
+        "program/<program_pk>/special_taxes",
         special_taxes.program_special_taxes,
         name="program_special_taxes",
     ),
-    url(
-        r"^program/(?P<program_pk>[0-9]+)/edit_item$",
+    path(
+        "program/<program_pk>/edit_item",
         special_taxes.program_edit_item,
         name="program_edit_item",
     ),
-    url(
-        r"^program/(?P<program_pk>[0-9]+)/edit_marketgroup$",
+    path(
+        "program/<program_pk>/edit_marketgroup",
         special_taxes.program_edit_marketgroup,
         name="program_edit_marketgroup",
     ),
-    url(
-        r"^program/(?P<program_pk>[0-9]+)/edit",
+    path(
+        "program/<program_pk>/edit",
         programs.program_edit,
         name="program_edit",
     ),
-    url(
-        r"^program/(?P<program_pk>[0-9]+)/remove$",
+    path(
+        "program/<program_pk>/remove",
         programs.program_remove,
         name="program_remove",
     ),
-    url(
-        r"^program/(?P<program_pk>[0-9]+)/program_item/(?P<item_pk>[0-9]+)/remove$",
+    path(
+        "program/<program_pk>/program_item/<item_pk>/remove",
         special_taxes.program_item_remove,
         name="program_item_remove",
     ),
-    url(
-        r"^program/(?P<program_pk>[0-9]+)/remove_all$",
+    path(
+        "program/<program_pk>/remove_all",
         special_taxes.program_item_remove_all,
         name="program_item_remove_all",
     ),
-    url(
-        r"^program/(?P<program_pk>[0-9]+)/calculate$",
+    path(
+        "program/<program_pk>/calculate",
         calculate.program_calculate,
         name="program_calculate",
     ),
@@ -65,18 +64,18 @@ urlpatterns = [
     ),
     path("program_stats", stats.program_stats, name="program_stats"),
     path("program_stats_all", stats.program_stats_all, name="program_stats_all"),
-    url(
-        r"^item_autocomplete/$",
+    path(
+        "item_autocomplete/",
         common.item_autocomplete,
         name="item_autocomplete",
     ),
-    url(
-        r"^solarsystem_autocomplete/$",
+    path(
+        "solarsystem_autocomplete/",
         common.solarsystem_autocomplete,
         name="solarsystem_autocomplete",
     ),
-    url(
-        r"^marketgroup_autocomplete/$",
+    path(
+        "marketgroup_autocomplete/",
         common.marketgroup_autocomplete,
         name="marketgroup_autocomplete",
     ),

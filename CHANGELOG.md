@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased] - yyyy-mm-dd
+
+### Added
+
+### Changed
+- Dropped support for python 3.6
+
+### Fixed
+
 ## [1.5.2] - 2022-04-21
 
 ### Added

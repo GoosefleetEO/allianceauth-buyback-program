@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Fixes #40, expired contracts were showing as outstanding
+- Fixes #39, compressed volume was not used for fuel calculations
 
 ## [1.5.2] - 2022-04-21
 

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.5.3] - 2022-05-21
+
+### Added
+- Added type hints to urls
+
+### Changed
+- Dropped support for python 3.6
+
+### Fixed
+- Fixes #40, expired contracts were showing as outstanding
+- Fixes #39, compressed volume was not used for fuel calculations
+
 ## [1.5.2] - 2022-04-21
 
 ### Added

@@ -857,9 +857,36 @@ def get_item_buy_value(buyback_data, program, donation):
     if program.hauling_fuel_cost > 0:
         for item in buyback_data:
             if has_buy_price(item["item_prices"]):
-                item_volume = item["type_data"].volume
+                # Check if compressed price is used. If yes we will use compression price density. If not we will use raw price density.
+                if item["item_prices"]["compression_prices"]:
+
+                    compressed_version = EveType.objects.filter(
+                        id=item["item_prices"]["compression_prices"]["id"]
+                    ).first()
+
+                    item_volume = compressed_version.volume
+
+                    logger.debug(
+                        "Fuel Cost: Compression price model in TRUE. Checking fuel cost for %s based on %s volume of %s"
+                        % (item["type_data"], compressed_version.name, item_volume)
+                    )
+
+                else:
+
+                    logger.debug(
+                        "Fuel Cost: Compression price model is FALSE. Checking fuel cost for %s based on raw volume"
+                        % (item["type_data"])
+                    )
+
+                    item_volume = item["type_data"].volume
+
                 quantity = item["item_values"]["quantity"]
                 hauling_cost = item_volume * program.hauling_fuel_cost * quantity
+
+                logger.debug(
+                    "Fuel Cost: Fuel cost for %s pcs of %s with volume of %s is %s."
+                    % (quantity, item["type_data"], item_volume, hauling_cost)
+                )
 
                 total_hauling_cost += hauling_cost
 

@@ -16,6 +16,14 @@ BUYBACKPROGRAM_TRACKING_PREFILL = clean_setting(
     "BUYBACKPROGRAM_TRACKING_PREFILL", "aa-bbp"
 )
 
+BUYBACKPROGRAM_PRICE_SOURCE_ID = clean_setting(
+    "BUYBACKPROGRAM_PRICE_SOURCE_ID", 60003760
+)
+
+BUYBACKPROGRAM_PRICE_SOURCE_NAME = clean_setting(
+    "BUYBACKPROGRAM_PRICE_SOURCE_NAME", "Jita"
+)
+
 
 def allianceauth_discordbot_active():
     """

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.5.4] - 2022-05-21
+
+If you want to change where you pull your base prices from (Jita as default) you can do this by changing the values of `BUYBACKPROGRAM_PRICE_SOURCE_NAME` and `BUYBACKPROGRAM_PRICE_SOURCE_ID`. You can also change the source with an old install of this app simply by adjusting the values of these fields and running the price updates again.
+
+### Added the ability to select another price sources beside Jita.
+
 ## [1.5.3] - 2022-05-21
 
 ### Added

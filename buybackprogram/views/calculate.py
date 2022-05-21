@@ -6,6 +6,7 @@ from eveuniverse.models import EveType
 
 from allianceauth.services.hooks import get_extension_logger
 
+from buybackprogram.app_settings import BUYBACKPROGRAM_PRICE_SOURCE_NAME
 from buybackprogram.forms import CalculatorForm
 from buybackprogram.helpers import (
     get_item_buy_value,
@@ -242,6 +243,7 @@ def program_calculate(request, program_pk):
         "buyback_data": buyback_data,
         "contract_price_data": contract_price_data,
         "tracking_number": tracking.tracking_number,
+        "price_source": BUYBACKPROGRAM_PRICE_SOURCE_NAME,
     }
 
     return render(request, "buybackprogram/program_calculate.html", context)

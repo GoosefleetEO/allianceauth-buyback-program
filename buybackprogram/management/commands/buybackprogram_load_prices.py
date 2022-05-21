@@ -7,6 +7,10 @@ from eveuniverse.models import EveType
 
 from allianceauth.services.hooks import get_extension_logger
 
+from buybackprogram.app_settings import (
+    BUYBACKPROGRAM_PRICE_SOURCE_ID,
+    BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+)
 from buybackprogram.models import ItemPrices
 
 logger = get_extension_logger(__name__)
@@ -27,8 +31,12 @@ class Command(BaseCommand):
         typeids = EveType.objects.values_list("id", flat=True).filter(published=True)
 
         print(
-            "Price setup starting for %s items from Fuzzworks API, this may take up to 30 seconds..."
-            % len(typeids)
+            "Price setup starting for %s items from Fuzzworks API from station id %s (%s), this may take up to 30 seconds..."
+            % (
+                len(typeids),
+                BUYBACKPROGRAM_PRICE_SOURCE_ID,
+                BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+            )
         )
 
         # Build suitable bulks to fetch prices from API
@@ -43,7 +51,7 @@ class Command(BaseCommand):
                     "https://market.fuzzwork.co.uk/aggregates/",
                     params={
                         "types": ",".join([str(x) for x in type_ids]),
-                        "station": 60003760,
+                        "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
                     },
                 )
 
@@ -58,7 +66,7 @@ class Command(BaseCommand):
             "https://market.fuzzwork.co.uk/aggregates/",
             params={
                 "types": ",".join([str(x) for x in type_ids]),
-                "station": 60003760,
+                "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
             },
         )
 
@@ -94,6 +102,3 @@ class Command(BaseCommand):
                 return "All price data removed from database. Run the command again to populate the price data."
             else:
                 return "No changes done to price table."
-
-
-# from buybackprogram.tasks import update_all_prices

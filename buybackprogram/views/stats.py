@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
 from django.shortcuts import render
+from django.utils import timezone
 from eveuniverse.models import EveEntity
 
 from allianceauth.authentication.models import CharacterOwnership
@@ -41,6 +42,7 @@ def my_stats(request):
     tracking_numbers = (
         Tracking.objects.filter(contract__isnull=False)
         .filter(contract__issuer_id__in=characters)
+        .filter(contract__date_expired__gte=timezone.now())
         .prefetch_related("contract")
     )
 
@@ -114,6 +116,7 @@ def program_stats(request):
             Q(contract__assignee_id__in=characters)
             | Q(contract__assignee_id__in=corporations)
         )
+        .filter(contract__date_expired__gte=timezone.now())
         .prefetch_related("contract")
     )
 
@@ -171,8 +174,10 @@ def program_stats_all(request):
     }
 
     # Get all tracking objects that have a linked contract to them for the user
-    tracking_numbers = Tracking.objects.filter(contract__isnull=False).prefetch_related(
-        "contract"
+    tracking_numbers = (
+        Tracking.objects.filter(contract__isnull=False)
+        .filter(contract__date_expired__gte=timezone.now())
+        .prefetch_related("contract")
     )
 
     # Loop tracking objects to see if we have any contracts

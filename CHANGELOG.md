@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Dropped support for python 3.6
 
 ### Fixed
+- Fixes #40, expired contracts were showing as outstanding
 
 ## [1.5.2] - 2022-04-21
 

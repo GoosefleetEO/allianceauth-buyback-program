@@ -9,6 +9,10 @@ from eveuniverse.models import EveMarketPrice
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.services.tasks import QueueOnce
 
+from buybackprogram.app_settings import (
+    BUYBACKPROGRAM_PRICE_SOURCE_ID,
+    BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+)
 from buybackprogram.models import ItemPrices, Owner
 
 from .app_settings import BUYBACKPROGRAM_TASKS_TIME_LIMIT
@@ -48,7 +52,12 @@ def update_all_prices():
     # Get all type ids
     prices = ItemPrices.objects.all()
 
-    logger.debug("Price setup starting for %s items from Fuzzworks API" % len(prices))
+    logger.debug(
+        "Price update starting for %s items from Fuzzworks API. Using id %s (%s) as source"
+        % (len(prices)),
+        BUYBACKPROGRAM_PRICE_SOURCE_ID,
+        BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+    )
 
     # Build suitable bulks to fetch prices from API
     for item in prices:
@@ -62,7 +71,7 @@ def update_all_prices():
                 "https://market.fuzzwork.co.uk/aggregates/",
                 params={
                     "types": ",".join([str(x) for x in type_ids]),
-                    "station": 60003760,
+                    "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
                 },
             )
 
@@ -77,7 +86,7 @@ def update_all_prices():
         "https://market.fuzzwork.co.uk/aggregates/",
         params={
             "types": ",".join([str(x) for x in type_ids]),
-            "station": 60003760,
+            "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
         },
     )
 

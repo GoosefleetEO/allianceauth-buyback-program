@@ -1,5 +1,6 @@
 from django import template
 
+from buybackprogram.app_settings import BUYBACKPROGRAM_PRICE_SOURCE_NAME
 from buybackprogram.models import ProgramItem
 
 register = template.Library()
@@ -46,7 +47,8 @@ def setting_icons(option, program):
         "npc_price": {
             "icon": "fa-robot",
             "color": False,
-            "message": "Some items are using NPC prices from NPC buy orders instead of Jita prices.",
+            "message": "Some items are using NPC prices from NPC buy orders instead of %s prices."
+            % (BUYBACKPROGRAM_PRICE_SOURCE_NAME),
         },
         "unpacked": {
             "icon": "fa-box-open",

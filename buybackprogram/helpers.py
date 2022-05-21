@@ -8,7 +8,10 @@ from eveuniverse.models import EveMarketPrice, EveType, EveTypeMaterial
 
 from allianceauth.services.hooks import get_extension_logger
 
-from buybackprogram.app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
+from buybackprogram.app_settings import (
+    BUYBACKPROGRAM_PRICE_SOURCE_ID,
+    BUYBACKPROGRAM_TRACKING_PREFILL,
+)
 from buybackprogram.constants import (
     BLUE_LOOT_TYPE_IDS,
     OPE_EVE_GROUPS,
@@ -67,7 +70,7 @@ def get_or_create_prices(item_id):
             "https://market.fuzzwork.co.uk/aggregates/",
             params={
                 "types": item_id,
-                "station": 60003760,
+                "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
             },
         )
 

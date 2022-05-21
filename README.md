@@ -61,6 +61,7 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 	- Check extra characters in contract title
 	- Check if contract contains donations
 - Contract tracking history
+- Supports base price sources from [Fuzzwork API](https://market.fuzzwork.co.uk/api/)
 - Supports discord notifications
 	- Notifications for accepted contracts
 	- Notifications for new contracts
@@ -134,6 +135,10 @@ You may change the following settings by adding the lines in your `local.py` set
 Name | Description | Default
 -- | -- | --
 BUYBACKPROGRAM_TRACKING_PREFILL | This is the prefill tag you will have on the tracking description for your contracts | aa-bbp.
+BUYBACKPROGRAM_PRICE_SOURCE_ID | Station ID for fetching base prices. Supports IDs listed on [Fuzzworks API](https://market.fuzzwork.co.uk/api/) | 60003760
+BUYBACKPROGRAM_PRICE_SOURCE_NAME | Display name of your price source. Has no effect on the actual price fetch which uses the ID. | Jita
+
+Note: If you change your price source for an old install you need to wait for the price update task to run or manually run it to update your current database prices.
 
 ## Step 6 - Adjust Permissions
 Overview of all permissions in this program. Note that all permissions are in the "general" section.

@@ -1,5 +1,7 @@
 from allianceauth.services.hooks import get_extension_logger
 
+from buybackprogram.app_settings import BUYBACKPROGRAM_PRICE_SOURCE_NAME
+
 logger = get_extension_logger(__name__)
 
 
@@ -8,7 +10,8 @@ def note_missing_jita_buy(buy_price, name):
         note = {
             "icon": "fa-question",
             "color": "red",
-            "message": "%s has no buy orders in jita" % name,
+            "message": "%s has no buy orders in %s"
+            % (name, BUYBACKPROGRAM_PRICE_SOURCE_NAME),
         }
         return note
     else:
@@ -124,7 +127,8 @@ def note_npc_price(name):
     note = {
         "icon": "fa-robot",
         "color": "#5858df",
-        "message": "Using NPC buy price for %s instead of Jita buy prices" % name,
+        "message": "Using NPC buy price for %s instead of %s buy prices"
+        % (name, BUYBACKPROGRAM_PRICE_SOURCE_NAME),
     }
     return note
 

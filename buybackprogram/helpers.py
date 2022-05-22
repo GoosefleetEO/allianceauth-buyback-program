@@ -109,6 +109,9 @@ def is_ore(item_id):
 
 
 def has_buy_price(item):
+
+    logger.debug("Has buy price: Value is set to %s" % item)
+
     if (
         not item["raw_prices"]
         and not item["material_prices"]

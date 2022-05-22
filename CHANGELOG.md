@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.5.5] - 2022-05-22
+
+### Fixed
+- Fixed an issue where unpacked item caused an error when sold via a program that had a positive value in the JF fuel cost field.
+
 ## [1.5.4] - 2022-05-21
 
 If you want to change where you pull your base prices from (Jita as default) you can do this by changing the values of `BUYBACKPROGRAM_PRICE_SOURCE_NAME` and `BUYBACKPROGRAM_PRICE_SOURCE_ID`. You can also change the source with an old install of this app simply by adjusting the values of these fields and running the price updates again.

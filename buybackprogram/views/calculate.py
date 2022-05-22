@@ -205,6 +205,7 @@ def program_calculate(request, program_pk):
                                 "raw_prices": False,
                                 "material_prices": False,
                                 "compression_prices": False,
+                                "npc_prices": False,
                             },
                             "item_values": item_values,
                         }

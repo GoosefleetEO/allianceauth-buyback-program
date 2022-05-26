@@ -122,69 +122,51 @@ def send_message_to_discord_channel(
     channel_id: int, message: dict, embed: bool = False
 ) -> None:
 
-    if not aa_discordnotify_active():
-        # Check if the discordproxy module is active. We will use it as our priority app for notifications
-        try:
+    # Check if the discordproxy module is active. We will use it as our priority app for notifications
+    try:
 
-            from discordproxy.client import DiscordClient
-            from discordproxy.discord_api_pb2 import Embed
-            from discordproxy.exceptions import (
-                DiscordProxyException,
-                DiscordProxyGrpcError,
-            )
+        from discordproxy.client import DiscordClient
+        from discordproxy.discord_api_pb2 import Embed
+        from discordproxy.exceptions import DiscordProxyException, DiscordProxyGrpcError
 
-            logger.debug("Attempting send message to discord channel %s" % channel_id)
+        logger.debug("Attempting send message to discord channel %s" % channel_id)
 
-            client = DiscordClient()
+        client = DiscordClient()
 
-            fields = []
+        fields = []
 
-            fields.append(
-                Embed.Field(name="Value", value=message["value"], inline=True)
-            )
-            fields.append(
-                Embed.Field(
-                    name="Assigned to", value=message["assigned_to"], inline=True
-                )
-            )
-            fields.append(
-                Embed.Field(
-                    name="Assigned from", value=message["assigned_from"], inline=True
-                )
-            )
-
-            embed = Embed(
-                description=message["description"],
-                title=message["title"],
-                color=message["color"],
-                footer=Embed.Footer(text=message["footer"]),
-                fields=fields,
-                author=Embed.Author(name="AA Buyback Program"),
-            )
-
-            try:
-                logger.debug("Sending notification for discord channel %s" % channel_id)
-                client.create_channel_message(channel_id=channel_id, embed=embed)
-            except DiscordProxyGrpcError:
-                logger.debug(
-                    "Discordprox is installed but not running, failed to send message. Attempting to send via aa-discordbot instead."
-                )
-                send_aa_discordbot_channel_notification(
-                    channel_id, message["description"]
-                )
-
-            except DiscordProxyException as ex:
-                logger.error(
-                    "An error occured when trying to create a message: %s" % ex
-                )
-
-        except ModuleNotFoundError:
-            logger.debug(
-                "Discordproxy is not installed, sending message via aa-discordbot"
-            )
-
-            send_aa_discordbot_channel_notification(channel_id, message["description"])
-    else:
-        logger.debug(
-            "Aadiscordnotify is already active, passing notification sending to prevent multiple notifications"
+        fields.append(Embed.Field(name="Value", value=message["value"], inline=True))
+        fields.append(
+            Embed.Field(name="Assigned to", value=message["assigned_to"], inline=True)
         )
+        fields.append(
+            Embed.Field(
+                name="Assigned from", value=message["assigned_from"], inline=True
+            )
+        )
+
+        embed = Embed(
+            description=message["description"],
+            title=message["title"],
+            color=message["color"],
+            footer=Embed.Footer(text=message["footer"]),
+            fields=fields,
+            author=Embed.Author(name="AA Buyback Program"),
+        )
+
+        try:
+            logger.debug("Sending notification for discord channel %s" % channel_id)
+            client.create_channel_message(channel_id=channel_id, embed=embed)
+        except DiscordProxyGrpcError:
+            logger.debug(
+                "Discordprox is installed but not running, failed to send message. Attempting to send via aa-discordbot instead."
+            )
+            send_aa_discordbot_channel_notification(channel_id, message["description"])
+
+        except DiscordProxyException as ex:
+            logger.error("An error occured when trying to create a message: %s" % ex)
+
+    except ModuleNotFoundError:
+        logger.debug("Discordproxy is not installed, sending message via aa-discordbot")
+
+        send_aa_discordbot_channel_notification(channel_id, message["description"])

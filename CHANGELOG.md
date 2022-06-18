@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased] - yyyy-mm-dd
+
+This release requires migrations. Add a discord webhook to a program to receive notifications about new contracts.
+
+### Added
+- Closes #43, added NPC value option for CCS bonds.
+
+### Changed
+- Changed channel notifications to use webhooks instead of discord bots.
+
+### Fixed
+- Fixed #42, Talassonite not behaving as an ore
+
 ## [1.5.6] - 2022-05-26
 
 ### Fixed

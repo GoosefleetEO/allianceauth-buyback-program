@@ -877,6 +877,12 @@ class Program(models.Model):
         help_text="Use NPC price as value for OPEs",
     )
 
+    bonds_npc_price = models.BooleanField(
+        verbose_name="NPC price for: Bounty Encrypted Bonds",
+        default=False,
+        help_text="Use NPC price as value for SCC Encrypted Bond",
+    )
+
     restricted_to_group = models.ManyToManyField(
         Group,
         blank=True,

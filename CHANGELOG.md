@@ -11,6 +11,7 @@ This release requires migrations. Add a discord webhook to a program to receive 
 
 ### Added
 - Closes #43, added NPC value option for CCS bonds.
+- Closes #41
 
 ### Changed
 - Changed channel notifications to use webhooks instead of discord bots.

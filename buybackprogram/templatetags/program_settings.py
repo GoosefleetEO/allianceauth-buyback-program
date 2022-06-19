@@ -108,7 +108,12 @@ def program_setting(program):
 
         settings.append(setting)
 
-    if program.blue_loot_npc_price or program.red_loot_npc_price:
+    if (
+        program.blue_loot_npc_price
+        or program.red_loot_npc_price
+        or program.ope_npc_price
+        or program.bonds_npc_price
+    ):
         setting = setting_icons("npc_price", program)
 
         settings.append(setting)

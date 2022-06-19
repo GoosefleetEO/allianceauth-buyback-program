@@ -19,9 +19,24 @@ logger = get_extension_logger(__name__)
 def send_aa_discordbot_notification(user, message):
     # If discordproxy app is not active we will check if aa-discordbot is active
     if allianceauth_discordbot_active():
-        import aadiscordbot.tasks
+        from aadiscordbot.tasks import send_message
+        from discord import Embed
 
-        aadiscordbot.tasks.send_direct_message_by_user_id.delay(user, message)
+        embed = Embed(
+            description=message["description"],
+            title=message["title"],
+            color=message["color"],
+        )
+
+        embed.set_footer(text=message["footer"])
+
+        embed.add_field(name="Value", value=message["value"], inline=True)
+        embed.add_field(name="Assigned to", value=message["assigned_to"], inline=True)
+        embed.add_field(
+            name="Assigned from", value=message["assigned_from"], inline=True
+        )
+
+        send_message(user_pk=user, embed=embed)
 
         logger.debug("Sent discord DM to user %s" % user)
     else:
@@ -96,24 +111,29 @@ def send_user_notification(user: User, level: str, message: dict) -> None:
                 author=Embed.Author(name="AA Buyback Program"),
             )
 
-            try:
-                logger.debug(
-                    "Sending notification for discord user %s" % user.discord.uid
-                )
-                client.create_direct_message(user_id=user.discord.uid, embed=embed)
-            except DiscordProxyGrpcError:
-                logger.debug(
-                    "Discordprox is installed but not running, failed to send message. Attempting to send via aa-discordbot instead."
-                )
-                send_aa_discordbot_notification(user.pk, message["description"])
+            if user.discord.uid:
+                try:
+                    logger.debug(
+                        "Sending notification for discord user %s" % user.discord.uid
+                    )
+                    client.create_direct_message(user_id=user.discord.uid, embed=embed)
+                except DiscordProxyGrpcError:
+                    logger.debug(
+                        "Discordprox is installed but not running, failed to send message. Attempting to send via aa-discordbot instead."
+                    )
+                    send_aa_discordbot_notification(user.pk, message)
 
-            except DiscordProxyException as ex:
+                except DiscordProxyException as ex:
+                    logger.error(
+                        "An error occured when trying to create a message: %s" % ex
+                    )
+            else:
                 logger.error(
-                    "An error occured when trying to create a message: %s" % ex
+                    "User has no active discord accounts on AUTH, passing DM message."
                 )
 
         except ModuleNotFoundError:
-            send_aa_discordbot_notification(user.pk, message["description"])
+            send_aa_discordbot_notification(user.pk, message)
     else:
         logger.debug(
             "Aadiscordnotify is already active, passing notification sending to prevent multiple notifications"

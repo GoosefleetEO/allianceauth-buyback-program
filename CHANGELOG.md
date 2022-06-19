@@ -5,9 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased] - yyyy-mm-dd
+## [1.6.0] - 19-06-2022
 
 This release requires migrations. Add a discord webhook to a program to receive notifications about new contracts.
+
+This release includes updates that make buybackprogram notifications work with the current latest versions of aa-discordbot and discordproxy. These programs require minimum Python Version 3.8 to work and the New Discord Lib Py-Cord. If you are still running on the old versions the notifications will not work for you but everything else will.
 
 ### Added
 - Closes #43, added NPC value option for CCS bonds.
@@ -15,9 +17,12 @@ This release requires migrations. Add a discord webhook to a program to receive 
 
 ### Changed
 - Changed channel notifications to use webhooks instead of discord bots.
+- Changed DM messages as embeds for discordbot
 
 ### Fixed
 - Fixed #42, Talassonite not behaving as an ore
+- Fixed #44, Added support to latest aa-discordbot and discordproxy
+
 
 ## [1.5.6] - 2022-05-26
 

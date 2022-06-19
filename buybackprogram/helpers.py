@@ -14,6 +14,7 @@ from buybackprogram.app_settings import (
 )
 from buybackprogram.constants import (
     BLUE_LOOT_TYPE_IDS,
+    BONDS_EVE_GROUPS,
     OPE_EVE_GROUPS,
     ORE_EVE_GROUPS,
     RED_LOOT_TYPE_IDS,
@@ -54,6 +55,8 @@ def use_npc_price(item, program):
     elif item.id in RED_LOOT_TYPE_IDS and program.red_loot_npc_price:
         return True
     elif item.eve_group.id in OPE_EVE_GROUPS and program.ope_npc_price:
+        return True
+    elif item.eve_group.id in BONDS_EVE_GROUPS and program.ope_npc_price:
         return True
     else:
         return False

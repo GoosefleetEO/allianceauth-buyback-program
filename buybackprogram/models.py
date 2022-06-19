@@ -323,8 +323,9 @@ class Owner(models.Model):
 
                                 user_message = {
                                     "title": "New buyback contract assigned",
-                                    "description": "A new buyback contract with tracking number {0} has been assigned to you.{1}".format(
+                                    "description": "A new contract with tracking number {0} has been assigned to buyback program {1}.{2}".format(
                                         tracking.tracking_number,
+                                        tracking.program.name,
                                         notes,
                                     ),
                                     "color": 0x5BC0DE,
@@ -351,8 +352,11 @@ class Owner(models.Model):
 
                                 # Notifications for the discord channel
                                 if tracking.program.discord_channel_notification:
+                                    logger.debug(
+                                        "Program wants channel notification, attempting to send via webhook"
+                                    )
                                     send_message_to_discord_channel(
-                                        channel_id=tracking.program.discord_channel_notification,
+                                        webhook=tracking.program.discord_channel_notification,
                                         message=user_message,
                                     )
                                 else:
@@ -877,6 +881,12 @@ class Program(models.Model):
         help_text="Use NPC price as value for OPEs",
     )
 
+    bonds_npc_price = models.BooleanField(
+        verbose_name="NPC price for: Bounty Encrypted Bonds",
+        default=False,
+        help_text="Use NPC price as value for SCC Encrypted Bond",
+    )
+
     restricted_to_group = models.ManyToManyField(
         Group,
         blank=True,
@@ -896,11 +906,12 @@ class Program(models.Model):
         help_text="Check if you want to receive a direct message notification each time a new contract is created. <b>Requires aa-discordbot app or discordproxy app to work</b>",
     )
 
-    discord_channel_notification = models.BigIntegerField(
-        verbose_name="Discord channel ID for notifications",
+    discord_channel_notification = models.CharField(
+        verbose_name="Discord webhook for notifications",
+        max_length=256,
         null=True,
         blank=True,
-        help_text="Check if you want to feed new contracts to a discord channel. <b>Requires aa-discordbot app or discordproxy app to work</b>",
+        help_text="Discord webhook to send contract notifications to.",
     )
 
     class Meta:

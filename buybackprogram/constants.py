@@ -25,12 +25,15 @@ ORE_EVE_GROUPS = [
     1923,
     2024,
     2029,
+    4029,
     4030,
     4031,
     4094,
 ]
 
 OPE_EVE_GROUPS = [493]
+
+BONDS_EVE_GROUPS = [1248]
 
 BLUE_LOOT_TYPE_IDS = [
     30744,

@@ -9,6 +9,7 @@ from eveuniverse.models import EveMarketPrice, EveType, EveTypeMaterial
 from allianceauth.services.hooks import get_extension_logger
 
 from buybackprogram.app_settings import (
+    BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT,
     BUYBACKPROGRAM_PRICE_SOURCE_ID,
     BUYBACKPROGRAM_TRACKING_PREFILL,
 )
@@ -25,10 +26,12 @@ from buybackprogram.notes import (
     note_item_disallowed,
     note_item_specific_tax,
     note_missing_jita_buy,
+    note_missing_npc_price,
     note_missing_typematerials,
     note_no_price_data,
     note_npc_price,
     note_price_dencity_tax,
+    note_price_outdated,
     note_raw_price_used,
     note_refined_price_used,
     note_unpublished_item,
@@ -95,7 +98,15 @@ def get_or_create_prices(item_id):
 
 def get_npc_price(item_id):
     try:
+        logger.error("Getting NPC price from EveMarketPrice for item: %s" % (item_id))
         return EveMarketPrice.objects.get(eve_type=item_id)
+    except EveMarketPrice.DoesNotExist:
+        logger.error(
+            "NPC price missing from EveMarketPrice for: %s. Did you forget to run buybackprogram_load_data and buybackprogram_load_prices on setup?"
+            % (item_id)
+        )
+        return EveMarketPrice.objects.none()
+
     except Error as e:
         logger.error("Error getting NPC prices for %s: %s" % (item_id, e))
 
@@ -249,6 +260,17 @@ def get_item_prices(item_type, name, quantity, program):
 
         notes.append(note_missing_jita_buy(item_price.buy, name))
 
+        # Get time difference since price update
+        update_timediff = timezone.now() - item_price.updated
+
+        # Convert to hours
+        update_timediff = update_timediff.total_seconds() / 3600
+
+        logger.debug("Raw price data was updated %s hours a go" % update_timediff)
+
+        if update_timediff > BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT:
+            notes.append(note_price_outdated(update_timediff, name))
+
         # Check if we should get refined value for the item
         if is_ore(item_type.eve_group.id) and program.use_refined_value:
 
@@ -324,12 +346,22 @@ def get_item_prices(item_type, name, quantity, program):
         if use_npc_price(item_type, program):
             item_npc_price = get_npc_price(item_type.id)
 
-            npc_type_prices = {
-                "id": item_type.id,
-                "quantity": quantity,
-                "buy": item_npc_price.average_price,
-                "sell": False,
-            }
+            if item_npc_price:
+                npc_type_prices = {
+                    "id": item_type.id,
+                    "quantity": quantity,
+                    "buy": item_npc_price.average_price,
+                    "sell": False,
+                }
+            else:
+                npc_type_prices = {
+                    "id": item_type.id,
+                    "quantity": quantity,
+                    "buy": 0,
+                    "sell": False,
+                }
+
+                notes.append(note_missing_npc_price(name))
 
             logger.debug("Prices: Got NPC buy price for %s" % name)
 
@@ -749,6 +781,30 @@ def get_item_values(item_type, item_prices, program):
             % (item_type, buy_value)
         )
 
+    elif buy_value == npc_item["value"]:
+
+        npc_item["is_buy_value"] = True
+        tax_value = npc_item["total_tax"]
+
+        item_prices["notes"].append(note_npc_price(raw_item["name"]))
+
+        item_prices["notes"].append(
+            note_price_dencity_tax(
+                raw_item["name"],
+                raw_item["price_dencity"],
+                raw_item["price_dencity_tax"],
+            )
+        )
+
+        item_prices["notes"].append(
+            note_item_specific_tax(raw_item["name"], raw_item["item_tax"])
+        )
+
+        logger.debug(
+            "Values: Best buy value with NPC price for %s is %s ISK"
+            % (item_type, buy_value)
+        )
+
     elif buy_value == refined["value"]:
 
         refined["is_buy_value"] = True
@@ -788,30 +844,6 @@ def get_item_values(item_type, item_prices, program):
 
         logger.debug(
             "Values: Best buy value with compressed price for %s is %s ISK"
-            % (item_type, buy_value)
-        )
-
-    elif buy_value == npc_item["value"]:
-
-        npc_item["is_buy_value"] = True
-        tax_value = npc_item["total_tax"]
-
-        item_prices["notes"].append(note_npc_price(raw_item["name"]))
-
-        item_prices["notes"].append(
-            note_price_dencity_tax(
-                raw_item["name"],
-                raw_item["price_dencity"],
-                raw_item["price_dencity_tax"],
-            )
-        )
-
-        item_prices["notes"].append(
-            note_item_specific_tax(raw_item["name"], raw_item["item_tax"])
-        )
-
-        logger.debug(
-            "Values: Best buy value with NPC price for %s is %s ISK"
             % (item_type, buy_value)
         )
 

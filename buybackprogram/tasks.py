@@ -54,9 +54,11 @@ def update_all_prices():
 
     logger.debug(
         "Price update starting for %s items from Fuzzworks API. Using id %s (%s) as source"
-        % (len(prices)),
-        BUYBACKPROGRAM_PRICE_SOURCE_ID,
-        BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+        % (
+            len(prices),
+            BUYBACKPROGRAM_PRICE_SOURCE_ID,
+            BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+        )
     )
 
     # Build suitable bulks to fetch prices from API

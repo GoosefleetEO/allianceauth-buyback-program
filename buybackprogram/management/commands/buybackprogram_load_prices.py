@@ -3,7 +3,7 @@ import requests
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 from django.utils import timezone
-from eveuniverse.models import EveType
+from eveuniverse.models import EveMarketPrice, EveType
 
 from allianceauth.services.hooks import get_extension_logger
 
@@ -89,7 +89,8 @@ class Command(BaseCommand):
                 objs.append(item)
         try:
             ItemPrices.objects.bulk_create(objs)
-            return "Succesfully setup %s prices." % item_count
+
+            print("Succesfully setup %s prices." % item_count)
         except IntegrityError:
             print(
                 "Error: Prices already loaded into database, did you mean to run task.update_all_prices instead?"
@@ -102,3 +103,11 @@ class Command(BaseCommand):
                 return "All price data removed from database. Run the command again to populate the price data."
             else:
                 return "No changes done to price table."
+        else:
+            print("Starting to update NPC market prices for all fetched items...")
+
+            EveMarketPrice.objects.update_from_esi()
+
+            logger.debug("Updated all eveuniverse market prices.")
+
+            return "Price preload completed!"

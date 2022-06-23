@@ -1,6 +1,9 @@
 from allianceauth.services.hooks import get_extension_logger
 
-from buybackprogram.app_settings import BUYBACKPROGRAM_PRICE_SOURCE_NAME
+from buybackprogram.app_settings import (
+    BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT,
+    BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+)
 
 logger = get_extension_logger(__name__)
 
@@ -138,5 +141,26 @@ def note_raw_price_used(name):
         "icon": "fa-icicles",
         "color": "#5858df",
         "message": "Best price: Using raw price for %s" % name,
+    }
+    return note
+
+
+def note_missing_npc_price(name):
+    note = {
+        "icon": "fa-question",
+        "color": "red",
+        "message": "%s is missing price on database. Run `buybackprogram_load_prices` to fix."
+        % (name),
+    }
+
+    return note
+
+
+def note_price_outdated(updated, name):
+    note = {
+        "icon": "fa-history",
+        "color": "red",
+        "message": "Price data for %s has not been updated for more than %s hours"
+        % (name, BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT),
     }
     return note

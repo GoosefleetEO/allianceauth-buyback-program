@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.1] - 23-06-2022
+
+### Added
+- Added notification for missing NPC prices in database
+- Added notification for outdated prices
+- Added setting `BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT`to detemine the warning limit in hours for outdated prices. Default 48 hours
+- Included NPC prices into the price preload command `python manage.py buybackprogram_load_prices`
+
+### Fixed
+- Fixed error when NPC price was used but no NPC price had been loaded in database
+- Fixed Jita prices not updating when debug mode was in use
+
 ## [1.6.0] - 19-06-2022
 
 This release requires migrations. Add a discord webhook to a program to receive notifications about new contracts.

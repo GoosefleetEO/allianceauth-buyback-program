@@ -7,6 +7,13 @@ from eveuniverse.models import EveEntity
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.services.hooks import get_extension_logger
 
+from buybackprogram.notes import (
+    note_missing_from_contract,
+    note_missing_from_tracking,
+    note_quantity_missing_from_contract,
+    note_quantity_missing_from_tracking,
+)
+
 from ..models import (
     Contract,
     ContractItem,
@@ -227,7 +234,7 @@ def contract_details(request, contract_title):
     notes = ContractNotification.objects.filter(contract=contract)
 
     # Get items for this contract
-    contract_items = ContractItem.objects.filter(contract=contract).order_by("eve_type")
+    contract_items = ContractItem.objects.filter(contract=contract)
 
     # Get tracking object for this contract
     tracking = Tracking.objects.get(
@@ -235,7 +242,62 @@ def contract_details(request, contract_title):
     )
 
     # Get tracked items
-    tracking_items = TrackingItem.objects.filter(tracking=tracking).order_by("eve_type")
+    tracking_items = TrackingItem.objects.filter(tracking=tracking)
+
+    # Find the difference in the created contract and original calculation
+    for tracking_item in tracking_items:
+
+        tracking_notes = []
+
+        item_match = False
+        quantity_match = False
+
+        for contract_item in contract_items:
+            if contract_item.eve_type == tracking_item.eve_type:
+                item_match = True
+
+                if contract_item.quantity == tracking_item.quantity:
+                    quantity_match = True
+                    break
+
+        tracking_item.item_match = item_match
+
+        if not item_match:
+            tracking_notes.append(note_missing_from_contract(tracking_item.eve_type))
+
+        if item_match and not quantity_match:
+            tracking_notes.append(
+                note_quantity_missing_from_contract(tracking_item.eve_type)
+            )
+
+        tracking_item.notes = tracking_notes
+
+    for contract_item in contract_items:
+
+        contract_notes = []
+
+        item_match = False
+        quantity_match = False
+
+        for tracking_item in tracking_items:
+            if contract_item.eve_type == tracking_item.eve_type:
+                item_match = True
+
+                if contract_item.quantity == tracking_item.quantity:
+                    quantity_match = True
+                    break
+
+        contract_item.item_match = item_match
+
+        if not item_match:
+            contract_notes.append(note_missing_from_tracking(contract_item.eve_type))
+
+        if item_match and not quantity_match:
+            contract_notes.append(
+                note_quantity_missing_from_tracking(contract_item.eve_type)
+            )
+
+        contract_item.notes = contract_notes
 
     # Get the name for the issuer
     contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)

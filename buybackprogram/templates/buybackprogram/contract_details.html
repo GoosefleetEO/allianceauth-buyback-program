@@ -99,9 +99,10 @@
         <table class="table table-striped table-condensed">
             <thead>
                 <tr>
-                    <th >{% trans "Name" %}</th>
-                    <th >{% trans "Quantity" %}</th>
-                    <th >{% trans "Buy value" %}</th>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Quantity" %}</th>
+                    <th>{% trans "Buy value" %}</th>
+                    <th>{% trans "Note" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -110,6 +111,11 @@
                             <td><img class="item-icon" src="https://image.eveonline.com/Type/{{item.eve_type.id}}_64.png" />{{item.eve_type.name}}</td>
                             <td>{{item.quantity|intcomma}}</td>
                             <td>{{item.buy_value|floatformat:0|intcomma}} ISK</td>
+                            <td>
+                                {% for note in item.notes %}
+                                    <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
+                                {% endfor %}
+                            </td>
                         </tr>
                 {% endfor %}
             </tbody>
@@ -122,8 +128,9 @@
         <table class="table table-striped table-condensed">
             <thead>
                 <tr>
-                    <th >{% trans "Name" %}</th>
-                    <th >{% trans "Quantity" %}</th>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Quantity" %}</th>
+                    <th>{% trans "Note" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -131,6 +138,11 @@
                         <tr>
                             <td><img class="item-icon" src="https://image.eveonline.com/Type/{{item.eve_type.id}}_64.png" />{{item.eve_type.name}}</td>
                             <td>{{item.quantity|intcomma}}</td>
+                            <td>
+                                {% for note in item.notes %}
+                                    <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
+                                {% endfor %}
+                            </td>
                         </tr>
                 {% endfor %}
             </tbody>

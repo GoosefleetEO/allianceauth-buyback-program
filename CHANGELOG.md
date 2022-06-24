@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.2] - 24-05-2022
+
+### Added
+- Closes #45, Added notes for contract tracking to indicate unmatching items or quantities
+
 ## [1.6.1] - 23-06-2022
 
 ### Added

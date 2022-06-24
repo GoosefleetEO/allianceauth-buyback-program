@@ -164,3 +164,45 @@ def note_price_outdated(updated, name):
         % (name, BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT),
     }
     return note
+
+
+def note_missing_from_contract(name):
+    note = {
+        "icon": "fa-question",
+        "color": "red",
+        "message": "%s is missing from the created contract" % (name),
+    }
+
+    return note
+
+
+def note_missing_from_tracking(name):
+    note = {
+        "icon": "fa-question",
+        "color": "red",
+        "message": "%s is missing from the original calculation" % (name),
+    }
+
+    return note
+
+
+def note_quantity_missing_from_contract(name):
+    note = {
+        "icon": "fa-calculator",
+        "color": "red",
+        "message": "Calculated item quantity for %s does not match with contract"
+        % (name),
+    }
+
+    return note
+
+
+def note_quantity_missing_from_tracking(name):
+    note = {
+        "icon": "fa-calculator",
+        "color": "red",
+        "message": "Calculated item quantity for %s does not match with tracking"
+        % (name),
+    }
+
+    return note

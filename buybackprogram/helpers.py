@@ -227,10 +227,10 @@ def get_item_prices(item_type, name, quantity, program):
             notes.append(note_item_disallowed(item_disallowed, name))
 
     # If item is somehow not published (expired items etc.)
-    if not item_type.published:
+    if not item_type.published or not item_type.eve_market_group:
         item_disallowed = True
 
-        notes.append(note_unpublished_item(name))
+        notes.append(note_unpublished_item(item_type))
 
     if not item_disallowed:
 

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.3] - 27-06-2022
+
+### Fixed
+- Fixed an issue that occured when a user tried to sell a mission ore while the program had compressed or refined value accepted causing the program to crash with error 500
+
+### Changed
+- Changed the notification for unpublished items to indicate where the item is unpublished or a special commondite item without any market categories such as a mission item.
+
 ## [1.6.2] - 24-05-2022
 
 ### Added

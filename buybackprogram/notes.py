@@ -47,13 +47,21 @@ def note_item_disallowed(item_disallowed, name):
         return False
 
 
-def note_unpublished_item(name):
-    note = {
-        "icon": "fa-hand-paper",
-        "color": "red",
-        "message": "%s is not a published item. Special commondite or expired item?"
-        % name,
-    }
+def note_unpublished_item(item_type):
+    if not item_type.published:
+        note = {
+            "icon": "fa-hand-paper",
+            "color": "red",
+            "message": "%s is not a published item. It is either an expired item or a copy paste of an item that should not exists ingame."
+            % item_type.name,
+        }
+    if not item_type.eve_market_group:
+        note = {
+            "icon": "fa-hand-paper",
+            "color": "red",
+            "message": "%s has no market information. Most likely a mission item or a special commondite item that can't be valued by market."
+            % item_type.name,
+        }
     return note
 
 

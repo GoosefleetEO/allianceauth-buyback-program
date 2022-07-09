@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Changed item not found message to be more accurate for cases with unpacked renamed items
+- Changed missing item images to a static image
 
 ### Fixed
 

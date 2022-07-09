@@ -120,7 +120,18 @@
             <tbody>
                 {% for item in buyback_data %}
                         <tr>
-                            <td><img class="item-icon" src="https://image.eveonline.com/Type/{{item.type_data.id}}_64.png" /><b>{{ item.item_values.name }}</b></td>
+                            <td>
+                                {% if item.type_data %}
+                                    <img class="item-icon" src="https://image.eveonline.com/Type/{{item.type_data.id}}_64.png" />
+                                {% else %}
+                                    <img class="item-icon" src="{% static 'buybackprogram/images/help.png' %}" />
+                                {% endif %}
+
+
+
+                                <b>{{ item.item_values.name }}</b>
+
+                            </td>
                             <td>{{ item.item_values.quantity|intcomma }}</td>
                             <td>{{ item.item_prices.type_prices.sell|floatformat:0|intcomma|price }}</td>
                             <td>{{ item.item_prices.type_prices.buy|floatformat:0|intcomma|price }}</td>

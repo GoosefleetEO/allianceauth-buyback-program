@@ -267,9 +267,9 @@ def program_remove(request, program_pk):
         messages_plus.warning(
             request,
             format_html(
-                gettext_lazy("Deleted program for %(location)s")
+                gettext_lazy("Deleted program %(name)s")
                 % {
-                    "location": format_html("<strong>{}</strong>", program.location),
+                    "name": format_html("<strong>{}</strong>", program.name),
                 }
             ),
         )

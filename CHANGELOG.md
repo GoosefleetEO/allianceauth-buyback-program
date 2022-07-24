@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Changed missing item images to a static image
 
 ### Fixed
+- Fixed an message error when deleting a program.
 
 
 ## [1.6.3] - 27-06-2022

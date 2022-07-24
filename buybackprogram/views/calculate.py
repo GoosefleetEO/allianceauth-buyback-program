@@ -81,7 +81,7 @@ def program_calculate(request, program_pk):
                         note = {
                             "icon": "fa-skull-crossbones",
                             "color": "red",
-                            "message": "%s not found from database. It is most likely a new item still not added to database."
+                            "message": "%s not found from database. It is most likely a new item still not added to database or a renamed unpacked item."
                             % name,
                         }
                         notes.append(note)

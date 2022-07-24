@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.4] - 24-07-2022
+
+### Changed
+- Changed item not found message to be more accurate for cases with unpacked renamed items
+- Changed missing item images to a static image
+
+### Fixed
+- Fixed an message error when deleting a program.
+
 ## [1.6.3] - 27-06-2022
 
 ### Fixed

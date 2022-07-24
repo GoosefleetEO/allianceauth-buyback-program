@@ -5,9 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased] - yyyy-mm-dd
-
-### Added
+## [1.6.4] - 24-07-2022
 
 ### Changed
 - Changed item not found message to be more accurate for cases with unpacked renamed items
@@ -15,7 +13,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Fixed an message error when deleting a program.
-
 
 ## [1.6.3] - 27-06-2022
 

@@ -232,6 +232,13 @@ def get_item_prices(item_type, name, quantity, program):
 
         notes.append(note_unpublished_item(item_type))
 
+        logger.debug(
+            "%s published status is %s and market group is %s, item disallowed: %s"
+            % (name, item_type.published, item_type.eve_market_group, item_disallowed)
+        )
+
+    logger.debug("%s is disallowed: %s" % (name, item_disallowed))
+
     if not item_disallowed:
 
         # If raw ore value should not be taken into account

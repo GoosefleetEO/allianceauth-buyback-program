@@ -10,10 +10,10 @@ from allianceauth.services.hooks import get_extension_logger
 
 from buybackprogram.app_settings import (
     BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT,
+    BUYBACKPROGRAM_PRICE_JANICE_API_KEY,
+    BUYBACKPROGRAM_PRICE_METHOD,
     BUYBACKPROGRAM_PRICE_SOURCE_ID,
     BUYBACKPROGRAM_TRACKING_PREFILL,
-    BUYBACKPROGRAM_PRICE_METHOD,
-    BUYBACKPROGRAM_PRICE_JANICE_API_KEY,
 )
 from buybackprogram.constants import (
     BLUE_LOOT_TYPE_IDS,
@@ -90,7 +90,11 @@ def get_or_create_prices(item_id):
         elif BUYBACKPROGRAM_PRICE_METHOD == "Janice":
             response_janice = requests.get(
                 f"https://janice.e-351.com/api/rest/v2/pricer/{item_id}",
-                headers={'Content-Type': 'text/plain', 'X-ApiKey': 'G9KwKq3465588VPd6747t95Zh94q3W2E', 'accept': 'application/json'}
+                headers={
+                    "Content-Type": "text/plain",
+                    "X-ApiKey": BUYBACKPROGRAM_PRICE_JANICE_API_KEY,
+                    "accept": "application/json",
+                },
             )
 
             item_janice = response_janice.json()

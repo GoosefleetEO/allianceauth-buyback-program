@@ -705,7 +705,7 @@ class Owner(models.Model):
 
 
 class Location(models.Model):
-    """ Location where the buyback program is operated at """
+    """Location where the buyback program is operated at"""
 
     name = models.CharField(
         max_length=32, help_text="Structure name where the contracts are accepted at"

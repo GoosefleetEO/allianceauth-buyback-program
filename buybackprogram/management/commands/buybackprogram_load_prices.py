@@ -1,5 +1,3 @@
-import requests
-
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 from django.utils import timezone
@@ -8,9 +6,9 @@ from eveuniverse.models import EveMarketPrice, EveType
 from allianceauth.services.hooks import get_extension_logger
 
 from buybackprogram.app_settings import (
+    BUYBACKPROGRAM_PRICE_METHOD,
     BUYBACKPROGRAM_PRICE_SOURCE_ID,
     BUYBACKPROGRAM_PRICE_SOURCE_NAME,
-    BUYBACKPROGRAM_PRICE_METHOD,
 )
 from buybackprogram.models import ItemPrices
 from buybackprogram.tasks import get_bulk_prices
@@ -24,7 +22,6 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        i = 0
         item_count = 0
         type_ids = []
         market_data = {}
@@ -44,12 +41,12 @@ class Command(BaseCommand):
         elif BUYBACKPROGRAM_PRICE_METHOD == "Janice":
             print(
                 "Price setup starting for %s items from Janice API for Jita 4-4, this may take up to 30 seconds..."
-                % (
-                    len(typeids),
-                )
+                % (len(typeids),)
             )
         else:
-            return "Unknown pricing method: '%s', skipping" % BUYBACKPROGRAM_PRICE_METHOD
+            return (
+                "Unknown pricing method: '%s', skipping" % BUYBACKPROGRAM_PRICE_METHOD
+            )
 
         # Build suitable bulks to fetch prices from API
         for item in typeids:

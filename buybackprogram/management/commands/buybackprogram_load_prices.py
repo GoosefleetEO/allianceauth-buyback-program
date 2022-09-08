@@ -10,83 +10,71 @@ from allianceauth.services.hooks import get_extension_logger
 from buybackprogram.app_settings import (
     BUYBACKPROGRAM_PRICE_SOURCE_ID,
     BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+    BUYBACKPROGRAM_PRICE_METHOD,
 )
 from buybackprogram.models import ItemPrices
+from buybackprogram.tasks import get_bulk_prices
 
 logger = get_extension_logger(__name__)
 
 
 class Command(BaseCommand):
     help = (
-        "Preloads price data required for the buyback program from fuzzwork market API"
+        "Preloads price data required for the buyback program from Fuzzwork market API"
     )
 
     def handle(self, *args, **options):
         i = 0
         item_count = 0
         type_ids = []
-        market_data = []
+        market_data = {}
 
         # Get all type ids
         typeids = EveType.objects.values_list("id", flat=True).filter(published=True)
 
-        print(
-            "Price setup starting for %s items from Fuzzworks API from station id %s (%s), this may take up to 30 seconds..."
-            % (
-                len(typeids),
-                BUYBACKPROGRAM_PRICE_SOURCE_ID,
-                BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+        if BUYBACKPROGRAM_PRICE_METHOD == "Fuzzwork":
+            print(
+                "Price setup starting for %s items from Fuzzworks API from station id %s (%s), this may take up to 30 seconds..."
+                % (
+                    len(typeids),
+                    BUYBACKPROGRAM_PRICE_SOURCE_ID,
+                    BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+                )
             )
-        )
+        elif BUYBACKPROGRAM_PRICE_METHOD == "Janice":
+            print(
+                "Price setup starting for %s items from Janice API for Jita 4-4, this may take up to 30 seconds..."
+                % (
+                    len(typeids),
+                )
+            )
+        else:
+            return "Unknown pricing method: '%s', skipping" % BUYBACKPROGRAM_PRICE_METHOD
 
         # Build suitable bulks to fetch prices from API
         for item in typeids:
             type_ids.append(item)
 
-            i += 1
-
-            if i == 1000:
-
-                response_fuzzwork = requests.get(
-                    "https://market.fuzzwork.co.uk/aggregates/",
-                    params={
-                        "types": ",".join([str(x) for x in type_ids]),
-                        "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
-                    },
-                )
-
-                items_fuzzwork = response_fuzzwork.json()
-                market_data.append(items_fuzzwork)
-
-                i = 0
+            if len(type_ids) == 1000:
+                market_data.update(get_bulk_prices(type_ids))
                 type_ids.clear()
 
         # Get leftover data from the bulk
-        response_fuzzwork = requests.get(
-            "https://market.fuzzwork.co.uk/aggregates/",
-            params={
-                "types": ",".join([str(x) for x in type_ids]),
-                "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
-            },
-        )
-
-        items_fuzzwork = response_fuzzwork.json()
-        market_data.append(items_fuzzwork)
+        market_data.update(get_bulk_prices(type_ids))
 
         objs = []
 
-        for objects in market_data:
-            for key, value in objects.items():
-                item_count += 1
+        for key, value in market_data.items():
+            item_count += 1
 
-                item = ItemPrices(
-                    eve_type_id=key,
-                    buy=int(float(value["buy"]["max"])),
-                    sell=int(float(value["sell"]["min"])),
-                    updated=timezone.now(),
-                )
+            item = ItemPrices(
+                eve_type_id=key,
+                buy=int(float(value["buy"]["max"])),
+                sell=int(float(value["sell"]["min"])),
+                updated=timezone.now(),
+            )
 
-                objs.append(item)
+            objs.append(item)
         try:
             ItemPrices.objects.bulk_create(objs)
 

@@ -12,6 +12,8 @@ from buybackprogram.app_settings import (
     BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT,
     BUYBACKPROGRAM_PRICE_SOURCE_ID,
     BUYBACKPROGRAM_TRACKING_PREFILL,
+    BUYBACKPROGRAM_PRICE_METHOD,
+    BUYBACKPROGRAM_PRICE_JANICE_API_KEY,
 )
 from buybackprogram.constants import (
     BLUE_LOOT_TYPE_IDS,
@@ -72,18 +74,33 @@ def get_or_create_prices(item_id):
 
     except ItemPrices.DoesNotExist:
 
-        response_fuzzwork = requests.get(
-            "https://market.fuzzwork.co.uk/aggregates/",
-            params={
-                "types": item_id,
-                "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
-            },
-        )
+        if BUYBACKPROGRAM_PRICE_METHOD == "Fuzzwork":
+            response_fuzzwork = requests.get(
+                "https://market.fuzzwork.co.uk/aggregates/",
+                params={
+                    "types": item_id,
+                    "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
+                },
+            )
 
-        items_fuzzwork = response_fuzzwork.json()
+            items_fuzzwork = response_fuzzwork.json()
 
-        buy = int(float(items_fuzzwork[str(item_id)]["buy"]["max"]))
-        sell = int(float(items_fuzzwork[str(item_id)]["sell"]["min"]))
+            buy = int(float(items_fuzzwork[str(item_id)]["buy"]["max"]))
+            sell = int(float(items_fuzzwork[str(item_id)]["sell"]["min"]))
+        elif BUYBACKPROGRAM_PRICE_METHOD == "Janice":
+            response_janice = requests.get(
+                f"https://janice.e-351.com/api/rest/v2/pricer/{item_id}",
+                headers={'Content-Type': 'text/plain', 'X-ApiKey': 'G9KwKq3465588VPd6747t95Zh94q3W2E', 'accept': 'application/json'}
+            )
+
+            item_janice = response_janice.json()
+            print(item_janice)
+
+            buy = int(float(item_janice["top5AveragePrices"]["buyPrice5DayMedian"]))
+            sell = int(float(item_janice["top5AveragePrices"]["sellPrice5DayMedian"]))
+        else:
+            raise f"Unknown pricing method: {BUYBACKPROGRAM_PRICE_METHOD}"
+
         updated = timezone.now()
 
         try:

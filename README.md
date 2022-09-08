@@ -138,8 +138,12 @@ BUYBACKPROGRAM_TRACKING_PREFILL | This is the prefill tag you will have on the t
 BUYBACKPROGRAM_PRICE_SOURCE_ID | Station ID for fetching base prices. Supports IDs listed on [Fuzzworks API](https://market.fuzzwork.co.uk/api/) | 60003760
 BUYBACKPROGRAM_PRICE_SOURCE_NAME | Display name of your price source. Has no effect on the actual price fetch which uses the ID. | Jita
 BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT | Limit in hours when an item price is considered as outdated | 48
+BUYBACKPROGRAM_PRICE_METHOD | By default Fuzzwork API will be used for pricing, if this is set to "Janice" then the Janice API will be used. | Fuzzwork
+BUYBACKPROGRAM_PRICE_JANICE_API_KEY | The API key to access Janice API. | 
 
 Note: If you change your price source for an old install you need to wait for the price update task to run or manually run it to update your current database prices.
+
+Note: Using Janice API, Jita 4-4 prices will be used with the top 5% average price of the 5 day median price for buy and sell orders. 
 
 ## Step 6 - Adjust Permissions
 Overview of all permissions in this program. Note that all permissions are in the "general" section.

@@ -12,6 +12,8 @@ from allianceauth.services.tasks import QueueOnce
 from buybackprogram.app_settings import (
     BUYBACKPROGRAM_PRICE_SOURCE_ID,
     BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+    BUYBACKPROGRAM_PRICE_METHOD,
+    BUYBACKPROGRAM_PRICE_JANICE_API_KEY,
 )
 from buybackprogram.models import ItemPrices, Owner
 
@@ -41,6 +43,36 @@ TASK_ESI_KWARGS = {
     },
 }
 
+def get_bulk_prices(type_ids):
+    r = None
+    if BUYBACKPROGRAM_PRICE_METHOD == "Fuzzwork":
+        r = requests.get(
+            "https://market.fuzzwork.co.uk/aggregates/",
+            params={
+                "types": ",".join([str(x) for x in type_ids]),
+                "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
+            },
+        ).json()
+    elif BUYBACKPROGRAM_PRICE_METHOD == "Janice":
+        r = response_janice = requests.post(
+            "https://janice.e-351.com/api/rest/v2/pricer?market=2",
+            data = "\n".join([str(x) for x in type_ids]),
+            headers={'Content-Type': 'text/plain', 'X-ApiKey': 'G9KwKq3465588VPd6747t95Zh94q3W2E', 'accept': 'application/json'}
+        ).json()
+        # Make Janice data look like Fuzzworks
+        output = {}
+        for item in r:
+            output[str(item["itemType"]["eid"])] = {
+                    "buy": {"max": str(item["top5AveragePrices"]["buyPrice5DayMedian"])},
+                    "sell": {"min": str(item["top5AveragePrices"]["sellPrice5DayMedian"])}
+                    }
+        r = output
+    else:
+        raise f"Unknown pricing method: {BUYBACKPROGRAM_PRICE_METHOD}"
+
+    return r
+
+
 
 @shared_task
 def update_all_prices():
@@ -52,48 +84,37 @@ def update_all_prices():
     # Get all type ids
     prices = ItemPrices.objects.all()
 
-    logger.debug(
-        "Price update starting for %s items from Fuzzworks API. Using id %s (%s) as source"
-        % (
-            len(prices),
-            BUYBACKPROGRAM_PRICE_SOURCE_ID,
-            BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+    if BUYBACKPROGRAM_PRICE_METHOD == "Fuzzwork":
+        logger.debug(
+            "Price setup starting for %s items from Fuzzworks API from station id %s (%s), this may take up to 30 seconds..."
+            % (
+                len(typeids),
+                BUYBACKPROGRAM_PRICE_SOURCE_ID,
+                BUYBACKPROGRAM_PRICE_SOURCE_NAME,
+            )
         )
-    )
+    elif BUYBACKPROGRAM_PRICE_METHOD == "Janice":
+        logger.debug(
+            "Price setup starting for %s items from Janice API for Jita 4-4, this may take up to 30 seconds..."
+            % (
+                len(typeids),
+            )
+        )
+    else:
+        logger.error( "Unknown pricing method: '%s', skipping" % BUYBACKPROGRAM_PRICE_METHOD)
+        return
+
 
     # Build suitable bulks to fetch prices from API
     for item in prices:
         type_ids.append(item.eve_type_id)
 
-        i += 1
-
-        if i == 1000:
-
-            response_fuzzwork = requests.get(
-                "https://market.fuzzwork.co.uk/aggregates/",
-                params={
-                    "types": ",".join([str(x) for x in type_ids]),
-                    "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
-                },
-            )
-
-            items_fuzzwork = response_fuzzwork.json()
-            market_data.update(items_fuzzwork)
-
-            i = 0
+        if len(type_ids) == 1000:
+            market_data.update(get_bulk_prices(type_ids))
             type_ids.clear()
 
     # Get leftover data from the bulk
-    response_fuzzwork = requests.get(
-        "https://market.fuzzwork.co.uk/aggregates/",
-        params={
-            "types": ",".join([str(x) for x in type_ids]),
-            "station": BUYBACKPROGRAM_PRICE_SOURCE_ID,
-        },
-    )
-
-    items_fuzzwork = response_fuzzwork.json()
-    market_data.update(items_fuzzwork)
+    market_data.update(get_bulk_prices(type_ids))
 
     logger.debug("Market data fetched, starting database update...")
     for price in prices:

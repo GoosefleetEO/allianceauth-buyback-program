@@ -45,8 +45,8 @@ TASK_ESI_KWARGS = {
 
 
 def valid_janice_api_key():
-    c = requests.post(
-        "https://janice.e-351.com/api/rest/v2/pricer?market=2",
+    c = requests.get(
+        "https://janice.e-351.com/api/rest/v2/markets",
         headers={
             "Content-Type": "text/plain",
             "X-ApiKey": BUYBACKPROGRAM_PRICE_JANICE_API_KEY,
@@ -54,7 +54,8 @@ def valid_janice_api_key():
         },
     ).json()
 
-    if c["status"] == 400:
+    if "status" in c:
+        logger.debug("Janice API status: %s" % c)
         return False
     else:
         return True

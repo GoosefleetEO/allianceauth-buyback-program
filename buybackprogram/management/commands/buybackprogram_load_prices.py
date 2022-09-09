@@ -11,7 +11,7 @@ from buybackprogram.app_settings import (
     BUYBACKPROGRAM_PRICE_SOURCE_NAME,
 )
 from buybackprogram.models import ItemPrices
-from buybackprogram.tasks import get_bulk_prices
+from buybackprogram.tasks import get_bulk_prices, valid_janice_api_key
 
 logger = get_extension_logger(__name__)
 
@@ -25,6 +25,7 @@ class Command(BaseCommand):
         item_count = 0
         type_ids = []
         market_data = {}
+        api_up = True
 
         # Get all type ids
         typeids = EveType.objects.values_list("id", flat=True).filter(published=True)
@@ -39,60 +40,69 @@ class Command(BaseCommand):
                 )
             )
         elif BUYBACKPROGRAM_PRICE_METHOD == "Janice":
-            print(
-                "Price setup starting for %s items from Janice API for Jita 4-4, this may take up to 30 seconds..."
-                % (len(typeids),)
-            )
+            if valid_janice_api_key():
+                print(
+                    "Price setup starting for %s items from Janice API for Jita 4-4, this may take up to 30 seconds..."
+                    % (len(typeids))
+                )
+            else:
+                print(
+                    "\033[91mPrice setup failed for Janice, invalid API key! Provide a working key or change price source to Fuzzwork\033[91m\033[0m"
+                )
+
+                api_up = False
+
         else:
             return (
                 "Unknown pricing method: '%s', skipping" % BUYBACKPROGRAM_PRICE_METHOD
             )
 
-        # Build suitable bulks to fetch prices from API
-        for item in typeids:
-            type_ids.append(item)
+        if api_up:
+            # Build suitable bulks to fetch prices from API
+            for item in typeids:
+                type_ids.append(item)
 
-            if len(type_ids) == 1000:
-                market_data.update(get_bulk_prices(type_ids))
-                type_ids.clear()
+                if len(type_ids) == 1000:
+                    market_data.update(get_bulk_prices(type_ids))
+                    type_ids.clear()
 
-        # Get leftover data from the bulk
-        market_data.update(get_bulk_prices(type_ids))
+            # Get leftover data from the bulk
+            market_data.update(get_bulk_prices(type_ids))
 
-        objs = []
+            objs = []
 
-        for key, value in market_data.items():
-            item_count += 1
+            for key, value in market_data.items():
+                item_count += 1
 
-            item = ItemPrices(
-                eve_type_id=key,
-                buy=int(float(value["buy"]["max"])),
-                sell=int(float(value["sell"]["min"])),
-                updated=timezone.now(),
-            )
+                item = ItemPrices(
+                    eve_type_id=key,
+                    buy=int(float(value["buy"]["max"])),
+                    sell=int(float(value["sell"]["min"])),
+                    updated=timezone.now(),
+                )
 
-            objs.append(item)
-        try:
-            ItemPrices.objects.bulk_create(objs)
+                objs.append(item)
+            try:
+                ItemPrices.objects.bulk_create(objs)
 
-            print("Succesfully setup %s prices." % item_count)
-        except IntegrityError:
-            print(
-                "Error: Prices already loaded into database, did you mean to run task.update_all_prices instead?"
-            )
+                print("Succesfully setup %s prices." % item_count)
+            except IntegrityError:
+                print(
+                    "Error: Prices already loaded into database, did you mean to run task.update_all_prices instead?"
+                )
 
-            delete_arg = input("Would you like to delete current prices? (y/n): ")
+                delete_arg = input("Would you like to delete current prices? (y/n): ")
 
-            if delete_arg == "y":
-                ItemPrices.objects.all().delete()
-                return "All price data removed from database. Run the command again to populate the price data."
+                if delete_arg == "y":
+                    ItemPrices.objects.all().delete()
+                    return "All price data removed from database. Run the command again to populate the price data."
+                else:
+                    return "No changes done to price table."
             else:
-                return "No changes done to price table."
-        else:
-            print("Starting to update NPC market prices for all fetched items...")
+                print("Starting to update NPC market prices for all fetched items...")
 
-            EveMarketPrice.objects.update_from_esi()
+                EveMarketPrice.objects.update_from_esi()
 
-            logger.debug("Updated all eveuniverse market prices.")
+                logger.debug("Updated all eveuniverse market prices.")
 
-            return "Price preload completed!"
+                return "Price preload completed!"

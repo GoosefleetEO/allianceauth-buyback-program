@@ -38,6 +38,7 @@ from buybackprogram.notes import (
     note_refined_price_used,
     note_unpublished_item,
 )
+from buybackprogram.tasks import valid_janice_api_key
 
 logger = get_extension_logger(__name__)
 
@@ -87,21 +88,32 @@ def get_or_create_prices(item_id):
 
             buy = int(float(items_fuzzwork[str(item_id)]["buy"]["max"]))
             sell = int(float(items_fuzzwork[str(item_id)]["sell"]["min"]))
+
         elif BUYBACKPROGRAM_PRICE_METHOD == "Janice":
-            response_janice = requests.get(
-                f"https://janice.e-351.com/api/rest/v2/pricer/{item_id}",
-                headers={
-                    "Content-Type": "text/plain",
-                    "X-ApiKey": BUYBACKPROGRAM_PRICE_JANICE_API_KEY,
-                    "accept": "application/json",
-                },
-            )
+            if valid_janice_api_key():
+                response_janice = requests.get(
+                    f"https://janice.e-351.com/api/rest/v2/pricer/{item_id}",
+                    headers={
+                        "Content-Type": "text/plain",
+                        "X-ApiKey": BUYBACKPROGRAM_PRICE_JANICE_API_KEY,
+                        "accept": "application/json",
+                    },
+                )
 
-            item_janice = response_janice.json()
-            print(item_janice)
+                item_janice = response_janice.json()
 
-            buy = int(float(item_janice["top5AveragePrices"]["buyPrice5DayMedian"]))
-            sell = int(float(item_janice["top5AveragePrices"]["sellPrice5DayMedian"]))
+                buy = int(float(item_janice["top5AveragePrices"]["buyPrice5DayMedian"]))
+                sell = int(
+                    float(item_janice["top5AveragePrices"]["sellPrice5DayMedian"])
+                )
+            else:
+                logger.error(
+                    "Price setup failed for Janice, invalid API key! Provide a working key or change price source to Fuzzwork"
+                )
+
+                buy = False
+                sell = False
+
         else:
             raise f"Unknown pricing method: {BUYBACKPROGRAM_PRICE_METHOD}"
 

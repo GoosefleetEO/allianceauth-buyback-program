@@ -44,6 +44,22 @@ TASK_ESI_KWARGS = {
 }
 
 
+def valid_janice_api_key():
+    c = requests.post(
+        "https://janice.e-351.com/api/rest/v2/pricer?market=2",
+        headers={
+            "Content-Type": "text/plain",
+            "X-ApiKey": BUYBACKPROGRAM_PRICE_JANICE_API_KEY,
+            "accept": "application/json",
+        },
+    ).json()
+
+    if c["status"] == 400:
+        return False
+    else:
+        return True
+
+
 def get_bulk_prices(type_ids):
     r = None
     if BUYBACKPROGRAM_PRICE_METHOD == "Fuzzwork":
@@ -64,6 +80,7 @@ def get_bulk_prices(type_ids):
                 "accept": "application/json",
             },
         ).json()
+
         # Make Janice data look like Fuzzworks
         output = {}
         for item in r:
@@ -82,6 +99,7 @@ def get_bulk_prices(type_ids):
 def update_all_prices():
     type_ids = []
     market_data = {}
+    api_up = True
 
     # Get all type ids
     prices = ItemPrices.objects.all()
@@ -96,46 +114,55 @@ def update_all_prices():
             )
         )
     elif BUYBACKPROGRAM_PRICE_METHOD == "Janice":
-        logger.debug(
-            "Price setup starting for %s items from Janice API for Jita 4-4, this may take up to 30 seconds..."
-            % (len(prices),)
-        )
+        if valid_janice_api_key():
+            logger.debug(
+                "Price setup starting for %s items from Janice API for Jita 4-4, this may take up to 30 seconds..."
+                % (len(prices),)
+            )
+        else:
+            logger.debug(
+                "Price setup failed for Janice, invalid API key! Provide a working key or change price source to Fuzzwork"
+            )
+            api_up = False
     else:
         logger.error(
             "Unknown pricing method: '%s', skipping" % BUYBACKPROGRAM_PRICE_METHOD
         )
         return
 
-    # Build suitable bulks to fetch prices from API
-    for item in prices:
-        type_ids.append(item.eve_type_id)
+    if api_up:
+        # Build suitable bulks to fetch prices from API
+        for item in prices:
+            type_ids.append(item.eve_type_id)
 
-        if len(type_ids) == 1000:
-            market_data.update(get_bulk_prices(type_ids))
-            type_ids.clear()
+            if len(type_ids) == 1000:
+                market_data.update(get_bulk_prices(type_ids))
+                type_ids.clear()
 
-    # Get leftover data from the bulk
-    market_data.update(get_bulk_prices(type_ids))
+        # Get leftover data from the bulk
+        market_data.update(get_bulk_prices(type_ids))
 
-    logger.debug("Market data fetched, starting database update...")
-    for price in prices:
+        logger.debug("Market data fetched, starting database update...")
+        for price in prices:
 
-        buy = int(float(market_data[str(price.eve_type_id)]["buy"]["max"]))
-        sell = int(float(market_data[str(price.eve_type_id)]["sell"]["min"]))
+            buy = int(float(market_data[str(price.eve_type_id)]["buy"]["max"]))
+            sell = int(float(market_data[str(price.eve_type_id)]["sell"]["min"]))
 
-        price.buy = buy
-        price.sell = sell
-        price.updated = timezone.now()
+            price.buy = buy
+            price.sell = sell
+            price.updated = timezone.now()
 
-    try:
-        ItemPrices.objects.bulk_update(prices, ["buy", "sell", "updated"])
-        logger.debug("All prices succesfully updated")
-    except Error as e:
-        logger.error("Error updating prices: %s" % e)
+        try:
+            ItemPrices.objects.bulk_update(prices, ["buy", "sell", "updated"])
+            logger.debug("All prices succesfully updated")
+        except Error as e:
+            logger.error("Error updating prices: %s" % e)
 
-    EveMarketPrice.objects.update_from_esi()
+        EveMarketPrice.objects.update_from_esi()
 
-    logger.debug("Updated all eveuniverse market prices.")
+        logger.debug("Updated all eveuniverse market prices.")
+    else:
+        logger.error("Price source API is not up! Prices not updated.")
 
 
 @shared_task(

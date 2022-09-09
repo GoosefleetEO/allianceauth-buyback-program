@@ -757,6 +757,13 @@ class Location(models.Model):
 class Program(models.Model):
     """An Eve Online buyback program"""
 
+    class Expiration(models.TextChoices):
+        DAY1 = "1 Day", _("1 Day")
+        DAY3 = "3 Days", _("3 Days")
+        WEEK1 = "1 Week", _("1 Week")
+        WEEK2 = "2 Weeks", _("2 Weeks")
+        WEEK4 = "4 Weeks", _("4 Weeks")
+
     name = models.CharField(
         verbose_name="Name/description",
         max_length=64,
@@ -782,6 +789,13 @@ class Program(models.Model):
         Location,
         help_text="The location where contracts should be created at.",
         related_name="+",
+    )
+
+    expiration = models.CharField(
+        max_length=7,
+        choices=Expiration.choices,
+        default=Expiration.WEEK2,
+        help_text="Expiration time the contracts should bet set to.",
     )
 
     tax = models.IntegerField(

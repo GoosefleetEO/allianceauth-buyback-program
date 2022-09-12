@@ -17,6 +17,11 @@ urlpatterns = [
         name="location_remove",
     ),
     path(
+        "program/<int:program_pk>/performance", 
+        stats.program_performance, 
+        name="program_performance",
+    ),
+    path(
         "program/<int:program_pk>/special_taxes",
         special_taxes.program_special_taxes,
         name="program_special_taxes",

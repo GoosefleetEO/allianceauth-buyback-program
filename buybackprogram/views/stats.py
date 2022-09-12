@@ -137,14 +137,14 @@ def program_performance(request, program_pk):
 
             # Collect ISK data per user
             user = tracking.contract.assignee_id
-            if not user in monthstats["users"][month]:
+            if user not in monthstats["users"][month]:
                 monthstats["users"][month][user] = 0
             monthstats["users"][month][user] += tracking.contract.price
 
             # Collect ISK data per items
             tracking_items = TrackingItem.objects.filter(tracking=tracking)
             for item in tracking_items:
-                if not item in monthstats["items"][month]:
+                if item not in monthstats["items"][month]:
                     monthstats["items"][month][item] = {
                         "descript": item.eve_type,
                         "isk": 0,

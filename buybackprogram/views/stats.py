@@ -1,10 +1,11 @@
 import json
+from datetime import datetime
+
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
 from django.shortcuts import render
 from django.utils import timezone
 from eveuniverse.models import EveEntity
-from datetime import datetime
 
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.services.hooks import get_extension_logger
@@ -98,17 +99,16 @@ def my_stats(request):
 def program_performance(request, program_pk):
     # Tracker values
     monthstats = {
-            "status": {},
-            "isk": {},
-            "n": {},
-            "items": {},
-            "users": {},
+        "status": {},
+        "isk": {},
+        "n": {},
+        "items": {},
+        "users": {},
     }
 
     # Get all tracking objects that have a linked contract to them for the user
-    tracking_numbers = (
-        Tracking.objects.filter(program_id=program_pk)
-        .prefetch_related("contract")
+    tracking_numbers = Tracking.objects.filter(program_id=program_pk).prefetch_related(
+        "contract"
     )
 
     # Loop all tracking objects
@@ -116,7 +116,9 @@ def program_performance(request, program_pk):
         month = datetime.strftime(tracking.contract.date_issued, "%Y-%m")
 
         if month not in monthstats["status"]:
-            monthstats["status"][month] = {}    # status of all contracts issued during a given month
+            monthstats["status"][
+                month
+            ] = {}  # status of all contracts issued during a given month
 
         # Gather stats on all contracts' statuses
         if tracking.contract.status not in monthstats["status"][month]:
@@ -126,10 +128,10 @@ def program_performance(request, program_pk):
         # For finished contracts, gather more data
         if tracking.contract.status == "finished":
             if month not in monthstats["n"]:
-                monthstats["n"][month] = 0          # Number of finished contracts that month
-                monthstats["isk"][month] = 0        # Amount of ISK exchanged that month
-                monthstats["items"][month] = {}     # Highest ISK items
-                monthstats["users"][month] = {}     # Highest ISK users
+                monthstats["n"][month] = 0  # Number of finished contracts that month
+                monthstats["isk"][month] = 0  # Amount of ISK exchanged that month
+                monthstats["items"][month] = {}  # Highest ISK items
+                monthstats["users"][month] = {}  # Highest ISK users
             monthstats["isk"][month] += tracking.contract.price
             monthstats["n"][month] += 1
 
@@ -143,34 +145,57 @@ def program_performance(request, program_pk):
             tracking_items = TrackingItem.objects.filter(tracking=tracking)
             for item in tracking_items:
                 if not item in monthstats["items"][month]:
-                    monthstats["items"][month][item] = {"descript": item.eve_type, "isk": 0, "q": 0 }
+                    monthstats["items"][month][item] = {
+                        "descript": item.eve_type,
+                        "isk": 0,
+                        "q": 0,
+                    }
                 monthstats["items"][month][item]["isk"] += item.buy_value
                 monthstats["items"][month][item]["q"] += item.quantity
-
 
     # Calculate top 10 users and items for each month
     for month in monthstats["items"].keys():
         h_item = []
         h_user = []
-        for it in sorted(monthstats["items"][month], key=lambda x: -monthstats["items"][month][x]["isk"]):
-            h_item.append((it.eve_type.name, f"https://image.eveonline.com/Type/{it.eve_type.id}_32.png", monthstats["items"][month][it]["isk"]))
+        for it in sorted(
+            monthstats["items"][month],
+            key=lambda x: -monthstats["items"][month][x]["isk"],
+        ):
+            h_item.append(
+                (
+                    it.eve_type.name,
+                    f"https://image.eveonline.com/Type/{it.eve_type.id}_32.png",
+                    monthstats["items"][month][it]["isk"],
+                )
+            )
             if len(h_item) == 10:
                 break
 
-        for u in sorted(monthstats["users"][month], key=lambda x: -monthstats["users"][month][x]):
+        for u in sorted(
+            monthstats["users"][month], key=lambda x: -monthstats["users"][month][x]
+        ):
             user = EveEntity.objects.resolve_name(u)
-            h_user.append((user, f"https://images.evetech.net/characters/{u}/portrait?size=32", monthstats["users"][month][u]))
+            h_user.append(
+                (
+                    user,
+                    f"https://images.evetech.net/characters/{u}/portrait?size=32",
+                    monthstats["users"][month][u],
+                )
+            )
             if len(h_user) == 10:
                 break
-
 
         monthstats["items"][month] = h_item
         monthstats["users"][month] = h_user
 
     # Reformat data so that it is easier to use billboard.js
     for cat in ("isk", "n"):
-        x = ["x", ]
-        y = [cat, ]
+        x = [
+            "x",
+        ]
+        y = [
+            cat,
+        ]
         for m in sorted(monthstats[cat].keys()):
             x.append(m)
             if cat == "isk":

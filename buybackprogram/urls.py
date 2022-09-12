@@ -17,8 +17,8 @@ urlpatterns = [
         name="location_remove",
     ),
     path(
-        "program/<int:program_pk>/performance", 
-        stats.program_performance, 
+        "program/<int:program_pk>/performance",
+        stats.program_performance,
         name="program_performance",
     ),
     path(

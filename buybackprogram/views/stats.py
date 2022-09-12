@@ -144,14 +144,14 @@ def program_performance(request, program_pk):
             # Collect ISK data per items
             tracking_items = TrackingItem.objects.filter(tracking=tracking)
             for item in tracking_items:
-                if item not in monthstats["items"][month]:
-                    monthstats["items"][month][item] = {
-                        "descript": item.eve_type,
+                if item.eve_type.id not in monthstats["items"][month]:
+                    monthstats["items"][month][item.eve_type.id] = {
+                        "descript": item.eve_type.name,
                         "isk": 0,
                         "q": 0,
                     }
-                monthstats["items"][month][item]["isk"] += item.buy_value
-                monthstats["items"][month][item]["q"] += item.quantity
+                monthstats["items"][month][item.eve_type.id]["isk"] += item.buy_value
+                monthstats["items"][month][item.eve_type.id]["q"] += item.quantity
 
     # Calculate top 10 users and items for each month
     for month in monthstats["items"].keys():
@@ -163,8 +163,8 @@ def program_performance(request, program_pk):
         ):
             h_item.append(
                 (
-                    it.eve_type.name,
-                    f"https://image.eveonline.com/Type/{it.eve_type.id}_32.png",
+                    monthstats["items"][month][it]["descript"],
+                    f"https://image.eveonline.com/Type/{it}_32.png",
                     monthstats["items"][month][it]["isk"],
                 )
             )

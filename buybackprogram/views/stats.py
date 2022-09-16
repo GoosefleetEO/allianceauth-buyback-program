@@ -265,7 +265,7 @@ def program_performance(request, program_pk):
             if strata == "overall":
                 y = [["ISK"], ["n"]]
             for m in allmonths:
-                if not m in (monthstats[strata][yi]):
+                if m not in (monthstats[strata][yi]):
                     monthstats[strata][yi][m] = [0, 0]
                 if strata == "overall":
                     y[0].append(round(monthstats[strata][yi][m][0] / 1.0e9, 2))

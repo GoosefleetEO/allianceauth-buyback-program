@@ -1,0 +1,81 @@
+{% extends 'buybackprogram/page.html' %}
+{% load i18n %}
+{% load humanize %}
+{% load bootstrap %}
+{% load static %}
+
+{% block body %}
+<div class="panel-heading">
+  <h3 class="panel-title">Buyback Leaderboards</h3>
+</div>
+<div class="panel-body" style="min-height: 100px;">
+  <div class='row'>
+    <div class='col-md-1'>
+	    <button class="btn btn-default" onclick="prior()"><span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span></button>
+    </div>
+    <div class='col-md-7 col-md-offset-3'>
+	    <h3>Month: <span id="month"></span></h3>
+    </div>
+    <div class='col-md-1'>
+	    <button class="btn btn-default" onclick="next()"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
+    </div>
+  </div>
+  <div class='row'>
+    <div class='col-md-12'>
+	    <table class="table table-striped"><thead><tr><th>Name</th><th>ISK</th></tr></thead>
+		    <tbody id="data"></tbody>
+	    </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_javascript %}
+<script type="text/javascript">
+{% autoescape off %}
+var data;
+var curi;
+
+function next() {
+	curi++;
+	if (curi >= data.months.length) {
+		curi = data.months.length - 1;
+	}
+	render();
+}
+
+function prior() {
+	curi--;
+	if (curi < 0) {
+		curi = 0;
+	}
+	render();
+}
+
+function render() {
+	var month = data.months[curi].split(":")[1];
+	$("#month").html(month);
+	var html = "";
+	data.users[data.months[curi]].forEach(function(d) {
+		html += "<tr><td><img src='" + d[1] + "'/> " + d[0] + " </td><td> " + d[2].toLocaleString("en-US") + " </td></tr>";
+	});
+	$("#data").html(html);
+}
+
+(function() {
+	data = {{stats}};
+	curi = data.months.length - 1;
+	console.log(data);
+	console.log(curi);
+	render();
+})();
+{% endautoescape %}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/billboard.js/3.5.1/billboard.min.css" integrity="sha512-RMOXiaUbYERixbCxwbAyhJcq/KDpbXMZGLLUbexHB5JWdXsZONmsv2tLycOcTnAGCDZ9qPGG5pbd6bnL8YRhSw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+{% endblock %}
+
+{% block extra_script %}
+{% endblock %}

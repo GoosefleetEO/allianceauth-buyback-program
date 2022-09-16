@@ -17,6 +17,11 @@ urlpatterns = [
         name="location_remove",
     ),
     path(
+        "program/<int:program_pk>/leaderboard",
+        stats.leaderboard,
+        name="program_leaderboard",
+    ),
+    path(
         "program/<int:program_pk>/performance",
         stats.program_performance,
         name="program_performance",

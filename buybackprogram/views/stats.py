@@ -114,7 +114,7 @@ def leaderboard(request, program_pk):
     for tracking in tracking_numbers:
         # For finished contracts, gather more data
         if tracking.contract.status == "finished":
-            month = datetime.strftime(tracking.contract.date_issued, "%Y-%m")
+            month = datetime.strftime(tracking.contract.date_issued, "%Y-%m:%B %Y")
             if month not in monthstats["users"]:
                 monthstats["users"][month] = {}  # User data per month
 
@@ -151,7 +151,7 @@ def leaderboard(request, program_pk):
 
 
 @login_required
-@permission_required("buybackprogram.basic_access")
+@permission_required("buybackprogram.manage_programs")
 def program_performance(request, program_pk):
     # Tracker values
     monthstats = {

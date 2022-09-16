@@ -96,24 +96,103 @@ def my_stats(request):
 
 @login_required
 @permission_required("buybackprogram.basic_access")
+def leaderboard(request, program_pk):
+    # Tracker values
+    monthstats = {
+        "users": {},
+        "months": [],
+    }
+
+    # Get all tracking objects that have a linked contract to them for the user
+    tracking_numbers = (
+        Tracking.objects.filter(program_id=program_pk)
+        .filter(contract__isnull=False)
+        .prefetch_related("contract")
+    )
+
+    # Loop all tracking objects
+    for tracking in tracking_numbers:
+        # For finished contracts, gather more data
+        if tracking.contract.status == "finished":
+            month = datetime.strftime(tracking.contract.date_issued, "%Y-%m")
+            if month not in monthstats["users"]:
+                monthstats["users"][month] = {}  # User data per month
+
+            # Collect ISK data per user
+            user = tracking.contract.issuer_id
+            if user not in monthstats["users"][month]:
+                monthstats["users"][month][user] = 0
+            monthstats["users"][month][user] += tracking.contract.price
+
+    # Calculate top 20 users for each month
+    for month in sorted(monthstats["users"].keys()):
+        monthstats["months"].append(month)
+        h_user = []
+        for u in sorted(
+            monthstats["users"][month], key=lambda x: -monthstats["users"][month][x]
+        ):
+            user = EveEntity.objects.resolve_name(u)
+            h_user.append(
+                (
+                    user,
+                    f"https://images.evetech.net/characters/{u}/portrait?size=32",
+                    monthstats["users"][month][u],
+                )
+            )
+            if len(h_user) == 20:
+                break
+        monthstats["users"][month] = h_user
+
+    context = {
+        "stats": json.dumps(monthstats),
+    }
+
+    return render(request, "buybackprogram/leaderboards.html", context)
+
+
+@login_required
+@permission_required("buybackprogram.basic_access")
 def program_performance(request, program_pk):
     # Tracker values
     monthstats = {
         "status": {},
-        "isk": {},
-        "n": {},
+        "overall": {"all": {}},
         "items": {},
-        "users": {},
+        "categories": {},
     }
+    allmonths = set()
+
+    # Category to Item mapping
+    category2items = {}
+
+    # Export data
+    dumpdata = [
+        [
+            "Contract ID",
+            "Date Issued",
+            "Date Finished",
+            "User ID",
+            "User Name",
+            "Total ISK",
+            "Object Cateogry",
+            "Object ID",
+            "Object Name",
+            "Object Quant",
+            "Object ISK",
+        ]
+    ]
 
     # Get all tracking objects that have a linked contract to them for the user
-    tracking_numbers = Tracking.objects.filter(program_id=program_pk).prefetch_related(
-        "contract"
+    tracking_numbers = (
+        Tracking.objects.filter(program_id=program_pk)
+        .filter(contract__isnull=False)
+        .prefetch_related("contract")
     )
 
     # Loop all tracking objects
     for tracking in tracking_numbers:
         month = datetime.strftime(tracking.contract.date_issued, "%Y-%m")
+        allmonths.add(month)
 
         if month not in monthstats["status"]:
             monthstats["status"][
@@ -127,89 +206,96 @@ def program_performance(request, program_pk):
 
         # For finished contracts, gather more data
         if tracking.contract.status == "finished":
-            if month not in monthstats["n"]:
-                monthstats["n"][month] = 0  # Number of finished contracts that month
-                monthstats["isk"][month] = 0  # Amount of ISK exchanged that month
-                monthstats["items"][month] = {}  # Highest ISK items
-                monthstats["users"][month] = {}  # Highest ISK users
-            monthstats["isk"][month] += tracking.contract.price
-            monthstats["n"][month] += 1
+            # "overall": {"all": {"isk": {}, "q": {}, }
+            if month not in monthstats["overall"]["all"]:
+                monthstats["overall"]["all"][month] = [0, 0]  # isk, q
 
-            # Collect ISK data per user
-            user = tracking.contract.assignee_id
-            if user not in monthstats["users"][month]:
-                monthstats["users"][month][user] = 0
-            monthstats["users"][month][user] += tracking.contract.price
+            monthstats["overall"]["all"][month][0] += tracking.contract.price
+            monthstats["overall"]["all"][month][1] += 1
 
             # Collect ISK data per items
             tracking_items = TrackingItem.objects.filter(tracking=tracking)
             for item in tracking_items:
-                if item.eve_type.id not in monthstats["items"][month]:
-                    monthstats["items"][month][item.eve_type.id] = {
-                        "descript": item.eve_type.name,
-                        "isk": 0,
-                        "q": 0,
-                    }
-                monthstats["items"][month][item.eve_type.id]["isk"] += item.buy_value
-                monthstats["items"][month][item.eve_type.id]["q"] += item.quantity
+                if item.eve_type.name not in monthstats["items"]:
+                    monthstats["items"][item.eve_type.name] = {}
+                if month not in monthstats["items"][item.eve_type.name]:
+                    monthstats["items"][item.eve_type.name][month] = [0, 0]
+                monthstats["items"][item.eve_type.name][month][0] += item.buy_value
+                monthstats["items"][item.eve_type.name][month][1] += item.quantity
 
-    # Calculate top 10 users and items for each month
-    for month in monthstats["items"].keys():
-        h_item = []
-        h_user = []
-        for it in sorted(
-            monthstats["items"][month],
-            key=lambda x: -monthstats["items"][month][x]["isk"],
-        ):
-            h_item.append(
-                (
-                    monthstats["items"][month][it]["descript"],
-                    f"https://image.eveonline.com/Type/{it}_32.png",
-                    monthstats["items"][month][it]["isk"],
+                # Collect item category data
+                catid = item.eve_type.eve_group.name
+                if catid not in category2items:
+                    category2items[catid] = set()
+                category2items[catid].add(item.eve_type.name)
+
+                if catid not in monthstats["categories"]:
+                    monthstats["categories"][catid] = {}
+                if month not in monthstats["categories"][catid]:
+                    monthstats["categories"][catid][month] = [0, 0]
+                monthstats["categories"][catid][month][0] += item.buy_value
+                monthstats["categories"][catid][month][1] += item.quantity
+
+                # Collect data for export
+                dumpdata.append(
+                    [
+                        tracking.id,
+                        datetime.strftime(
+                            tracking.contract.date_issued, "%Y-%m-%d %H:%M:%S"
+                        ),
+                        datetime.strftime(
+                            tracking.contract.date_completed, "%Y-%m-%d %H:%M:%S"
+                        ),
+                        tracking.contract.issuer_id,
+                        EveEntity.objects.resolve_name(tracking.contract.issuer_id),
+                        tracking.contract.price,
+                        item.eve_type.eve_group.name,
+                        item.eve_type.id,
+                        item.eve_type.name,
+                        item.quantity,
+                        item.buy_value,
+                    ]
                 )
-            )
-            if len(h_item) == 10:
-                break
-
-        for u in sorted(
-            monthstats["users"][month], key=lambda x: -monthstats["users"][month][x]
-        ):
-            user = EveEntity.objects.resolve_name(u)
-            h_user.append(
-                (
-                    user,
-                    f"https://images.evetech.net/characters/{u}/portrait?size=32",
-                    monthstats["users"][month][u],
-                )
-            )
-            if len(h_user) == 10:
-                break
-
-        monthstats["items"][month] = h_item
-        monthstats["users"][month] = h_user
 
     # Reformat data so that it is easier to use billboard.js
-    for cat in ("isk", "n"):
-        x = [
-            "x",
-        ]
-        y = [
-            cat,
-        ]
-        for m in sorted(monthstats[cat].keys()):
-            x.append(m)
-            if cat == "isk":
-                y.append("%.2f" % (monthstats[cat][m] / 1.0e9))
-            else:
-                y.append(monthstats[cat][m])
-        monthstats[cat] = {"x": x, "y": y}
+    allmonths = sorted(list(allmonths))
+    for strata in ("overall", "items", "categories"):
+        for yi in monthstats[strata].keys():
+            y = [[yi], [yi]]
+            if strata == "overall":
+                y = [["ISK"], ["n"]]
+            for m in allmonths:
+                if not m in (monthstats[strata][yi]):
+                    monthstats[strata][yi][m] = [0, 0]
+                if strata == "overall":
+                    y[0].append(round(monthstats[strata][yi][m][0] / 1.0e9, 2))
+                else:
+                    y[0].append(monthstats[strata][yi][m][0])
+                y[1].append(monthstats[strata][yi][m][1])
+            monthstats[strata][yi] = y
+    monthstats["x"] = ["x"] + allmonths
+
+    for cat in category2items:
+        category2items[cat] = list(category2items[cat])
+
+    # Break down of categories by last three months:
+    lastthree = []
+    for yi in monthstats["categories"].keys():
+        lastthree.append((yi, sum(monthstats["categories"][yi][0][-3:])))
+
+    # Sanitize CSV data
+    for i in range(len(dumpdata)):
+        for j in range(len(dumpdata[i])):
+            dumpdata[i][j] = dumpdata[i][j].replace(",", " ")
 
     context = {
         "stats": json.dumps(monthstats),
+        "lastthree": json.dumps(lastthree),
+        "categories": json.dumps(category2items),
+        "export": json.dumps(dumpdata),
     }
 
     return render(request, "buybackprogram/performance.html", context)
-
 
 @login_required
 @permission_required("buybackprogram.manage_programs")

@@ -286,7 +286,7 @@ def program_performance(request, program_pk):
     # Sanitize CSV data
     for i in range(len(dumpdata)):
         for j in range(len(dumpdata[i])):
-            dumpdata[i][j] = dumpdata[i][j].replace(",", " ")
+            dumpdata[i][j] = str(dumpdata[i][j]).replace(",", " ")
 
     context = {
         "stats": json.dumps(monthstats),
@@ -296,6 +296,7 @@ def program_performance(request, program_pk):
     }
 
     return render(request, "buybackprogram/performance.html", context)
+
 
 @login_required
 @permission_required("buybackprogram.manage_programs")

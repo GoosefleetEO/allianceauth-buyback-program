@@ -25,6 +25,11 @@
     </div>
   </div>
   <div class='row'>
+    <div class='col-md-12'>
+	    <div id="donations"></div>
+    </div>
+  </div>
+  <div class='row'>
     <div class='col-md-6'>
 	    <div id="categoryisk"></div>
     </div>
@@ -163,6 +168,26 @@ var data;
 			y2: { label: "Number of Finished Contracts", show: true }
 		},
 		bindto:"#isk"
+	});
+
+	var donationchart = bb.generate({
+		data: {
+			x: "x",
+			columns: [ data["x"], data["donations"]["all"][0], data["donations"]["all"][1] ],
+			axes: { isk: "y", n: "y2"},
+		},
+		axis: {
+			x: {
+				type: "timeseries",
+				tick: { format: "%Y-%m" }
+			},
+			y: {
+				tick: { format: function(x) { return d3.format("$,")(x); } },
+				label: "Donated ISK"
+			},
+			y2: { label: "Number of Donations", show: true }
+		},
+		bindto:"#donations"
 	});
 
 	var catisk = bb.generate({

@@ -152,6 +152,7 @@ def program_performance(request, program_pk):
         "overall": {"all": {}},
         "items": {},
         "categories": {},
+        "donations": {"all": {}},
     }
     allmonths = set()
 
@@ -202,9 +203,13 @@ def program_performance(request, program_pk):
             # "overall": {"all": {"isk": {}, "q": {}, }
             if month not in monthstats["overall"]["all"]:
                 monthstats["overall"]["all"][month] = [0, 0]  # isk, q
+                monthstats["donations"]["all"][month] = [0, 0]  # isk, q
 
             monthstats["overall"]["all"][month][0] += tracking.contract.price
             monthstats["overall"]["all"][month][1] += 1
+
+            monthstats["donations"]["all"][month][0] += tracking.donation
+            monthstats["donations"]["all"][month][1] += 1
 
             # Collect ISK data per items
             tracking_items = TrackingItem.objects.filter(tracking=tracking)
@@ -252,10 +257,10 @@ def program_performance(request, program_pk):
 
     # Reformat data so that it is easier to use billboard.js
     allmonths = sorted(list(allmonths))
-    for strata in ("overall", "items", "categories"):
+    for strata in ("overall", "items", "categories", "donations"):
         for yi in monthstats[strata].keys():
             y = [[yi], [yi]]
-            if strata == "overall":
+            if strata == "overall" or strata == "donations":
                 y = [["ISK"], ["n"]]
             for m in allmonths:
                 if m not in (monthstats[strata][yi]):

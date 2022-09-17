@@ -22,7 +22,7 @@
   </div>
   <div class='row'>
     <div class='col-md-12'>
-	    <table class="table table-striped"><thead><tr><th>Name</th><th>ISK</th></tr></thead>
+	    <table id="leaderboard" class="table table-striped"><thead><tr><th>Name</th><th>Contract Total (ISK)</th><th>Donation Total (ISK)</th></tr></thead>
 		    <tbody id="data"></tbody>
 	    </table>
     </div>
@@ -31,10 +31,12 @@
 {% endblock %}
 
 {% block extra_javascript %}
+<script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
 {% autoescape off %}
 var data;
 var curi;
+var leaderboard;
 
 function next() {
 	curi++;
@@ -53,13 +55,15 @@ function prior() {
 }
 
 function render() {
+	leaderboard.clear();
 	var month = data.months[curi].split(":")[1];
 	$("#month").html(month);
-	var html = "";
-	data.users[data.months[curi]].forEach(function(d) {
-		html += "<tr><td><img src='" + d[1] + "'/> " + d[0] + " </td><td> " + d[2].toLocaleString("en-US") + " </td></tr>";
-	});
-	$("#data").html(html);
+	for (const [uid, arr] of Object.entries(data.users[data.months[curi]])) {
+		leaderboard.row.add(["<img src='" + data.userinfo[uid].pic + "'/> " + data.userinfo[uid].name,
+			arr[0].toLocaleString("en-US"),
+			arr[1].toLocaleString("en-US") ]);
+	}
+	leaderboard.draw();
 }
 
 (function() {
@@ -67,6 +71,9 @@ function render() {
 	curi = data.months.length - 1;
 	console.log(data);
 	console.log(curi);
+	leaderboard = $('#leaderboard').DataTable({
+		"order":[[1, 'desc']],
+	});
 	render();
 })();
 {% endautoescape %}
@@ -75,6 +82,7 @@ function render() {
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/billboard.js/3.5.1/billboard.min.css" integrity="sha512-RMOXiaUbYERixbCxwbAyhJcq/KDpbXMZGLLUbexHB5JWdXsZONmsv2tLycOcTnAGCDZ9qPGG5pbd6bnL8YRhSw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"/>
 {% endblock %}
 
 {% block extra_script %}

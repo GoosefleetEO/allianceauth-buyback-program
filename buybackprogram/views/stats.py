@@ -99,8 +99,9 @@ def my_stats(request):
 def leaderboard(request, program_pk):
     # Tracker values
     monthstats = {
-        "users": {},
-        "months": [],
+        "users": {},  # monthly stats per user
+        "userinfo": {},  # profile information per user
+        "months": None,  # all months
     }
 
     # Get all tracking objects that have a linked contract to them for the user
@@ -121,28 +122,20 @@ def leaderboard(request, program_pk):
             # Collect ISK data per user
             user = tracking.contract.issuer_id
             if user not in monthstats["users"][month]:
-                monthstats["users"][month][user] = 0
-            monthstats["users"][month][user] += tracking.contract.price
+                monthstats["users"][month][user] = [
+                    0, # contract total
+                    0, # donation total
+                ]
+            monthstats["users"][month][user][0] += tracking.contract.price
+            monthstats["users"][month][user][1] += tracking.donation
 
-    # Calculate top 20 users for each month
-    for month in sorted(monthstats["users"].keys()):
-        monthstats["months"].append(month)
-        h_user = []
-        for u in sorted(
-            monthstats["users"][month], key=lambda x: -monthstats["users"][month][x]
-        ):
-            user = EveEntity.objects.resolve_name(u)
-            h_user.append(
-                (
-                    user,
-                    f"https://images.evetech.net/characters/{u}/portrait?size=32",
-                    monthstats["users"][month][u],
-                )
-            )
-            if len(h_user) == 20:
-                break
-        monthstats["users"][month] = h_user
+            if user not in monthstats["userinfo"]:
+                monthstats["userinfo"][user] = {
+                    "name": EveEntity.objects.resolve_name(user),
+                    "pic": f"https://images.evetech.net/characters/{user}/portrait?size=32",
+                }
 
+    monthstats["months"] = sorted(list(monthstats["users"].keys()))
     context = {
         "stats": json.dumps(monthstats),
     }

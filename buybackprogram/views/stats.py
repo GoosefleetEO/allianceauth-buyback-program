@@ -123,8 +123,8 @@ def leaderboard(request, program_pk):
             user = tracking.contract.issuer_id
             if user not in monthstats["users"][month]:
                 monthstats["users"][month][user] = [
-                    0, # contract total
-                    0, # donation total
+                    0,  # contract total
+                    0,  # donation total
                 ]
             monthstats["users"][month][user][0] += tracking.contract.price
             monthstats["users"][month][user][1] += tracking.donation
@@ -274,7 +274,9 @@ def program_performance(request, program_pk):
     # Break down of categories by last three months:
     lastthree = []
     for yi in monthstats["categories"].keys():
-        lastthree.append((yi, sum(monthstats["categories"][yi][0][-3:])))
+        calc = monthstats["categories"][yi][0].copy()
+        calc.pop(0)
+        lastthree.append((yi, sum(calc[-3:])))
 
     # Sanitize CSV data
     for i in range(len(dumpdata)):

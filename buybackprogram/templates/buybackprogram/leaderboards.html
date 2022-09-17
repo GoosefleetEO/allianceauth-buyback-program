@@ -39,6 +39,7 @@ var curi;
 var leaderboard;
 
 function next() {
+	if (data.months.length == 0) { return; }
 	curi++;
 	if (curi >= data.months.length) {
 		curi = data.months.length - 1;
@@ -47,6 +48,7 @@ function next() {
 }
 
 function prior() {
+	if (data.months.length == 0) { return; }
 	curi--;
 	if (curi < 0) {
 		curi = 0;
@@ -55,6 +57,7 @@ function prior() {
 }
 
 function render() {
+	if (data.months.length == 0) { return; }
 	leaderboard.clear();
 	var month = data.months[curi].split(":")[1];
 	$("#month").html(month);
@@ -68,9 +71,8 @@ function render() {
 
 (function() {
 	data = {{stats}};
+	if (data.months.length == 0) { return; }
 	curi = data.months.length - 1;
-	console.log(data);
-	console.log(curi);
 	leaderboard = $('#leaderboard').DataTable({
 		"order":[[1, 'desc']],
 	});

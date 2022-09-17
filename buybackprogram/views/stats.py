@@ -209,7 +209,8 @@ def program_performance(request, program_pk):
             monthstats["overall"]["all"][month][1] += 1
 
             monthstats["donations"]["all"][month][0] += tracking.donation
-            monthstats["donations"]["all"][month][1] += 1
+            if tracking.donation > 0:
+                monthstats["donations"]["all"][month][1] += 1
 
             # Collect ISK data per items
             tracking_items = TrackingItem.objects.filter(tracking=tracking)

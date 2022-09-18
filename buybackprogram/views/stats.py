@@ -261,15 +261,20 @@ def program_performance(request, program_pk):
     for strata in ("overall", "items", "categories", "donations"):
         for yi in monthstats[strata].keys():
             y = [[yi], [yi]]
-            if strata == "overall" or strata == "donations":
-                y = [["ISK"], ["Count"]]
+            # Overall ISK
+            if strata == "overall":
+                y = [["Bought"], ["Contract count"]]
+            # Donation ISK
+            if strata == "donations":
+                y = [["Donations"], ["Donation count"]]
+
             for m in allmonths:
                 if m not in (monthstats[strata][yi]):
                     monthstats[strata][yi][m] = [0, 0]
                 if strata == "overall":
                     y[0].append(round(monthstats[strata][yi][m][0] / 1.0e9, 2))
                 else:
-                    y[0].append(monthstats[strata][yi][m][0])
+                    y[0].append(monthstats[strata][yi][m][0] / 1.0e9)
                 y[1].append(monthstats[strata][yi][m][1])
             monthstats[strata][yi] = y
     monthstats["x"] = ["x"] + allmonths

@@ -146,6 +146,8 @@ def leaderboard(request, program_pk):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def program_performance(request, program_pk):
+    firstbench = datetime.now()
+    lastbench = datetime.now()
     # Tracker values
     monthstats = {
         "status": {},
@@ -176,6 +178,9 @@ def program_performance(request, program_pk):
         ]
     ]
 
+    # Cache requests for user lookup
+    cache = {}
+
     # Get all tracking objects that have a linked contract to them for the user
     tracking_numbers = (
         Tracking.objects.filter(program_id=program_pk)
@@ -183,6 +188,8 @@ def program_performance(request, program_pk):
         .prefetch_related("contract")
     )
 
+    print("bench: %.2f" % (datetime.now() - lastbench).total_seconds())
+    lastbench = datetime.now()
     # Loop all tracking objects
     for tracking in tracking_numbers:
         month = datetime.strftime(tracking.contract.date_issued, "%Y-%m")
@@ -212,6 +219,14 @@ def program_performance(request, program_pk):
             if tracking.donation > 0:
                 monthstats["donations"]["all"][month][1] += 1
 
+            if tracking.contract.issuer_id not in cache:
+                cache[tracking.contract.issuer_id] = EveEntity.objects.resolve_name(
+                    tracking.contract.issuer_id
+                )
+            username = cache[tracking.contract.issuer_id]
+
+            print("loop bench: %.2f" % (datetime.now() - lastbench).total_seconds())
+            lastbench = datetime.now()
             # Collect ISK data per items
             tracking_items = TrackingItem.objects.filter(tracking=tracking)
             for item in tracking_items:
@@ -221,6 +236,7 @@ def program_performance(request, program_pk):
                     monthstats["items"][item.eve_type.name][month] = [0, 0]
                 monthstats["items"][item.eve_type.name][month][0] += item.buy_value
                 monthstats["items"][item.eve_type.name][month][1] += item.quantity
+                # cache[tracking.contract.issuer_id] = EveEntity.objects.resolve_name(tracking.contract.issuer_id)
 
                 # Collect item category data
                 catid = item.eve_type.eve_group.name
@@ -246,7 +262,7 @@ def program_performance(request, program_pk):
                             tracking.contract.date_completed, "%Y-%m-%d %H:%M:%S"
                         ),
                         tracking.contract.issuer_id,
-                        EveEntity.objects.resolve_name(tracking.contract.issuer_id),
+                        username,
                         tracking.contract.price,
                         item.eve_type.eve_group.name,
                         item.eve_type.id,
@@ -256,6 +272,8 @@ def program_performance(request, program_pk):
                     ]
                 )
 
+    print("exit loop bench: %.2f" % (datetime.now() - lastbench).total_seconds())
+    lastbench = datetime.now()
     # Reformat data so that it is easier to use billboard.js
     allmonths = sorted(list(allmonths))
     for strata in ("overall", "items", "categories", "donations"):
@@ -274,7 +292,8 @@ def program_performance(request, program_pk):
                 if strata == "overall":
                     y[0].append(round(monthstats[strata][yi][m][0] / 1.0e9, 2))
                 else:
-                    y[0].append(round(monthstats[strata][yi][m][0] / 1.0e9, 2))
+                    # y[0].append(round(monthstats[strata][yi][m][0] / 1.0e9, 3))
+                    y[0].append(round(monthstats[strata][yi][m][0] / 1.0e3, 3))
                 y[1].append(monthstats[strata][yi][m][1])
             monthstats[strata][yi] = y
     monthstats["x"] = ["x"] + allmonths
@@ -283,11 +302,47 @@ def program_performance(request, program_pk):
         category2items[cat] = list(category2items[cat])
 
     # Break down of categories by last three months:
-    lastthree = []
+    lastthree = {}
     for yi in monthstats["categories"].keys():
         calc = monthstats["categories"][yi][0].copy()
         calc.pop(0)
-        lastthree.append((yi, sum(calc[-3:])))
+        lastthree[yi] = sum(calc[-3:])
+
+    if len(lastthree.keys()) > 10:
+        th = lastthree[sorted(lastthree.keys(), key=lambda x: -lastthree[x])[10]]
+        lastthree["Other"] = 0
+        for k in list(lastthree.keys()):
+            if lastthree[k] <= th:
+                lastthree["Other"] += lastthree[k]
+                del lastthree[k]
+
+        monthstats["categories"]["Other"] = None
+        for k in list(monthstats["categories"].keys()):
+            if k not in lastthree:
+                if monthstats["categories"]["Other"] == None:
+                    monthstats["categories"]["Other"] = monthstats["categories"][k]
+                else:
+                    print(monthstats["categories"]["Other"][0])
+                    print(monthstats["categories"][k][0])
+                    monthstats["categories"]["Other"][0][1:] = [
+                        sum(x)
+                        for x in zip(
+                            monthstats["categories"]["Other"][0][1:],
+                            monthstats["categories"][k][0][1:],
+                        )
+                    ]
+                    monthstats["categories"]["Other"][1][1:] = [
+                        sum(x)
+                        for x in zip(
+                            monthstats["categories"]["Other"][1][1:],
+                            monthstats["categories"][k][1][1:],
+                        )
+                    ]
+                del monthstats["categories"][k]
+        monthstats["categories"]["Other"][0][0] = "Other"
+        monthstats["categories"]["Other"][1][0] = "Other"
+
+    lastthree = list(lastthree.items())
 
     # Sanitize CSV data
     for i in range(len(dumpdata)):
@@ -296,10 +351,14 @@ def program_performance(request, program_pk):
 
     context = {
         "stats": json.dumps(monthstats),
+        # "stats": json.dumps([]),
         "lastthree": json.dumps(lastthree),
         "categories": json.dumps(category2items),
         "export": json.dumps(dumpdata),
+        # "export": json.dumps([]),
     }
+    print("finished: %.2f" % (datetime.now() - lastbench).total_seconds())
+    print("total: %.2f" % (datetime.now() - firstbench).total_seconds())
 
     return render(request, "buybackprogram/performance.html", context)
 

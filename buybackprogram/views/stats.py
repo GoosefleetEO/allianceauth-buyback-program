@@ -322,8 +322,6 @@ def program_performance(request, program_pk):
                 if monthstats["categories"]["Other"] == None:
                     monthstats["categories"]["Other"] = monthstats["categories"][k]
                 else:
-                    print(monthstats["categories"]["Other"][0])
-                    print(monthstats["categories"][k][0])
                     monthstats["categories"]["Other"][0][1:] = [
                         sum(x)
                         for x in zip(
@@ -351,11 +349,9 @@ def program_performance(request, program_pk):
 
     context = {
         "stats": json.dumps(monthstats),
-        # "stats": json.dumps([]),
         "lastthree": json.dumps(lastthree),
         "categories": json.dumps(category2items),
         "export": json.dumps(dumpdata),
-        # "export": json.dumps([]),
     }
     print("finished: %.2f" % (datetime.now() - lastbench).total_seconds())
     print("total: %.2f" % (datetime.now() - firstbench).total_seconds())

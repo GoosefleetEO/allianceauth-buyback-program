@@ -168,7 +168,6 @@ def program_performance(request, program_pk):
             "Date Issued",
             "Date Finished",
             "User ID",
-            "User Name",
             "Total ISK",
             "Object Cateogry",
             "Object ID",
@@ -177,9 +176,6 @@ def program_performance(request, program_pk):
             "Object ISK",
         ]
     ]
-
-    # Cache requests for user lookup
-    cache = {}
 
     # Get all tracking objects that have a linked contract to them for the user
     tracking_numbers = (
@@ -219,12 +215,6 @@ def program_performance(request, program_pk):
             if tracking.donation > 0:
                 monthstats["donations"]["all"][month][1] += 1
 
-            if tracking.contract.issuer_id not in cache:
-                cache[tracking.contract.issuer_id] = EveEntity.objects.resolve_name(
-                    tracking.contract.issuer_id
-                )
-            username = cache[tracking.contract.issuer_id]
-
             print("loop bench: %.2f" % (datetime.now() - lastbench).total_seconds())
             lastbench = datetime.now()
             # Collect ISK data per items
@@ -262,7 +252,6 @@ def program_performance(request, program_pk):
                             tracking.contract.date_completed, "%Y-%m-%d %H:%M:%S"
                         ),
                         tracking.contract.issuer_id,
-                        username,
                         tracking.contract.price,
                         item.eve_type.eve_group.name,
                         item.eve_type.id,

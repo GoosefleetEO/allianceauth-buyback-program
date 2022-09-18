@@ -2,7 +2,11 @@
 {% load i18n %}
 {% load static %}
 {% block extra_css %}
-    <link rel="stylesheet" type="text/css" href="{% static 'buybackprogram/style.css' %}">
+    {% if NIGHT_MODE %}
+        <link rel="stylesheet" type="text/css" href="{% static 'buybackprogram/css/style_dark.css' %}">
+        {% else %}
+        <link rel="stylesheet" type="text/css" href="{% static 'buybackprogram/css/style_light.css' %}">
+    {% endif %}
 {% endblock extra_css %}
 
 {% block page_title %}{% translate "buybackprogram" %}{% endblock %}

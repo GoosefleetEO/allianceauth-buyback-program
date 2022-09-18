@@ -274,7 +274,7 @@ def program_performance(request, program_pk):
                 if strata == "overall":
                     y[0].append(round(monthstats[strata][yi][m][0] / 1.0e9, 2))
                 else:
-                    y[0].append(monthstats[strata][yi][m][0] / 1.0e9)
+                    y[0].append(round(monthstats[strata][yi][m][0] / 1.0e9, 2))
                 y[1].append(monthstats[strata][yi][m][1])
             monthstats[strata][yi] = y
     monthstats["x"] = ["x"] + allmonths

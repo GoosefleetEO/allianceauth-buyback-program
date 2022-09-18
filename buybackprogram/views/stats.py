@@ -262,7 +262,7 @@ def program_performance(request, program_pk):
         for yi in monthstats[strata].keys():
             y = [[yi], [yi]]
             if strata == "overall" or strata == "donations":
-                y = [["ISK"], ["n"]]
+                y = [["ISK"], ["Count"]]
             for m in allmonths:
                 if m not in (monthstats[strata][yi]):
                     monthstats[strata][yi][m] = [0, 0]

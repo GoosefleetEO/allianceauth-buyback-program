@@ -47,15 +47,24 @@
                     <a class="btn btn-success btn-sm" href="{% url 'buybackprogram:program_calculate' program_pk=program.id %}">
                         Use
                     </a>
-                    <a class="btn btn-sm btn-warning" href="{% url 'buybackprogram:program_leaderboard' program_pk=program.id %}">Leaderboard</a>
-                    <a class="btn btn-sm btn-warning" href="{% url 'buybackprogram:program_special_taxes' program_pk=program.id %}">Special taxes</a>
+
+                    {% if perms.buybackprogram.see_leaderboard %}
+                        <a class="btn btn-sm btn-info" href="{% url 'buybackprogram:program_leaderboard' program_pk=program.id %}">Leaderboard</a>
+                    {% endif %}
+
                     {% if perms.buybackprogram.manage_programs and program.owner.user == request.user %}
-                        <a class="btn btn-sm btn-warning" href="{% url 'buybackprogram:program_performance' program_pk=program.id %}">Performance</a>
+                        <a class="btn btn-sm btn-info" href="{% url 'buybackprogram:program_performance' program_pk=program.id %}">Performance</a>
+                    {% endif %}
+
+                    <a class="btn btn-sm btn-warning" href="{% url 'buybackprogram:program_special_taxes' program_pk=program.id %}">Special taxes</a>
+
+                    {% if perms.buybackprogram.manage_programs and program.owner.user == request.user %}
                         <a class="btn btn-sm btn-warning" href="{% url 'buybackprogram:program_edit' program_pk=program.id %}">Edit program</a>
                         <a class="btn btn-danger btn-sm" href="{% url 'buybackprogram:program_remove' program_pk=program.id %}">
                         Delete
                     </a>
                     {% endif %}
+
                 </td>
             </tr>
             {% endfor %}

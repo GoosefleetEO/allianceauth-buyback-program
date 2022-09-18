@@ -48,6 +48,7 @@ class General(models.Model):
                 "manage_programs",
                 "Can manage own buyback programs and see own program statics.",
             ),
+            ("see_leaderboard", "Can see leaderboards for available programs."),
             ("see_all_statics", "Can see all program statics."),
         )
 

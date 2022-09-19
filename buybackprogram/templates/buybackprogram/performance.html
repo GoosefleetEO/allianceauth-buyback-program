@@ -112,11 +112,11 @@ function render(k) {
 				}
 			},
 			y: {
-				tick: { format: function(x) { 
+				tick: { format: function(x) {
 					if (hscaling["items"] == "") {
 						return d3.format(",")(x);
 					} else {
-						return d3.format(",")(x) + " " + hscaling["items"][0]; } 
+						return d3.format(",")(x) + " " + hscaling["items"][0]; }
 					} },
 				label: "ISK (" + hscaling["items"] + ")",
 			},
@@ -169,11 +169,11 @@ var hscaling;
 				tick: { format: "%Y-%m" }
 			},
 			y: {
-				tick: { format: function(x) { 
+				tick: { format: function(x) {
 					if (hscaling["overall"] == "") {
 						return d3.format(",")(x);
 					} else {
-						return d3.format(",")(x) + " " + hscaling["overall"][0]; } 
+						return d3.format(",")(x) + " " + hscaling["overall"][0]; }
 					} },
 				label: "ISK (" + hscaling["overall"] + ")"
 			},
@@ -210,11 +210,11 @@ var hscaling;
 				}
 			},
 			y: {
-				tick: { format: function(x) { 
+				tick: { format: function(x) {
 					if (hscaling["categories"] == "") {
 						return d3.format(",")(x);
 					} else {
-						return d3.format(",")(x) + " " + hscaling["categories"][0]; } 
+						return d3.format(",")(x) + " " + hscaling["categories"][0]; }
 					} },
 				label: "ISK (" + hscaling["categories"] + ")",
 			},

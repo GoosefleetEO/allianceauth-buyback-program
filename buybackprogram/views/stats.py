@@ -283,11 +283,10 @@ def program_performance(request, program_pk):
         if scaling[strata] < 1e3:
             scaling[strata] = 1
             hscaling[strata] = ""
-    if (
-        scaling["donations"] != scaling["overall"]
-    ):  # Overall is always bigger than donations
-        scaling["overall"] = scaling["donations"]
-        hscaling["overall"] = hscaling["donations"]
+
+    # Always set donations to be the same scale as overall since they are plotted together.
+    scaling["donations"] = scaling["overall"]
+    hscaling["donations"] = hscaling["overall"]
 
     for strata in ("overall", "items", "categories", "donations"):
         for yi in monthstats[strata].keys():
@@ -302,7 +301,7 @@ def program_performance(request, program_pk):
             for m in allmonths:
                 if m not in (monthstats[strata][yi]):
                     monthstats[strata][yi][m] = [0, 0]
-                y[0].append(round(monthstats[strata][yi][m][0] / scaling[strata], 2))
+                y[0].append(round(monthstats[strata][yi][m][0] / scaling[strata], 3))
                 y[1].append(monthstats[strata][yi][m][1])
             monthstats[strata][yi] = y
     monthstats["x"] = ["x"] + allmonths

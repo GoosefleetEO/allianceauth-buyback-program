@@ -273,7 +273,7 @@ def program_performance(request, program_pk):
             scaling[strata] += [
                 monthstats[strata][yi][x][0] for x in monthstats[strata][yi].keys()
             ]
-        if len(allmonths) == 0:
+        if len(scaling[strata]) == 0:
             scaling[strata] = 1
         else:
             scaling[strata] = sum(scaling[strata]) / len(scaling[strata])

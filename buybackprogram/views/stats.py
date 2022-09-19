@@ -103,7 +103,6 @@ def leaderboard(request, program_pk):
         "userinfo": {},  # profile information per user
         "months": None,  # all months
     }
-
     # Get all tracking objects that have a linked contract to them for the user
     tracking_numbers = (
         Tracking.objects.filter(program_id=program_pk)
@@ -265,6 +264,31 @@ def program_performance(request, program_pk):
     lastbench = datetime.now()
     # Reformat data so that it is easier to use billboard.js
     allmonths = sorted(list(allmonths))
+
+    scaling = {}
+    hscaling = {}
+    for strata in ("overall", "items", "categories", "donations"):
+        scaling[strata] = []
+        for yi in monthstats[strata].keys():
+            avg = sum(
+                [monthstats[strata][yi][x][0] for x in monthstats[strata][yi].keys()]
+            )
+            avg /= len(monthstats[strata][yi].keys())
+            scaling[strata].append(avg)
+        scaling[strata] = sum(scaling[strata]) / len(scaling[strata])
+        for s, h in ((1e9, "Billions"), (1e6, "Millions"), (1e3, "Thousands")):
+            if scaling[strata] > s:
+                scaling[strata] = s
+                hscaling[strata] = h
+        if scaling[strata] < 1e3:
+            scaling[strata] = 1
+            hscaling[strata] = ""
+    if (
+        scaling["donations"] != scaling["overall"]
+    ):  # Overall is always bigger than donations
+        scaling["overall"] = scaling["donations"]
+        hscaling["overall"] = hscaling["donations"]
+
     for strata in ("overall", "items", "categories", "donations"):
         for yi in monthstats[strata].keys():
             y = [[yi], [yi]]
@@ -278,11 +302,7 @@ def program_performance(request, program_pk):
             for m in allmonths:
                 if m not in (monthstats[strata][yi]):
                     monthstats[strata][yi][m] = [0, 0]
-                if strata == "overall":
-                    y[0].append(round(monthstats[strata][yi][m][0] / 1.0e9, 2))
-                else:
-                    # y[0].append(round(monthstats[strata][yi][m][0] / 1.0e9, 3))
-                    y[0].append(round(monthstats[strata][yi][m][0] / 1.0e3, 3))
+                y[0].append(round(monthstats[strata][yi][m][0] / scaling[strata], 2))
                 y[1].append(monthstats[strata][yi][m][1])
             monthstats[strata][yi] = y
     monthstats["x"] = ["x"] + allmonths
@@ -341,6 +361,7 @@ def program_performance(request, program_pk):
         "lastthree": json.dumps(lastthree),
         "categories": json.dumps(category2items),
         "export": json.dumps(dumpdata),
+        "hscaling": json.dumps(hscaling),
     }
     print("finished: %.2f" % (datetime.now() - lastbench).total_seconds())
     print("total: %.2f" % (datetime.now() - firstbench).total_seconds())

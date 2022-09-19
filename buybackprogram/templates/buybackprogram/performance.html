@@ -112,8 +112,13 @@ function render(k) {
 				}
 			},
 			y: {
-				tick: { format: function(x) { return d3.format(",")(x); } },
-				label: "ISK",
+				tick: { format: function(x) { 
+					if (hscaling["items"] == "") {
+						return d3.format(",")(x);
+					} else {
+						return d3.format(",")(x) + " " + hscaling["items"][0]; } 
+					} },
+				label: "ISK (" + hscaling["categories"] + ")",
 			},
 		},
 		bindto:"#itemisk"
@@ -147,14 +152,16 @@ function exportdata() {
 }
 
 var data;
+var hscaling;
 
 (function() {
 	data = {{stats}};
+	hscaling = {{hscaling}};
 	var iskchart = bb.generate({
 		data: {
 			x: "x",
 			columns: [ data["x"], data["overall"]["all"][0], data["donations"]["all"][0] ],
-			axes: { isk: "y", n: "y2"},
+			axes: { isk: "y"},
 		},
 		axis: {
 			x: {
@@ -162,8 +169,8 @@ var data;
 				tick: { format: "%Y-%m" }
 			},
 			y: {
-				tick: { format: function(x) { return d3.format(",")(x) + " B"; } },
-				label: "ISK (Billions)"
+				tick: { format: function(x) { return d3.format(",")(x) + " " + hscaling["overall"][0]; } },
+				label: "ISK (" + hscaling["overall"] + ")"
 			},
 		},
 		bindto:"#isk"
@@ -173,7 +180,7 @@ var data;
 		data: {
 			x: "x",
 			columns: [ data["x"], data["overall"]["all"][1], data["donations"]["all"][1] ],
-			axes: { isk: "y", n: "y2"},
+			axes: { isk: "y"},
 		},
 		axis: {
 			x: {
@@ -198,8 +205,13 @@ var data;
 				}
 			},
 			y: {
-				tick: { format: function(x) { return d3.format(",")(x); } },
-				label: "ISK",
+				tick: { format: function(x) { 
+					if (hscaling["categories"] == "") {
+						return d3.format(",")(x);
+					} else {
+						return d3.format(",")(x) + " " + hscaling["categories"][0]; } 
+					} },
+				label: "ISK (" + hscaling["categories"] + ")",
 			},
 		},
 		bindto:"#categoryisk"

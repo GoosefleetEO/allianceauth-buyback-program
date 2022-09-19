@@ -273,7 +273,10 @@ def program_performance(request, program_pk):
             scaling[strata] += [
                 monthstats[strata][yi][x][0] for x in monthstats[strata][yi].keys()
             ]
-        scaling[strata] = sum(scaling[strata]) / len(scaling[strata])
+        if len(allmonths) == 0:
+            scaling[strata] = 1
+        else:
+            scaling[strata] = sum(scaling[strata]) / len(scaling[strata])
         for s, h in ((1e9, "Billions"), (1e6, "Millions")):
             if scaling[strata] > s:
                 scaling[strata] = s

@@ -322,14 +322,14 @@ def program_performance(request, program_pk):
         th = lastthree[sorted(lastthree.keys(), key=lambda x: -lastthree[x])[10]]
         lastthree["Other"] = 0
         for k in list(lastthree.keys()):
-            if lastthree[k] <= th:
+            if k != "Other" and lastthree[k] <= th:
                 lastthree["Other"] += lastthree[k]
                 del lastthree[k]
 
         monthstats["categories"]["Other"] = None
         for k in list(monthstats["categories"].keys()):
             if k not in lastthree:
-                if monthstats["categories"]["Other"] == None:
+                if monthstats["categories"]["Other"] is None:
                     monthstats["categories"]["Other"] = monthstats["categories"][k]
                 else:
                     monthstats["categories"]["Other"][0][1:] = [

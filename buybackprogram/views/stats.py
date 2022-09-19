@@ -270,14 +270,16 @@ def program_performance(request, program_pk):
     for strata in ("overall", "items", "categories", "donations"):
         scaling[strata] = []
         for yi in monthstats[strata].keys():
-            scaling[strata] += [monthstats[strata][yi][x][0] for x in monthstats[strata][yi].keys()]
+            scaling[strata] += [
+                monthstats[strata][yi][x][0] for x in monthstats[strata][yi].keys()
+            ]
         scaling[strata] = sum(scaling[strata]) / len(scaling[strata])
-        for s, h in ((1e9, "Billions"), (1e6, "Millions"), (1e3, "Thousands")):
+        for s, h in ((1e9, "Billions"), (1e6, "Millions")):
             if scaling[strata] > s:
                 scaling[strata] = s
                 hscaling[strata] = h
                 break
-        if scaling[strata] < 1e3:
+        if scaling[strata] < 1e6:
             scaling[strata] = 1
             hscaling[strata] = ""
 

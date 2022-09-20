@@ -155,6 +155,7 @@ Name | Purpose | Example Target Audience
 basic_access | Can access this app and see own statics. Can use buyback programs that are allowed by the buyback restriction rules. | Member State
 manage_programs | Can create new locations and buyback programs and manage their own buyback programs. Can see own buyback programs statics. | Buyback managers
 see_leaderboard | Can see the leaderboard stats for the programs that are visible for the user | Member State
+see_performance | Can see the performance stats for the programs that are visible to the user | Member / Managers
 see_all_statics | Can see all statistics in all buyback programs | Leadership
 
 ## Step 7 - Program Setup

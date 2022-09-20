@@ -238,7 +238,7 @@
                                 </tr>
                             {% endfor %}
                             <tr class="collapse" id="{{ item.item_values.normal.id }}-refined-total">
-                                <td colspan="3" style="padding-left: 30px;border-top:1px dotted grey;">Total value</td>
+                                <td colspan="3" style="padding-left: 30px;border-top:1px dotted grey;">Total value <i>@ {{program.refining_rate}} refining rate</i></td>
                                 <td style="border-top:1px dotted grey;">{{item.item_values.refined.buy|floatformat:0|intcomma|price}}</td>
                                 <td style="border-top:1px dotted grey;">{{item.item_values.refined.total_tax|floatformat:2|tax}}</td>
                                 <td style="border-top:1px dotted grey;">{{item.item_values.refined.unit_value|floatformat:0|intcomma|price}}</td>

@@ -37,7 +37,10 @@ def setting_icons(option, program):
         "refined": {
             "icon": "fa-industry",
             "color": False,
-            "message": "Refined price is taken into account when calculating values for ores.",
+            "message": (
+                "Refined price is taken into account when calculating values for ores at refining rate of %s%s."
+                % (program.refining_rate, "%")
+            ),
         },
         "raw_ore": {
             "icon": "fa-icicles",

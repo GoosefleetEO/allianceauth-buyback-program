@@ -48,7 +48,8 @@ class General(models.Model):
                 "manage_programs",
                 "Can manage own buyback programs and see own program statics.",
             ),
-            ("see_leaderboard", "Can see leaderboards for available programs."),
+            ("see_leaderboard", "Can see leaderboards for all available programs."),
+            ("see_performance", "Can see performance for all available programs."),
             ("see_all_statics", "Can see all program statics."),
         )
 
@@ -870,8 +871,10 @@ class Program(models.Model):
         help_text="Do you want to allow unpacked items in this program such as assembled ship hulls?",
     )
 
-    refining_rate = models.IntegerField(
+    refining_rate = models.DecimalField(
         verbose_name="Refining rate",
+        max_digits=5,
+        decimal_places=2,
         default=0,
         null=True,
         help_text="Refining rate to be used if ore refined value is active",

@@ -586,7 +586,7 @@ def get_item_values(item_type, item_prices, program):
             buy = material["buy"]
             price = buy
             program_tax = program.tax
-            refining_rate = program.refining_rate / 100
+            refining_rate = float(program.refining_rate) / 100
             tax_multiplier = (100 - (program_tax + item_tax + price_dencity_tax)) / 100
 
             raw_value = quantity * refining_rate * price

@@ -183,7 +183,9 @@ def program_performance(request, program_pk):
         .prefetch_related("contract")
     )
 
-    print("bench: %.2f" % (datetime.now() - lastbench).total_seconds())
+    logger.debug(
+        "Performance bench: %.2f" % (datetime.now() - lastbench).total_seconds()
+    )
     lastbench = datetime.now()
     # Loop all tracking objects
     for tracking in tracking_numbers:
@@ -214,7 +216,10 @@ def program_performance(request, program_pk):
             if tracking.donation > 0:
                 monthstats["donations"]["all"][month][1] += 1
 
-            print("loop bench: %.2f" % (datetime.now() - lastbench).total_seconds())
+            logger.debug(
+                "Performance loop bench: %.2f"
+                % (datetime.now() - lastbench).total_seconds()
+            )
             lastbench = datetime.now()
             # Collect ISK data per items
             tracking_items = TrackingItem.objects.filter(tracking=tracking)
@@ -260,7 +265,10 @@ def program_performance(request, program_pk):
                     ]
                 )
 
-    print("exit loop bench: %.2f" % (datetime.now() - lastbench).total_seconds())
+    logger.debug(
+        "Performance exit loop bench: %.2f"
+        % (datetime.now() - lastbench).total_seconds()
+    )
     lastbench = datetime.now()
     # Reformat data so that it is easier to use billboard.js
     allmonths = sorted(list(allmonths))
@@ -364,8 +372,12 @@ def program_performance(request, program_pk):
         "export": json.dumps(dumpdata),
         "hscaling": json.dumps(hscaling),
     }
-    print("finished: %.2f" % (datetime.now() - lastbench).total_seconds())
-    print("total: %.2f" % (datetime.now() - firstbench).total_seconds())
+    logger.debug(
+        "Performance finished: %.2f" % (datetime.now() - lastbench).total_seconds()
+    )
+    logger.debug(
+        "Performance total: %.2f" % (datetime.now() - firstbench).total_seconds()
+    )
 
     return render(request, "buybackprogram/performance.html", context)
 

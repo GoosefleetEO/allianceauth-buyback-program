@@ -5,21 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased] - yyyy-mm-dd
+## [1.8.0] - 20-09-2022
 
 This update adds beter statistics and leaderboard for each program. Users will be able to display the leaderboard for each program they are able to see if they have been granted the view_leaderboard setting. Leaderboard displays a datatable for each month total isk and total donations count.
 
-Performance table tracks the performance of each individual program and is visible for the program manager.
+Performance table tracks the performance of each individual program and is visible for the program owners and to users who have the see_performance permission.
 
 ### Added
+- Added new permission: `see_leaderboard`
+- Added new permission: `see_performance`
 - Added leaderboard and performance statistics for programs (Thanks [Arc Tiru ](https://gitlab.com/arctiru))
-- Added new permission: view_leaderboards
-- Adds new CSS files
+- Adds new CSS files for light and dark themes
 
 ### Changed
+- Changed program refining rate to allow 2 decimals
 
 ### Fixed
 - Fixed type in css file name
+- Fixed type in readme on Janice name
 
 ## [1.7.0] - 09-09-2022
 

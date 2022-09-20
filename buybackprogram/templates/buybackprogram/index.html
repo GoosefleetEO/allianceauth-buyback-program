@@ -52,7 +52,7 @@
                         <a class="btn btn-sm btn-info" href="{% url 'buybackprogram:program_leaderboard' program_pk=program.id %}">Leaderboard</a>
                     {% endif %}
 
-                    {% if perms.buybackprogram.manage_programs and program.owner.user == request.user %}
+                    {% if program.owner.user == request.user or perms.buybackprogram.see_performance %}
                         <a class="btn btn-sm btn-info" href="{% url 'buybackprogram:program_performance' program_pk=program.id %}">Performance</a>
                     {% endif %}
 

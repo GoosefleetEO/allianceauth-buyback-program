@@ -63,7 +63,7 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 - Contract tracking history
 - Supports base price sources from:
 	- [Fuzzwork API](https://market.fuzzwork.co.uk/api/)
-	- [Januce API](https://janice.e-351.com/api/rest/docs/index.html)
+	- [Janice API](https://janice.e-351.com/api/rest/docs/index.html)
 - Supports discord notifications
 	- Notifications for accepted contracts
 	- Notifications for new contracts

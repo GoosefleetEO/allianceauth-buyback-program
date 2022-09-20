@@ -180,6 +180,8 @@ def send_message_to_discord_channel(
     try:
         result.raise_for_status()
     except requests.exceptions.HTTPError as err:
-        print(err)
+        logger.error(err)
     else:
-        print("Payload delivered successfully, code {}.".format(result.status_code))
+        logger.debug(
+            "Payload delivered successfully, code {}.".format(result.status_code)
+        )

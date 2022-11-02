@@ -144,7 +144,11 @@ def update_all_prices():
         market_data.update(get_bulk_prices(type_ids))
 
         logger.debug("Market data fetched, starting database update...")
+        missing_items = []
         for price in prices:
+            if str(price.eve_type_id) not in market_data:
+                missing_items.append(price.eve_type.name)
+                continue
 
             buy = int(float(market_data[str(price.eve_type_id)]["buy"]["max"]))
             sell = int(float(market_data[str(price.eve_type_id)]["sell"]["min"]))
@@ -152,6 +156,10 @@ def update_all_prices():
             price.buy = buy
             price.sell = sell
             price.updated = timezone.now()
+
+        if len(missing_items) > 0:
+            missing = ", ".join(missing_items)
+            logger.error("Missing items from source API: %s" % missing)
 
         try:
             ItemPrices.objects.bulk_update(prices, ["buy", "sell", "updated"])

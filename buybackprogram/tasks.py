@@ -146,20 +146,24 @@ def update_all_prices():
         logger.debug("Market data fetched, starting database update...")
         missing_items = []
         for price in prices:
-            if str(price.eve_type_id) not in market_data:
-                missing_items.append(price.eve_type.name)
-                continue
+            # Check if we received data from the API for the item. This will fix errors when using Janice as the POST endpoint does not return anything when there are no prices.
+            if str(price.eve_type_id) in market_data:
 
-            buy = int(float(market_data[str(price.eve_type_id)]["buy"]["max"]))
-            sell = int(float(market_data[str(price.eve_type_id)]["sell"]["min"]))
+                # Get the price values from the API data
+                buy = int(float(market_data[str(price.eve_type_id)]["buy"]["max"]))
+                sell = int(float(market_data[str(price.eve_type_id)]["sell"]["min"]))
+
+            # If API did not return any values we remove prices for the item
+            else:
+                missing_items.append(price.eve_type.name)
+
+                # Reset prices for items not found from API
+                buy = 0
+                sell = 0
 
             price.buy = buy
             price.sell = sell
             price.updated = timezone.now()
-
-        if len(missing_items) > 0:
-            missing = ", ".join(missing_items)
-            logger.error("Missing items from source API: %s" % missing)
 
         try:
             ItemPrices.objects.bulk_update(prices, ["buy", "sell", "updated"])
@@ -170,6 +174,13 @@ def update_all_prices():
         EveMarketPrice.objects.update_from_esi()
 
         logger.debug("Updated all eveuniverse market prices.")
+
+        if len(missing_items) > 0:
+            logger.error(
+                "%s items missing items from source API, prices set to 0."
+                % len(missing_items)
+            )
+
     else:
         logger.error("Price source API is not up! Prices not updated.")
 

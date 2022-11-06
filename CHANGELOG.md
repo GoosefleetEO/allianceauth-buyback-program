@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased] - yyyy-mm-dd
+
+### Added
+
+### Changed
+
+### Fixed
+- Fixes #49, fixes issue where missing items when using Janice API caused price update to crash
+
 ## [1.8.0] - 20-09-2022
 
 This update adds beter statistics and leaderboard for each program. Users will be able to display the leaderboard for each program they are able to see if they have been granted the view_leaderboard setting. Leaderboard displays a datatable for each month total isk and total donations count.

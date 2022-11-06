@@ -5,10 +5,13 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
 from django.shortcuts import render
 from django.utils import timezone
+from esi.clients import EsiClientProvider
+from esi.decorators import tokens_required
 from eveuniverse.models import EveEntity
 
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.services.hooks import get_extension_logger
+from app_utils.esi import fetch_esi_status
 
 from buybackprogram.notes import (
     note_missing_from_contract,
@@ -28,9 +31,28 @@ from ..models import (
 logger = get_extension_logger(__name__)
 
 
+def get_location_name(token, structid):
+    esi = EsiClientProvider()
+    status = fetch_esi_status()
+    if not status.is_online or status.error_limit_remain < 5:
+        return "Unknown"
+    if structid <= 100000000:  # likely to be NPC station
+        return EveEntity.objects.resolve_name(structid)
+
+    operation = esi.client.Universe.get_universe_structures_structure_id(
+        structure_id=structid, token=token
+    )
+    operation.request_config.also_return_response = True
+    label, response = operation.result()
+    if response.status_code != 200:
+        return "Unknown"
+    return label["name"]
+
+
+@tokens_required(scopes="esi-universe.read_structures.v1")
 @login_required
 @permission_required("buybackprogram.basic_access")
-def my_stats(request):
+def my_stats(request, token):
 
     # List for valid contracts to be displayed
     valid_contracts = []
@@ -80,6 +102,11 @@ def my_stats(request):
         # Get the name for the assignee
         tracking.contract.assignee_name = EveEntity.objects.resolve_name(
             tracking.contract.assignee_id
+        )
+
+        # Get location name for contract
+        tracking.contract.location = get_location_name(
+            token[0].valid_access_token(), tracking.contract.start_location_id
         )
 
         # Add contract to the valid contract list
@@ -382,9 +409,10 @@ def program_performance(request, program_pk):
     return render(request, "buybackprogram/performance.html", context)
 
 
+@tokens_required(scopes="esi-universe.read_structures.v1")
 @login_required
 @permission_required("buybackprogram.manage_programs")
-def program_stats(request):
+def program_stats(request, token):
 
     # List for valid contracts to be displayed
     valid_contracts = []
@@ -444,6 +472,11 @@ def program_stats(request):
             tracking.contract.assignee_id
         )
 
+        # Get location name for contract
+        tracking.contract.location = get_location_name(
+            token[0].valid_access_token(), tracking.contract.start_location_id
+        )
+
         # Add contract to the valid contract list
         valid_contracts.append(tracking)
 
@@ -456,9 +489,10 @@ def program_stats(request):
     return render(request, "buybackprogram/stats.html", context)
 
 
+@tokens_required(scopes="esi-universe.read_structures.v1")
 @login_required
 @permission_required("buybackprogram.see_all_statics")
-def program_stats_all(request):
+def program_stats_all(request, token):
 
     # List for valid contracts to be displayed
     valid_contracts = []
@@ -504,6 +538,11 @@ def program_stats_all(request):
             tracking.contract.assignee_id
         )
 
+        # Get location name for contract
+        tracking.contract.location = get_location_name(
+            token[0].valid_access_token(), tracking.contract.start_location_id
+        )
+
         valid_contracts.append(tracking)
 
     context = {
@@ -515,11 +554,17 @@ def program_stats_all(request):
     return render(request, "buybackprogram/stats.html", context)
 
 
+@tokens_required(scopes="esi-universe.read_structures.v1")
 @login_required
 @permission_required("buybackprogram.basic_access")
-def contract_details(request, contract_title):
+def contract_details(request, token, contract_title):
 
     contract = Contract.objects.get(title__contains=contract_title)
+
+    # Get location name for contract
+    contract.location = get_location_name(
+        token[0].valid_access_token(), contract.start_location_id
+    )
 
     # Get notes for this contract
     notes = ContractNotification.objects.filter(contract=contract)
@@ -595,6 +640,10 @@ def contract_details(request, contract_title):
 
     # Get the name for the assignee
     contract.assignee_name = EveEntity.objects.resolve_name(contract.assignee_id)
+
+    # Sort lists by reverse quantity order
+    contract_items = sorted(contract_items, key=lambda x: -x.quantity)
+    tracking_items = sorted(tracking_items, key=lambda x: -x.quantity)
 
     context = {
         "notes": notes,

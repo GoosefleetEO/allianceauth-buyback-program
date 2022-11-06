@@ -5,11 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased] - yyyy-mm-dd
+## [1.8.1] - 06-11-2022
 
 ### Added
-
-### Changed
+- Added location name information for tracking by [Arc Tiru ](https://gitlab.com/arctiru)
 
 ### Fixed
 - Fixes #49, fixes issue where missing items when using Janice API caused price update to crash

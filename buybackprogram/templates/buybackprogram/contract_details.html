@@ -30,6 +30,10 @@
                     <td>{{contract.assignee_name}}</td>
                 </tr>
                 <tr>
+                    <th >{% trans "Location" %}</th>
+                    <td>{{contract.location}}</td>
+                </tr>
+                <tr>
                     <th >{% trans "Time pending" %}</th>
                     <td>{{contract.date_issued|timesince }}</td>
                 </tr>

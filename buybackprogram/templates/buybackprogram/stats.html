@@ -43,6 +43,7 @@
                                 <tr>
                                     <th >{% trans "Issuer" %}</th>
                                     <th >{% trans "Assignee" %}</th>
+                                    <th >{% trans "Location" %}</th>
                                     <th >{% trans "Date issued" %}</th>
                                     <th >{% trans "Time pending" %}</th>
                                     <th >{% trans "Status" %}</th>
@@ -59,6 +60,7 @@
                                         <tr>
                                             <td>{{tracking.contract.issuer_name}}</td>
                                             <td>{{tracking.contract.assignee_name}}</td>
+                                            <td>{{tracking.contract.location}}</td>
                                             <td>{{tracking.contract.date_issued}}</td>
                                             <td>{{tracking.contract.date_issued|timesince }}</td>
                                             <td>{{tracking.contract.status}}</td>
@@ -88,6 +90,7 @@
                                 <tr>
                                     <th >{% trans "Issuer" %}</th>
                                     <th >{% trans "Assignee" %}</th>
+                                    <th >{% trans "Location" %}</th>
                                     <th >{% trans "Date issued" %}</th>
                                     <th >{% trans "Time pending" %}</th>
                                     <th >{% trans "Status" %}</th>
@@ -104,6 +107,7 @@
                                         <tr>
                                             <td>{{tracking.contract.issuer_name}}</td>
                                             <td>{{tracking.contract.assignee_name}}</td>
+                                            <td>{{tracking.contract.location}}</td>
                                             <td>{{tracking.contract.date_issued}}</td>
                                             <td>{{tracking.contract.date_issued|timesince }}</td>
                                             <td>{{tracking.contract.status}}</td>

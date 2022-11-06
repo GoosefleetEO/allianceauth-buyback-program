@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import Error, models
 from django.utils.translation import gettext as _
+from esi.clients import EsiClientProvider
 from esi.errors import TokenExpiredError, TokenInvalidError
 from esi.models import Token
 from eveuniverse.models import EveEntity, EveSolarSystem, EveType
@@ -15,6 +16,7 @@ from allianceauth.authentication.models import CharacterOwnership, State
 # Create your models here.
 from allianceauth.eveonline.models import EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
+from app_utils.esi import fetch_esi_status
 
 from buybackprogram.notification import (
     send_message_to_discord_channel,
@@ -154,11 +156,25 @@ class Owner(models.Model):
                             old_contract = Contract.objects.none()
                             old_contract.status = False
 
+                        logger.debug(
+                            "User has token: %s" % contract["start_location_id"]
+                        )
+
                         # If we have found a contract from database that is not yet finished
                         if old_contract.status not in ["finished", "rejected"]:
                             logger.debug(
                                 "Contract %s status is still pending, starting updates"
                                 % contract["contract_id"]
+                            )
+
+                            # Get location name for contract
+                            contract_location_name = self._get_location_name(
+                                contract["start_location_id"]
+                            )
+
+                            logger.debug(
+                                "Got contract location name: %s"
+                                % contract_location_name
                             )
 
                             # Create or update the found contract
@@ -177,6 +193,7 @@ class Owner(models.Model):
                                     ],
                                     "issuer_id": contract["issuer_id"],
                                     "start_location_id": contract["start_location_id"],
+                                    "location_name": contract_location_name,
                                     "price": contract["price"],
                                     "status": contract["status"],
                                     "title": contract["title"],
@@ -460,6 +477,25 @@ class Owner(models.Model):
                                 )
 
                         break  # If we have found a match from our ESI contracts wi will stop looping on the contract
+
+    @fetch_token_for_owner(["esi-universe.read_structures.v1"])
+    def _get_location_name(self, token, structid) -> list:
+        esi = EsiClientProvider()
+        status = fetch_esi_status()
+
+        if not status.is_online or status.error_limit_remain < 5:
+            return "Unknown"
+        if structid <= 100000000:  # likely to be NPC station
+            return EveEntity.objects.resolve_name(structid)
+
+        operation = esi.client.Universe.get_universe_structures_structure_id(
+            structure_id=structid, token=token.valid_access_token()
+        )
+        operation.request_config.also_return_response = True
+        label, response = operation.result()
+        if response.status_code != 200:
+            return "Unknown"
+        return label["name"]
 
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
     def _fetch_contracts(self, token) -> list:
@@ -1015,6 +1051,7 @@ class Contract(models.Model):
     issuer_corporation_id = models.IntegerField()
     issuer_id = models.IntegerField()
     start_location_id = models.BigIntegerField(null=True)
+    location_name = models.CharField(max_length=128, null=True)
     price = models.BigIntegerField()
     status = models.CharField(max_length=30)
     title = models.CharField(max_length=128)

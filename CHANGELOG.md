@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.8.2] - 06-11-2022
+
+### Changed
+- Fixes #50, Changed contract actual location name to be stored in database. Contract locations will only be displayed to contracts fetched in version 1.8.2
+
 ## [1.8.1] - 06-11-2022
 
 ### Added

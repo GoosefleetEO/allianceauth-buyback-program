@@ -24,6 +24,7 @@ logger = get_extension_logger(__name__)
     scopes=[
         "esi-contracts.read_character_contracts.v1",
         "esi-contracts.read_corporation_contracts.v1",
+        "esi-universe.read_structures.v1",
     ]
 )
 def setup(request, token):

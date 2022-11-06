@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('buybackprogram', '0008_alter_general_options_alter_program_refining_rate'),
+        ("buybackprogram", "0008_alter_general_options_alter_program_refining_rate"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contract',
-            name='location_name',
+            model_name="contract",
+            name="location_name",
             field=models.CharField(max_length=128, null=True),
         ),
     ]

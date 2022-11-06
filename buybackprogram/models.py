@@ -97,6 +97,7 @@ class Owner(models.Model):
         [
             "esi-contracts.read_character_contracts.v1",
             "esi-contracts.read_corporation_contracts.v1",
+            "esi-universe.read_structures.v1",
         ]
     )
     def update_contracts_esi(self, token):

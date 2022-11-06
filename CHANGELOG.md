@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.8.3] - 06-11-2022
+
+### Added
+- Readme for location scope
+
 ## [1.8.2] - 06-11-2022
 
 ### Changed

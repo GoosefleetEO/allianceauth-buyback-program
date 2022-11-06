@@ -88,6 +88,7 @@ An Alliance Auth app for creating buyback programs and to allow users calculate 
 Update the Eve Online API app used for authentication in your AA installation to include the following scopes:
 - `esi-contracts.read_character_contracts.v1`
 - `esi-contracts.read_corporation_contracts.v1`
+- `esi-universe.read_structures.v1`
 
 ## Step 4 - Data Preload
 

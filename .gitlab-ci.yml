@@ -22,10 +22,6 @@ pre-commit:
     - pip install pre-commit
     - pre-commit run --all-files
 
-.test-py37:
-  needs: []
-  stage: test
-  image: python:3.7-buster
 
 .test-py38:
   needs: []
@@ -36,24 +32,6 @@ pre-commit:
   needs: []
   stage: test
   image: python:3.9-buster
-
-test-37-django31:
-  extends: .test-py37
-  script:
-    - tox -e py37-django31
-    - bash <(curl -s https://codecov.io/bash)
-
-test-38-django31:
-  extends: .test-py38
-  script:
-    - tox -e py38-django31
-    - bash <(curl -s https://codecov.io/bash)
-
-test-39-django31:
-  extends: .test-py39
-  script:
-    - tox -e py39-django31
-    - bash <(curl -s https://codecov.io/bash)
 
 test-38-django40:
   extends: .test-py38

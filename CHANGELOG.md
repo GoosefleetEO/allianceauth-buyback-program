@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Fixes #49, fixes issue where missing items when using Janice API caused price update to crash
 
+### Removed
+- Dropped support for python 3.7
+- Dropped support for AA 2.x
+
 ## [1.8.0] - 20-09-2022
 
 This update adds beter statistics and leaderboard for each program. Users will be able to display the leaderboard for each program they are able to see if they have been granted the view_leaderboard setting. Leaderboard displays a datatable for each month total isk and total donations count.

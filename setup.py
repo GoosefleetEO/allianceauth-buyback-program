@@ -39,6 +39,6 @@ setup(
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     ],
-    python_requires="~=3.7",
-    install_requires=["allianceauth>=2.8.2", "django-eveuniverse>=0.8.2"],
+    python_requires="~=3.8",
+    install_requires=["allianceauth>=3.0", "django-eveuniverse>=0.8.2"],
 )

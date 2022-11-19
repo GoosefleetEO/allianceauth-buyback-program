@@ -189,7 +189,7 @@ def program_performance(request, program_pk):
     lastbench = datetime.now()
     # Loop all tracking objects
     for tracking in tracking_numbers:
-        month = datetime.strftime(tracking.contract.date_issued, "%Y-%m")
+        month = datetime.strftime(tracking.contract.date_issued, "%Y-%m") + "-15"
         allmonths.add(month)
 
         if month not in monthstats["status"]:

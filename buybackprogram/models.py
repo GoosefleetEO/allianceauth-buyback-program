@@ -493,7 +493,13 @@ class Owner(models.Model):
             structure_id=structid, token=token.valid_access_token()
         )
         operation.request_config.also_return_response = True
-        label, response = operation.result()
+
+        try:
+            label, response = operation.result()
+        except OSError as ex:
+            logger.error("Error fetching location information %s" % (ex))
+            return "Unknown"
+
         if response.status_code != 200:
             return "Unknown"
         return label["name"]

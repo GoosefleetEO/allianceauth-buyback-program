@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.8.4] - 03-12-2023
+## [1.8.5] - 03-12-2023
 
 ### Fixed
 - Fixed performance table issues

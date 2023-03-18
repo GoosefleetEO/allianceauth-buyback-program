@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.8.4] - 03-12-2023
+
+### Fixed
+- Fixed performance table issues
+- Fixed #52 - Too long location names caused issues when creating new locations
+- Fixed #53 - Contracts not updating if manager has no docking access to station
+
 ## [1.8.3] - 06-11-2022
 
 ### Added

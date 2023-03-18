@@ -98,6 +98,7 @@ class LocationForm(forms.Form):
     name = forms.CharField(
         label="Structure/station name",
         help_text="A name or identification tag of the structure where the items should be contracted at. Does not need to match ingame name.",
+        max_length=32,
     )
 
     structure_id = forms.CharField(

@@ -1125,7 +1125,7 @@ class Tracking(models.Model):
     hauling_cost = models.BigIntegerField(null=False)
     donation = models.BigIntegerField(null=True, blank=True)
     net_price = models.BigIntegerField(null=False)
-    tracking_number = models.CharField(max_length=20)
+    tracking_number = models.CharField(max_length=32)
     created_at = models.DateTimeField(null=True, blank=True)
 
 

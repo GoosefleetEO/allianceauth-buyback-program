@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased] - yyyy-mm-dd
+
+### Added
+
+### Changed
+- Increased tracking number max characters to 32
+
+### Fixed
+- Fixed #54, a running id key is now added to tracking numbers to make then unique.
+
 ## [1.8.5] - 03-12-2023
 
 ### Fixed

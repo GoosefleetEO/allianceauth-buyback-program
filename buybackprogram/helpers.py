@@ -1025,8 +1025,14 @@ def get_tracking_number(
     user, program, form_donation, buyback_data, contract_price_data
 ):
 
+    last_id = Tracking.objects.last().id
+
     tracking_number = (
-        BUYBACKPROGRAM_TRACKING_PREFILL + "-" + uuid.uuid4().hex[:6].upper()
+        BUYBACKPROGRAM_TRACKING_PREFILL
+        + "-"
+        + str(last_id)
+        + "-"
+        + uuid.uuid4().hex[:6].upper()
     )
 
     logger.debug(

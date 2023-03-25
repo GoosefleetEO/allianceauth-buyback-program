@@ -23,6 +23,8 @@ from buybackprogram.notification import (
     send_user_notification,
 )
 
+from .app_settings import BUYBACKPROGRAM_TRACKING_PREFILL
+
 from .decorators import fetch_token_for_owner
 from .providers import esi
 
@@ -105,6 +107,8 @@ class Owner(models.Model):
 
         # Get all contracts for owner
         contracts = self._fetch_contracts()
+
+        suspiciou_contracts = []
 
         logger.debug("Got %s character contracts" % len(contracts))
 
@@ -466,6 +470,14 @@ class Owner(models.Model):
                                 )
 
                         break  # If we have found a match from our ESI contracts wi will stop looping on the contract
+
+                    elif (
+                        BUYBACKPROGRAM_TRACKING_PREFILL in contract["title"]
+                        and contract["status"] == "Outstanding"
+                    ):
+                        suspiciou_contracts.append(contract)
+
+        logger.debug("Got sus contracts %s " % suspiciou_contracts)
 
     @fetch_token_for_owner(["esi-universe.read_structures.v1"])
     def _get_location_name(self, token, structid) -> list:

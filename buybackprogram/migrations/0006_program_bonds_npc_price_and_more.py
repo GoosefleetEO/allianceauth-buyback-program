@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("buybackprogram", "0005_program_compression_price_dencity_modifier"),
     ]

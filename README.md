@@ -116,7 +116,7 @@ Buyback program requires a few periodic tasks to operate and update its data.
 
 Buybackprogram is designed to use localy stored prices to speed up the price calculations. It is important that you have the price update task in your periodic tasks so that your prices will update.
 
-By adding the following lines in your `local.py` setting file the progral will update the stored item prices at midnight. It will also check for any new contracts and update the statistics page with them every 15 minutes:
+By adding the following lines in your `local.py` setting file the progral will update the stored item prices at midnight. This same task is also responsible for maintenance tasks such as removing unlinked tracking objects. It will also check for any new contracts and update the statistics page with them every 15 minutes:
 
 ```
 # Buybackprogram price updates
@@ -143,6 +143,7 @@ BUYBACKPROGRAM_PRICE_SOURCE_NAME | Display name of your price source. Has no eff
 BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT | Limit in hours when an item price is considered as outdated | 48
 BUYBACKPROGRAM_PRICE_METHOD | By default Fuzzwork API will be used for pricing, if this is set to "Janice" then the Janice API will be used. | Fuzzwork
 BUYBACKPROGRAM_PRICE_JANICE_API_KEY | The API key to access Janice API. |
+BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT | Time limit to remove unlinked tracking objects from the database | 48 hours
 
 Note: If you change your price source for an old install you need to wait for the price update task to run or manually run it to update your current database prices.
 

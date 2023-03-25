@@ -12,7 +12,6 @@ class Command(BaseCommand):
     help = "Links tracking objects with old contracts after 1.2.0 update"
 
     def handle(self, *args, **options):
-
         updated = 0
 
         self.stdout.write("Starting contract and tracking manual linking...")
@@ -33,16 +32,12 @@ class Command(BaseCommand):
 
         # Start looping for all stored tracking objects
         for tracking in tracking_numbers:
-
             # If the tracking has an active program (not deleted)
             if tracking.program:
-
                 # Start checking if we find any matches from our ESI contracts
                 for contract in all_contracts:
-
                     # Only get contracts with the correct prefill ticker
                     if tracking.tracking_number in contract.title:
-
                         try:
                             tracking = Tracking.objects.filter(pk=tracking.id).update(
                                 contract=contract.id

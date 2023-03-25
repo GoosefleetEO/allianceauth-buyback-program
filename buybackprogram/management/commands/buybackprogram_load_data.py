@@ -11,7 +11,6 @@ class Command(BaseCommand):
     help = "Setup all needed data for buyback program to operate"
 
     def _update_models(self):
-
         self.stdout.write(
             "Adding %s objects to celery task queue. This may take a minute..."
             % (EveSolarSystem.__name__)

@@ -82,7 +82,6 @@ def setting_icons(option, program):
 
 @register.filter
 def program_setting(program):
-
     settings = []
 
     program_items = ProgramItem.objects.filter(program=program)

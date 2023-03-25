@@ -6,11 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
+Performance increases bug fixes. Migrations needed.
 
 ### Added
+- Added settings option for tracking object removal
+- Added a maintenance task within the price_update tasks which will remove tracking objects that are not linked to any contracts
 
 ### Changed
 - Increased tracking number max characters to 32
+- Updated pre-commit
 
 ### Fixed
 - Fixed #54, a running id key is now added to tracking numbers to make then unique.

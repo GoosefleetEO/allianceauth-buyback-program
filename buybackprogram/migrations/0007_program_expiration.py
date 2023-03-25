@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("buybackprogram", "0006_program_bonds_npc_price_and_more"),
     ]

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('buybackprogram', '0009_contract_location_name'),
+        ("buybackprogram", "0009_contract_location_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='tracking',
-            name='tracking_number',
+            model_name="tracking",
+            name="tracking_number",
             field=models.CharField(max_length=32),
         ),
     ]

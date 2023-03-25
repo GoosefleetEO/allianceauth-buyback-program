@@ -120,7 +120,6 @@ class LocationForm(forms.Form):
 
 
 class CalculatorForm(forms.Form):
-
     items = forms.CharField(
         widget=forms.Textarea,
         label="Items",

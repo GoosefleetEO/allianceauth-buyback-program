@@ -67,7 +67,6 @@ def note_unpublished_item(item_type):
 
 def note_missing_typematerials(type_materials, name):
     if type_materials.count() == 0:
-
         logger.error(
             "TypeMaterials not found for %s. Did you forget to run buybackprogram_load_data?"
             % name

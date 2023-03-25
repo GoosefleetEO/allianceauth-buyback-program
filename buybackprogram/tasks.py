@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import requests
 from bravado.exception import HTTPBadGateway, HTTPGatewayTimeout, HTTPServiceUnavailable
 from celery import shared_task
@@ -15,9 +17,12 @@ from buybackprogram.app_settings import (
     BUYBACKPROGRAM_PRICE_SOURCE_ID,
     BUYBACKPROGRAM_PRICE_SOURCE_NAME,
 )
-from buybackprogram.models import ItemPrices, Owner
+from buybackprogram.models import ItemPrices, Owner, Tracking
 
-from .app_settings import BUYBACKPROGRAM_TASKS_TIME_LIMIT
+from .app_settings import (
+    BUYBACKPROGRAM_TASKS_TIME_LIMIT,
+    BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT,
+)
 
 logger = get_extension_logger(__name__)
 
@@ -148,7 +153,6 @@ def update_all_prices():
         for price in prices:
             # Check if we received data from the API for the item. This will fix errors when using Janice as the POST endpoint does not return anything when there are no prices.
             if str(price.eve_type_id) in market_data:
-
                 # Get the price values from the API data
                 buy = int(float(market_data[str(price.eve_type_id)]["buy"]["max"]))
                 sell = int(float(market_data[str(price.eve_type_id)]["sell"]["min"]))
@@ -183,6 +187,22 @@ def update_all_prices():
 
     else:
         logger.error("Price source API is not up! Prices not updated.")
+
+    """cleanup unused tracking objects"""
+    logger.debug(
+        "Starting tracking objects cleanup. Removing tracking objects with no contracts assigned to them that are more than %s hours old "
+        % BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT
+    )
+
+    try:
+        trackings, t = Tracking.objects.filter(
+            contract_id__isnull=True,
+            created_at__lte=timezone.now()
+            - timedelta(hours=BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT),
+        ).delete()
+        logger.debug("%s old unlinked tracking objects deleted." % len(t))
+    except Error as e:
+        logger.error("Error deleting old tracking objects: %s" % e)
 
 
 @shared_task(

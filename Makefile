@@ -4,7 +4,7 @@ package = buybackprogram
 help:
 	@echo "Makefile for $(appname)"
 
-translationfiles:
+makemessages:
 	cd $(package) && \
 	django-admin makemessages -l en --ignore 'build/*' && \
 	django-admin makemessages -l de --ignore 'build/*' && \
@@ -13,7 +13,13 @@ translationfiles:
 	django-admin makemessages -l ru --ignore 'build/*' && \
 	django-admin makemessages -l zh_Hans --ignore 'build/*'
 
-compiletranslationfiles:
+tx_push:
+	tx push --source
+
+tx_pull:
+	tx pull -f
+
+compilemessages:
 	cd $(package) && \
 	django-admin compilemessages -l en  && \
 	django-admin compilemessages -l de  && \
@@ -23,13 +29,28 @@ compiletranslationfiles:
 	django-admin compilemessages -l zh_Hans
 
 coverage:
-	rm -rfv htmlcov && \
-	coverage run ../myauth/manage.py test $(package) --keepdb --failfast && coverage html && coverage report
+	coverage run ../myauth/manage.py test $(package).tests --keepdb && coverage html && coverage report -m
 
-build_test:
-	rm -rfv dist && \
-	python3 -m build
+test:
+	# runs a full test incl. re-creating of the test DB
+	python ../myauth/manage.py test $(package) --failfast --debug-mode -v 2
 
-tox_tests:
-	tox && \
-	rm -rf .tox/
+pylint:
+	pylint --load-plugins pylint_django $(package)
+
+check_complexity:
+	flake8 $(package) --max-complexity=10
+
+nuke_testdb:
+	# This will delete the current test database
+	# very userful after large changes to the models
+	mysql -u root -p -e "drop database test_aa_dev_2;"
+
+flake8:
+	flake8 $(package) --count
+
+graph_models:
+	python ../myauth/manage.py graph_models $(package) --arrow-shape normal -o $(appname)_models.png
+
+create_testdata:
+	python ../myauth/manage.py test $(package).tests.testdata.create_eveuniverse --keepdb -v 2

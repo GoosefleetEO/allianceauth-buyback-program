@@ -304,6 +304,10 @@ EMAIL_HOST_PASSWORD = ""
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = ""
 
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 #######################################
 # Add any custom settings below here. #
 #######################################
+
+STATICFILES_DIRS = []  # needed to suppress a warning

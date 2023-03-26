@@ -144,6 +144,7 @@ BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT | Limit in hours when an item price is co
 BUYBACKPROGRAM_PRICE_METHOD | By default Fuzzwork API will be used for pricing, if this is set to "Janice" then the Janice API will be used. | Fuzzwork
 BUYBACKPROGRAM_PRICE_JANICE_API_KEY | The API key to access Janice API. |
 BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT | Time limit to remove unlinked tracking objects from the database | 48 hours
+BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS | Determines if we will track and store contracts that starts with the prefill phrase but do not have any actual tracking hits in database | True
 
 Note: If you change your price source for an old install you need to wait for the price update task to run or manually run it to update your current database prices.
 

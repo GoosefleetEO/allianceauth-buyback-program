@@ -10,6 +10,7 @@ Performance increases bug fixes. Migrations needed.
 
 ### Added
 - Added settings option for tracking object removal
+- Added setting to track all contracts starting with the buyback prefill
 - Added a maintenance task within the price_update tasks which will remove tracking objects that are not linked to any contracts
 
 ### Changed

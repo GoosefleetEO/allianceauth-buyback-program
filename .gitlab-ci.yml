@@ -22,11 +22,6 @@ pre-commit-check:
     - pip install pre-commit
     - pre-commit run --all-files
 
-.test-py37:
-  stage: test
-  needs: []
-  image: python:3.7-bullseye
-
 .test-py38:
   stage: test
   needs: []

@@ -392,6 +392,7 @@ def program_stats(request):
         "finished": 0,
         "outstanding_count": 0,
         "finished_count": 0,
+        "untracked_count": 0,
     }
 
     # Request user owned characters
@@ -443,8 +444,28 @@ def program_stats(request):
         # Add contract to the valid contract list
         valid_contracts.append(tracking)
 
+    # Get pending contracts that have no tracking assigned to them
+    untracked_contracts = Contract.objects.filter(
+        Q(assignee_id__in=characters) | Q(assignee_id__in=corporations)
+    ).filter(no_tracking=True, status="outstanding")
+
+    logger.debug("Got %s untracked contracts" % len(untracked_contracts))
+
+    for contract in untracked_contracts:
+        values["untracked_count"] += 1
+
+        # Get notes for this contract
+        contract.notes = ContractNotification.objects.filter(contract=contract)
+
+        # Get the name for the issuer
+        contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+
+        # Get the name for the assignee
+        contract.assignee_name = EveEntity.objects.resolve_name(contract.assignee_id)
+
     context = {
         "contracts": valid_contracts,
+        "untracked_contracts": untracked_contracts,
         "values": values,
         "mine": True,
     }

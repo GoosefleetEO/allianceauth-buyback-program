@@ -23,14 +23,24 @@
                         <th>Total bought:</th>
                         <td>{{values.finished|floatformat:0|intcomma|price}}</td>
                     </tr>
+                    <tr>
+                        <th>Untracked count:</th>
+                        <td>{{values.untracked_count}}</td>
+                    </tr>
                 </tbody>
             </table>
-        </div>
+
+            {% if values.untracked_count > 0 %}
+                <div class="alert alert-warning alert-dismissible" role="alert"> <i class="fas fa-exclamation-triangle"> Warning:</i> You have {{values.untracked_count}} outstanding contracts that start with the buyback prefill text but do not match any tracking objects in your programs! These contracts are possibly scam contracts trying to identify as valid buyback contracts.</div>
+
+                </div>
+            {% endif %}
 
         <!-- Nav tabs -->
         <ul class="nav nav-tabs" role="tablist">
-            <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Outstanding</a></li>
-            <li role="presentation"><a href="#finished" aria-controls="finished" role="tab" data-toggle="tab">Finished</a></li>
+            <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Outstanding ({{values.outstanding_count}})</a></li>
+            <li role="presentation"><a href="#finished" aria-controls="finished" role="tab" data-toggle="tab">Finished ({{values.finished_count}})</a></li>
+            <li role="presentation"><a href="#untracked" aria-controls="untracked" role="tab" data-toggle="tab">Untracked ({{values.untracked_count}})</a></li>
         </ul>
 
         <div class="panel panel-default panel-tabs">
@@ -121,6 +131,53 @@
                                             </td>
 
                                             <td><a class="btn btn-info btn-sm" href="{% url 'buybackprogram:contract_details' contract_title=tracking.tracking_number %}">
+                                            Details
+                                        </a></td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- untracked contracts tab -->
+                    <div role="tabpanel" class="tab-pane" id="untracked">
+                        <table class="table table-striped table-condensed">
+                            <thead>
+                                <tr>
+                                    <th >{% trans "Issuer" %}</th>
+                                    <th >{% trans "Assignee" %}</th>
+                                    <th >{% trans "Location" %}</th>
+                                    <th >{% trans "Date issued" %}</th>
+                                    <th >{% trans "Time pending" %}</th>
+                                    <th >{% trans "Status" %}</th>
+                                    <th >{% trans "Tracking #" %}</th>
+                                    <th >{% trans "Price" %}</th>
+                                    <th>{% trans "Notes" %}</th>
+                                    <th>{% trans "Action" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                {% for contract in untracked_contracts %}
+                                    {% if contract.status == 'outstanding' %}
+                                        <tr>
+                                            <td>{{contract.issuer_name}}</td>
+                                            <td>{{contract.assignee_name}}</td>
+                                            <td>{{contract.location_name}}</td>
+                                            <td>{{contract.date_issued}}</td>
+                                            <td>{{contract.date_issued|timesince }}</td>
+                                            <td>{{contract.status}}</td>
+                                            <td>{{tracking_number}}</td>
+                                            <td>{{contract.price|floatformat:0|intcomma|price}}</td>
+
+                                            <td>
+                                                {% for note in contract.notes %}
+                                                <i style="color: {{note.color}};" class="fas {{note.icon}}" title="{{note.message}}"></i>
+                                                {% endfor %}
+                                            </td>
+
+                                            <td><a class="btn btn-info btn-sm" href="{% url 'buybackprogram:contract_details' contract_title=contract.title %}">
                                             Details
                                         </a></td>
                                         </tr>

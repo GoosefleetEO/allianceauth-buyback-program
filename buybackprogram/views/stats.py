@@ -25,6 +25,10 @@ from ..models import (
     TrackingItem,
 )
 
+from buybackprogram.app_settings import (
+    BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS,
+)
+
 logger = get_extension_logger(__name__)
 
 
@@ -385,6 +389,7 @@ def program_performance(request, program_pk):
 def program_stats(request):
     # List for valid contracts to be displayed
     valid_contracts = []
+    untracked_contracts = False
 
     # Tracker values
     values = {
@@ -444,24 +449,27 @@ def program_stats(request):
         # Add contract to the valid contract list
         valid_contracts.append(tracking)
 
-    # Get pending contracts that have no tracking assigned to them
-    untracked_contracts = Contract.objects.filter(
-        Q(assignee_id__in=characters) | Q(assignee_id__in=corporations)
-    ).filter(no_tracking=True, status="outstanding")
+    if BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS:
+        # Get pending contracts that have no tracking assigned to them
+        untracked_contracts = Contract.objects.filter(
+            Q(assignee_id__in=characters) | Q(assignee_id__in=corporations)
+        ).filter(no_tracking=True, status="outstanding")
 
-    logger.debug("Got %s untracked contracts" % len(untracked_contracts))
+        logger.debug("Got %s untracked contracts" % len(untracked_contracts))
 
-    for contract in untracked_contracts:
-        values["untracked_count"] += 1
+        for contract in untracked_contracts:
+            values["untracked_count"] += 1
 
-        # Get notes for this contract
-        contract.notes = ContractNotification.objects.filter(contract=contract)
+            # Get notes for this contract
+            contract.notes = ContractNotification.objects.filter(contract=contract)
 
-        # Get the name for the issuer
-        contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+            # Get the name for the issuer
+            contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
 
-        # Get the name for the assignee
-        contract.assignee_name = EveEntity.objects.resolve_name(contract.assignee_id)
+            # Get the name for the assignee
+            contract.assignee_name = EveEntity.objects.resolve_name(
+                contract.assignee_id
+            )
 
     context = {
         "contracts": valid_contracts,
@@ -479,12 +487,15 @@ def program_stats_all(request):
     # List for valid contracts to be displayed
     valid_contracts = []
 
+    untracked_contracts = False
+
     # Tracker values
     values = {
         "outstanding": 0,
         "finished": 0,
         "outstanding_count": 0,
         "finished_count": 0,
+        "untracked_count": 0,
     }
 
     # Get all tracking objects that have a linked contract to them for the user
@@ -521,8 +532,31 @@ def program_stats_all(request):
 
         valid_contracts.append(tracking)
 
+    if BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS:
+        # Get pending contracts that have no tracking assigned to them
+        untracked_contracts = Contract.objects.filter(
+            no_tracking=True, status="outstanding"
+        )
+
+        logger.debug("Got %s untracked contracts" % len(untracked_contracts))
+
+        for contract in untracked_contracts:
+            values["untracked_count"] += 1
+
+            # Get notes for this contract
+            contract.notes = ContractNotification.objects.filter(contract=contract)
+
+            # Get the name for the issuer
+            contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+
+            # Get the name for the assignee
+            contract.assignee_name = EveEntity.objects.resolve_name(
+                contract.assignee_id
+            )
+
     context = {
         "contracts": valid_contracts,
+        "untracked_contracts": untracked_contracts,
         "values": values,
         "mine": True,
     }

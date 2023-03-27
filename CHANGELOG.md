@@ -6,11 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
-Performance increases bug fixes. Migrations needed.
+No breaking changes in the update. Migrations needed.
 
 ### Added
-- Added settings option for tracking object removal
-- Added setting to track all contracts starting with the buyback prefill
+- Added a new setting `BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS` that will determine if we will check all contracts from owners that include the buyback prefill. This is used to catch possible scam contracts trying to mimic as valid buyback contracts.
+- Added a new setting `BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT` that will determine how long unlinked tracking objects (with no corresponding contracts) will be stored until purged
 - Added a maintenance task within the price_update tasks which will remove tracking objects that are not linked to any contracts
 
 ### Changed

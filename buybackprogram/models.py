@@ -714,7 +714,7 @@ class Owner(models.Model):
 
         note = ContractNotification(
             contract=contract,
-            icon="fa-masks-theater",
+            icon="fa-theater-masks",
             color="red",
             message="Contract has no tracking object but is has a buyback prefill text! Possibly a scam contract.",
         )

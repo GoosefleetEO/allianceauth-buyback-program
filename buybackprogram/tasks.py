@@ -188,21 +188,27 @@ def update_all_prices():
     else:
         logger.error("Price source API is not up! Prices not updated.")
 
-    """cleanup unused tracking objects"""
-    logger.debug(
-        "Starting tracking objects cleanup. Removing tracking objects with no contracts assigned to them that are more than %s hours old "
-        % BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT
-    )
+    if BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT > 0:
+        """cleanup unused tracking objects"""
+        logger.debug(
+            "Starting tracking objects cleanup. Removing tracking objects with no contracts assigned to them that are more than %s hours old "
+            % BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT
+        )
 
-    try:
-        trackings, t = Tracking.objects.filter(
-            contract_id__isnull=True,
-            created_at__lte=timezone.now()
-            - timedelta(hours=BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT),
-        ).delete()
-        logger.debug("%s old unlinked tracking objects deleted." % len(t))
-    except Error as e:
-        logger.error("Error deleting old tracking objects: %s" % e)
+        try:
+            trackings, t = Tracking.objects.filter(
+                contract_id__isnull=True,
+                created_at__lte=timezone.now()
+                - timedelta(hours=BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT),
+            ).delete()
+            logger.debug("%s old unlinked tracking objects deleted." % len(t))
+        except Error as e:
+            logger.error("Error deleting old tracking objects: %s" % e)
+    else:
+        logger.debug(
+            "Tracking object time limit is set to %s, no old tracking object purging will happen. "
+            % BUYBACKPROGRAM_UNUSED_TRACKING_PURGE_LIMIT
+        )
 
 
 @shared_task(

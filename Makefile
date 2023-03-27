@@ -1,4 +1,4 @@
-appname = aa-buybackprogram
+appname = allianceauth-buybackprogram
 package = buybackprogram
 
 help:
@@ -29,7 +29,7 @@ compilemessages:
 	django-admin compilemessages -l zh_Hans
 
 coverage:
-	coverage run ../myauth/manage.py test $(package).tests --keepdb --failfast -v 2 && coverage html && coverage report -m
+	coverage run ../myauth/manage.py test $(package).tests --keepdb && coverage html && coverage report -m
 
 test:
 	# runs a full test incl. re-creating of the test DB
@@ -41,5 +41,16 @@ pylint:
 check_complexity:
 	flake8 $(package) --max-complexity=10
 
+nuke_testdb:
+	# This will delete the current test database
+	# very userful after large changes to the models
+	mysql -u root -p -e "drop database test_aa_dev_2;"
+
+flake8:
+	flake8 $(package) --count
+
 graph_models:
 	python ../myauth/manage.py graph_models $(package) --arrow-shape normal -o $(appname)_models.png
+
+create_testdata:
+	python ../myauth/manage.py test $(package).tests.testdata.create_eveuniverse --keepdb -v 2

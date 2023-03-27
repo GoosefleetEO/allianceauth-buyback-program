@@ -93,7 +93,6 @@ def program_add(request):
     form = ProgramForm(request.POST or None, user=request.user)
 
     if request.POST and form.is_valid():
-
         form = ProgramForm(request.POST, user=request.user)
 
         new_program = form.save()
@@ -118,7 +117,6 @@ def program_add(request):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def program_edit(request, program_pk):
-
     instance = Program.objects.get(pk=program_pk)
 
     if request.method == "POST":
@@ -130,7 +128,6 @@ def program_edit(request, program_pk):
         )
 
         if form.is_valid():
-
             form = ProgramForm(request.POST, instance=instance, user=request.user)
 
             updated_program = form.save()
@@ -156,7 +153,6 @@ def program_edit(request, program_pk):
             return HttpResponseRedirect(reverse("buybackprogram:index"))
 
     else:
-
         form = ProgramForm(instance=instance, user=request.user)
 
     context = {
@@ -170,7 +166,6 @@ def program_edit(request, program_pk):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def location_add(request):
-
     locations = Location.objects.all()
 
     if request.method != "POST":
@@ -223,7 +218,6 @@ def location_add(request):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def location_remove(request, location_pk):
-
     location = Location.objects.get(pk=location_pk)
 
     if location.owner.user == request.user:
@@ -259,7 +253,6 @@ def location_remove(request, location_pk):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def program_remove(request, program_pk):
-
     program = Program.objects.get(pk=program_pk)
 
     if program.owner.user == request.user:

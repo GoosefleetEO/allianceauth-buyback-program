@@ -25,13 +25,16 @@ from ..models import (
     TrackingItem,
 )
 
+from buybackprogram.app_settings import (
+    BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS,
+)
+
 logger = get_extension_logger(__name__)
 
 
 @login_required
 @permission_required("buybackprogram.basic_access")
 def my_stats(request):
-
     # List for valid contracts to be displayed
     valid_contracts = []
 
@@ -58,7 +61,6 @@ def my_stats(request):
 
     # Loop tracking objects to see if we have any contracts
     for tracking in tracking_numbers:
-
         # Get notes for this contract
         tracking.contract.notes = ContractNotification.objects.filter(
             contract=tracking.contract
@@ -385,9 +387,9 @@ def program_performance(request, program_pk):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def program_stats(request):
-
     # List for valid contracts to be displayed
     valid_contracts = []
+    untracked_contracts = False
 
     # Tracker values
     values = {
@@ -395,6 +397,7 @@ def program_stats(request):
         "finished": 0,
         "outstanding_count": 0,
         "finished_count": 0,
+        "untracked_count": 0,
     }
 
     # Request user owned characters
@@ -420,7 +423,6 @@ def program_stats(request):
 
     # Loop tracking objects to see if we have any contracts
     for tracking in tracking_numbers:
-
         # Get notes for this contract
         tracking.contract.notes = ContractNotification.objects.filter(
             contract=tracking.contract
@@ -447,10 +449,34 @@ def program_stats(request):
         # Add contract to the valid contract list
         valid_contracts.append(tracking)
 
+    if BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS:
+        # Get pending contracts that have no tracking assigned to them
+        untracked_contracts = Contract.objects.filter(
+            Q(assignee_id__in=characters) | Q(assignee_id__in=corporations)
+        ).filter(no_tracking=True, status="outstanding")
+
+        logger.debug("Got %s untracked contracts" % len(untracked_contracts))
+
+        for contract in untracked_contracts:
+            values["untracked_count"] += 1
+
+            # Get notes for this contract
+            contract.notes = ContractNotification.objects.filter(contract=contract)
+
+            # Get the name for the issuer
+            contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+
+            # Get the name for the assignee
+            contract.assignee_name = EveEntity.objects.resolve_name(
+                contract.assignee_id
+            )
+
     context = {
         "contracts": valid_contracts,
+        "untracked_contracts": untracked_contracts,
         "values": values,
         "mine": True,
+        "BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS": BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS,
     }
 
     return render(request, "buybackprogram/stats.html", context)
@@ -459,9 +485,10 @@ def program_stats(request):
 @login_required
 @permission_required("buybackprogram.see_all_statics")
 def program_stats_all(request):
-
     # List for valid contracts to be displayed
     valid_contracts = []
+
+    untracked_contracts = False
 
     # Tracker values
     values = {
@@ -469,6 +496,7 @@ def program_stats_all(request):
         "finished": 0,
         "outstanding_count": 0,
         "finished_count": 0,
+        "untracked_count": 0,
     }
 
     # Get all tracking objects that have a linked contract to them for the user
@@ -480,7 +508,6 @@ def program_stats_all(request):
 
     # Loop tracking objects to see if we have any contracts
     for tracking in tracking_numbers:
-
         # Get notes for this contract
         tracking.contract.notes = ContractNotification.objects.filter(
             contract=tracking.contract
@@ -506,10 +533,34 @@ def program_stats_all(request):
 
         valid_contracts.append(tracking)
 
+    if BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS:
+        # Get pending contracts that have no tracking assigned to them
+        untracked_contracts = Contract.objects.filter(
+            no_tracking=True, status="outstanding"
+        )
+
+        logger.debug("Got %s untracked contracts" % len(untracked_contracts))
+
+        for contract in untracked_contracts:
+            values["untracked_count"] += 1
+
+            # Get notes for this contract
+            contract.notes = ContractNotification.objects.filter(contract=contract)
+
+            # Get the name for the issuer
+            contract.issuer_name = EveEntity.objects.resolve_name(contract.issuer_id)
+
+            # Get the name for the assignee
+            contract.assignee_name = EveEntity.objects.resolve_name(
+                contract.assignee_id
+            )
+
     context = {
         "contracts": valid_contracts,
+        "untracked_contracts": untracked_contracts,
         "values": values,
         "mine": True,
+        "BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS": BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS,
     }
 
     return render(request, "buybackprogram/stats.html", context)
@@ -518,7 +569,6 @@ def program_stats_all(request):
 @login_required
 @permission_required("buybackprogram.basic_access")
 def contract_details(request, contract_title):
-
     contract = Contract.objects.get(title__contains=contract_title)
 
     # Get notes for this contract
@@ -537,7 +587,6 @@ def contract_details(request, contract_title):
 
     # Find the difference in the created contract and original calculation
     for tracking_item in tracking_items:
-
         tracking_notes = []
 
         item_match = False
@@ -564,7 +613,6 @@ def contract_details(request, contract_title):
         tracking_item.notes = tracking_notes
 
     for contract_item in contract_items:
-
         contract_notes = []
 
         item_match = False

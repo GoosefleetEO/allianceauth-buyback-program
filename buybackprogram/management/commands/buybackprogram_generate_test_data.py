@@ -23,7 +23,6 @@ class Command(BaseCommand):
     help = "Links tracking objects with old contracts after 1.2.0 update"
 
     def handle(self, *args, **options):
-
         self.stdout.write(
             "\033[91mThis command is only for development purposes. It will generate an endless amount of dummy contracts until terminated. Do not use in production enviroment!\033[91m\033[0m"
         )
@@ -31,11 +30,9 @@ class Command(BaseCommand):
             "Are you sure you want to proceed and run the command? (y/N)?"
         )
         if user_input.lower() == "y":
-
             x = 1
 
             while True:
-
                 x = x
 
                 net_price = random.randint(1000000, 100000000)
@@ -91,7 +88,6 @@ class Command(BaseCommand):
                 objs = []
 
                 for n in range(0, 3):
-
                     item_type = EveType.objects.order_by("?").first()
 
                     tracking_item = TrackingItem(

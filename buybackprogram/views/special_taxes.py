@@ -43,7 +43,6 @@ def program_edit_item(request, program_pk):
         )
 
         if form.is_valid():
-
             item_tax = form.cleaned_data["item_tax"]
             disallow_item = form.cleaned_data["disallow_item"]
 
@@ -105,7 +104,6 @@ def program_edit_marketgroup(request, program_pk):
         )
 
         if form.is_valid():
-
             item_types = []
             item_count = 0
 
@@ -123,20 +121,17 @@ def program_edit_marketgroup(request, program_pk):
             item_types.append(item_type)
 
             for m in marketgroups.market_group_children.all():
-
                 item_type = EveType.objects.filter(eve_market_group=m)
 
                 item_types.append(item_type)
 
                 for m2 in m.market_group_children.all():
-
                     item_type = EveType.objects.filter(eve_market_group=m2)
 
                     item_types.append(item_type)
 
             for sub_types in item_types:
                 for item in sub_types:
-
                     logger.debug("Adjusting tax for %s" % item)
 
                     ProgramItem.objects.update_or_create(
@@ -184,7 +179,6 @@ def program_edit_marketgroup(request, program_pk):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def program_item_remove(request, item_pk, program_pk):
-
     program_item = ProgramItem.objects.get(item_type=item_pk, program=program_pk)
 
     name = program_item.item_type
@@ -205,7 +199,6 @@ def program_item_remove(request, item_pk, program_pk):
 @login_required
 @permission_required("buybackprogram.manage_programs")
 def program_item_remove_all(request, program_pk):
-
     program_item = ProgramItem.objects.filter(program=program_pk)
 
     program_item.delete()

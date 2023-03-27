@@ -69,7 +69,6 @@ class messages_plus:
 
     @classmethod
     def _add_messages_icon(cls, level: int, message: str) -> str:
-
         return format_html(
             "{}",
             message,

@@ -24,7 +24,6 @@ logger = get_extension_logger(__name__)
 @login_required
 @permission_required("buybackprogram.basic_access")
 def program_calculate(request, program_pk):
-
     program = Program.objects.filter(pk=program_pk).first()
 
     buyback_data = []
@@ -35,7 +34,6 @@ def program_calculate(request, program_pk):
         return redirect("buybackprogram:index")
 
     if request.method != "POST":
-
         form = CalculatorForm()
 
     else:
@@ -49,7 +47,6 @@ def program_calculate(request, program_pk):
             if "\t" in form_items:
                 # Split items by rows
                 for item in form_items.split("\n"):
-
                     item_accepted = True
                     notes = []
 
@@ -89,11 +86,9 @@ def program_calculate(request, program_pk):
                     # Anything else
                     if len(parts) == 1:
                         if program.allow_unpacked_items:
-
                             quantity = 1
 
                         else:
-
                             quantity = 1
                             item_accepted = False
 
@@ -110,7 +105,6 @@ def program_calculate(request, program_pk):
                     elif len(parts) == 2:
                         # Get item quantity.
                         if not parts[1] == "\r":
-
                             # Get quantities and format the different localization imputs
                             quantity = int(
                                 parts[1]
@@ -121,11 +115,9 @@ def program_calculate(request, program_pk):
                             )
 
                         elif program.allow_unpacked_items:
-
                             quantity = 1
 
                         else:
-
                             quantity = 1
                             item_accepted = False
 
@@ -142,7 +134,6 @@ def program_calculate(request, program_pk):
                     else:
                         # Get item quantity.
                         if parts[1]:
-
                             # Get quantities and format the different localization imputs
                             quantity = int(
                                 parts[1]
@@ -153,11 +144,9 @@ def program_calculate(request, program_pk):
                             )
 
                         elif program.allow_unpacked_items:
-
                             quantity = 1
 
                         else:
-
                             quantity = 1
                             item_accepted = False
 
@@ -172,7 +161,6 @@ def program_calculate(request, program_pk):
 
                     # Get details for the item
                     if item_accepted:
-
                         # Get item material, compression and price information
                         item_prices = get_item_prices(
                             item_type,

@@ -18,7 +18,6 @@ logger = get_extension_logger(__name__)
 @login_required
 @permission_required("buybackprogram.basic_access")
 def index(request):
-
     user_groups = request.user.groups.all()
 
     logger.debug("User %s has groups: %s" % (request.user, user_groups))
@@ -130,7 +129,6 @@ def marketgroup_autocomplete(request):
 @login_required
 @permission_required("buybackprogram.basic_access")
 def user_settings_edit(request):
-
     try:
         user_settings = UserSettings.objects.get(user=request.user)
     except UserSettings.DoesNotExist:

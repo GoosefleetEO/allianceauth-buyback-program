@@ -62,7 +62,6 @@ def send_aa_discordbot_channel_notification(channel_id, message):
 
 
 def send_user_notification(user: User, level: str, message: dict) -> None:
-
     # Send AA text notification
     notify(
         user=user,
@@ -74,7 +73,6 @@ def send_user_notification(user: User, level: str, message: dict) -> None:
     if not aa_discordnotify_active():
         # Check if the discordproxy module is active. We will use it as our priority app for notifications
         try:
-
             from discordproxy.client import DiscordClient
             from discordproxy.discord_api_pb2 import Embed
             from discordproxy.exceptions import (
@@ -143,7 +141,6 @@ def send_user_notification(user: User, level: str, message: dict) -> None:
 def send_message_to_discord_channel(
     webhook, message: dict, embed: bool = False
 ) -> None:
-
     logger.debug("Notifications: Starting to parse channel webhook notification")
 
     url = webhook  # webhook url, from here: https://i.imgur.com/f9XnAew.png

@@ -2,6 +2,7 @@ from django.test import TestCase
 from unittest.mock import patch
 from app_utils.esi_testing import EsiClientStub, EsiEndpoint
 from app_utils.testing import NoSocketsTestCase
+from app_utils.esi import EsiStatus
 from .testdata.factories import (
     ContractFactory,
     ContractItemFactory,
@@ -151,6 +152,50 @@ class TestOwnersUpdateContractFromEsi(NoSocketsTestCase):
         contract.refresh_from_db()
         self.assertEqual(contract.status, "finished")
         self.assertTrue(mock_send_user_notification.called)
+
+
+@patch(MODULE_PATH + ".EveEntity.objects.resolve_name", spec=True)
+@patch(MODULE_PATH + ".fetch_esi_status")
+@patch(MODULE_PATH + ".EsiClientProvider")
+class TestOwnerGetLocationName(NoSocketsTestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        load_eveuniverse()
+        cls.owner = OwnerFactory()
+
+    def test_should_return_name_for_station(
+        self, mock_provider, mock_fetch_esi_status, mock_resolve_name
+    ):
+        # given
+        mock_fetch_esi_status.return_value = EsiStatus(True, 99, 99)
+        mock_resolve_name.return_value = "Jita 4-4"
+        # when
+        result = self.owner._get_location_name(60003760)
+        # then
+        self.assertEqual(result, "Jita 4-4")
+
+    # def test_should_return_name_for_structure(
+    #     self, mock_provider, mock_fetch_esi_status, mock_resolve_name
+    # ):
+    #     # given
+    #     mock_fetch_esi_status.return_value = EsiStatus(True, 99, 99)
+    #     endpoints = [
+    #         EsiEndpoint(
+    #             "Universe",
+    #             "get_universe_structures_structure_id",
+    #             "structure_id",
+    #             needs_token=True,
+    #             data={"100000001": {"name": "My home"}},
+    #         )
+    #     ]
+    #     mock_provider.return_value.client = EsiClientStub.create_from_endpoints(
+    #         endpoints
+    #     )
+    #     # when
+    #     result = self.owner._get_location_name(100000001)
+    #     # then
+    #     self.assertEqual(result, "My home")
 
 
 class TestLocations(TestCase):

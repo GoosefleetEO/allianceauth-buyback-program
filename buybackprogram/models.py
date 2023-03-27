@@ -305,11 +305,7 @@ class Owner(models.Model):
                 # Prepare objects for bulk create
                 for item in contract_items:
                     cont = Contract.objects.get(contract_id=contract["contract_id"])
-                    try:
-                        itm = EveType.objects.get(pk=item["type_id"])
-                    except EveType.DoesNotExist:
-                        itm = EveType.objects.get_or_create(id=item["type_id"])
-                        itm = EveType.objects.get(pk=item["type_id"])
+                    itm, _ = EveType.objects.get_or_create_esi(id=item["type_id"])
 
                     contract_item = ContractItem(
                         contract=cont,
@@ -591,12 +587,7 @@ class Owner(models.Model):
                 # Prepare objects for bulk create
                 for item in contract_items:
                     cont = Contract.objects.get(contract_id=contract["contract_id"])
-
-                    try:
-                        itm = EveType.objects.get(pk=item["type_id"])
-                    except EveType.DoesNotExist:
-                        itm = EveType.objects.get_or_create(id=item["type_id"])
-                        itm = EveType.objects.get(pk=item["type_id"])
+                    itm, _ = EveType.objects.get_or_create_esi(id=item["type_id"])
 
                     contract_item = ContractItem(
                         contract=cont,

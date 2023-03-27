@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - Memory leak in Owner._get_location_name()
+- Update contracts breaks with new eve types
 
 ## [1.9.0] - 2023-03-27
 

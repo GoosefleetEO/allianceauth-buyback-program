@@ -160,7 +160,7 @@ class TestOwnersUpdateContractFromEsi(NoSocketsTestCase):
 
 @patch(MODULE_PATH + ".EveEntity.objects.resolve_name", spec=True)
 @patch(MODULE_PATH + ".fetch_esi_status")
-@patch(MODULE_PATH + ".EsiClientProvider")
+@patch(MODULE_PATH + ".esi")
 class TestOwnerGetLocationName(NoSocketsTestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -169,7 +169,7 @@ class TestOwnerGetLocationName(NoSocketsTestCase):
         cls.owner = OwnerFactory()
 
     def test_should_return_name_for_station(
-        self, mock_provider, mock_fetch_esi_status, mock_resolve_name
+        self, mock_esi, mock_fetch_esi_status, mock_resolve_name
     ):
         # given
         mock_fetch_esi_status.return_value = EsiStatus(True, 99, 99)
@@ -180,7 +180,7 @@ class TestOwnerGetLocationName(NoSocketsTestCase):
         self.assertEqual(result, "Jita 4-4")
 
     def test_should_return_name_for_structure(
-        self, mock_provider, mock_fetch_esi_status, mock_resolve_name
+        self, mock_esi, mock_fetch_esi_status, mock_resolve_name
     ):
         # given
         mock_fetch_esi_status.return_value = EsiStatus(True, 99, 99)
@@ -193,16 +193,14 @@ class TestOwnerGetLocationName(NoSocketsTestCase):
                 data={"100000001": {"name": "My structure"}},
             )
         ]
-        mock_provider.return_value.client = EsiClientStub.create_from_endpoints(
-            endpoints
-        )
+        mock_esi.client = EsiClientStub.create_from_endpoints(endpoints)
         # when
         result = self.owner._get_location_name(100000001)
         # then
         self.assertEqual(result, "My structure")
 
     def test_should_return_unknown_when_esi_is_down(
-        self, mock_provider, mock_fetch_esi_status, mock_resolve_name
+        self, mock_esi, mock_fetch_esi_status, mock_resolve_name
     ):
         # given
         mock_fetch_esi_status.return_value = EsiStatus(False, 99, 99)
@@ -213,11 +211,11 @@ class TestOwnerGetLocationName(NoSocketsTestCase):
         self.assertEqual(result, "Unknown")
 
     def test_should_return_unknown_when_structure_endpoints_returns_error(
-        self, mock_provider, mock_fetch_esi_status, mock_resolve_name
+        self, mock_esi, mock_fetch_esi_status, mock_resolve_name
     ):
         # given
         mock_fetch_esi_status.return_value = EsiStatus(True, 99, 99)
-        mock = mock_provider.return_value.client.Universe
+        mock = mock_esi.client.Universe
         mock.get_universe_structures_structure_id.return_value.result.side_effect = (
             OSError
         )

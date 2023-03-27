@@ -6,7 +6,6 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import Error, models
 from django.utils.translation import gettext as _
-from esi.clients import EsiClientProvider
 from esi.errors import TokenExpiredError, TokenInvalidError
 from esi.models import Token
 from eveuniverse.models import EveEntity, EveSolarSystem, EveType
@@ -647,7 +646,6 @@ class Owner(models.Model):
 
     @fetch_token_for_owner(["esi-universe.read_structures.v1"])
     def _get_location_name(self, token, structid) -> list:
-        esi = EsiClientProvider()
         status = fetch_esi_status()
 
         if not status.is_online or status.error_limit_remain < 5:

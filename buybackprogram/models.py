@@ -101,7 +101,6 @@ class Owner(models.Model):
         ]
     )
     def update_contracts_esi(self, token):
-
         logger.debug("Fetching contracts for %s" % self.character)
 
         # Get all contracts for owner
@@ -128,16 +127,12 @@ class Owner(models.Model):
 
         # Start looping for all stored tracking objects
         for tracking in tracking_numbers:
-
             # If the tracking has an active program (not deleted)
             if tracking.program:
-
                 # Start checking if we find any matches from our ESI contracts
                 for contract in all_contracts:
-
                     # Only get contracts with the correct prefill ticker
                     if tracking.tracking_number in contract["title"]:
-
                         # Check if we already have the contract stored
                         try:
                             old_contract = Contract.objects.get(
@@ -158,7 +153,10 @@ class Owner(models.Model):
                             old_contract.status = False
 
                         logger.debug(
-                            "User has token: %s" % contract["start_location_id"]
+                            "User has token: %s"
+                            % contract[
+                                "start_location_id"
+                            ]  # FIXME: start_location_id is not a mandatory field
                         )
 
                         # If we have found a contract from database that is not yet finished
@@ -185,7 +183,9 @@ class Owner(models.Model):
                                     "contract_id": contract["contract_id"],
                                     "assignee_id": contract["assignee_id"],
                                     "availability": contract["availability"],
-                                    "date_completed": contract["date_completed"],
+                                    "date_completed": contract[
+                                        "date_completed"
+                                    ],  # FIXME: This field might be missing
                                     "date_expired": contract["date_expired"],
                                     "date_issued": contract["date_issued"],
                                     "for_corporation": contract["for_corporation"],
@@ -285,7 +285,6 @@ class Owner(models.Model):
 
                                 # Prepare objects for bulk create
                                 for item in contract_items:
-
                                     cont = Contract.objects.get(
                                         contract_id=contract["contract_id"]
                                     )
@@ -319,7 +318,6 @@ class Owner(models.Model):
                                 # Notifications for users who have the notifications enabled
 
                                 if not contract["is_corporation"]:
-
                                     assigned_to = (
                                         self.character.character.character_name
                                     )
@@ -337,7 +335,6 @@ class Owner(models.Model):
                                 if notifications:
                                     notes += "\n\n**Notes**:\n"
                                     for note in notifications:
-
                                         notes += str(note.message)
                                         notes += "\n\n"
 
@@ -359,7 +356,6 @@ class Owner(models.Model):
 
                                 # If tracking is active and we should send a message for our users
                                 if tracking.program.discord_dm_notification:
-
                                     send_user_notification(
                                         user=self.user,
                                         level="success",
@@ -408,9 +404,7 @@ class Owner(models.Model):
 
                                 # If user has not disabled notifications
                                 if user_settings.disable_notifications is False:
-
                                     if not contract["is_corporation"]:
-
                                         assigned_to = (
                                             self.character.character.character_name
                                         )
@@ -440,7 +434,6 @@ class Owner(models.Model):
                                     if notifications:
                                         notes += "\n\n**Notes**:\n"
                                         for note in notifications:
-
                                             notes += str(note.message)
                                             notes += "\n\n"
 
@@ -506,7 +499,6 @@ class Owner(models.Model):
 
     @fetch_token_for_owner(["esi-contracts.read_character_contracts.v1"])
     def _fetch_contracts(self, token) -> list:
-
         character_id = self.character.character.character_id
 
         esi_contracts = esi.client.Contracts.get_characters_character_id_contracts(
@@ -517,7 +509,6 @@ class Owner(models.Model):
         contracts = []
 
         for esi_contract in esi_contracts:
-
             contract = esi_contract
             contract["is_corporation"] = False
 
@@ -527,7 +518,6 @@ class Owner(models.Model):
 
     @fetch_token_for_owner(["esi-contracts.read_corporation_contracts.v1"])
     def _fetch_corporation_contracts(self, token) -> list:
-
         corporation_id = self.character.character.corporation_id
 
         esi_contracts = esi.client.Contracts.get_corporations_corporation_id_contracts(
@@ -538,7 +528,6 @@ class Owner(models.Model):
         contracts = []
 
         for esi_contract in esi_contracts:
-
             contract = esi_contract
             contract["is_corporation"] = True
 
@@ -547,7 +536,6 @@ class Owner(models.Model):
         return contracts
 
     def _set_contract_notifications(self, tracking, contract, corporations, program):
-
         # List for all notes
         notes = []
 
@@ -582,7 +570,6 @@ class Owner(models.Model):
         logger.debug("Got contract items: %s" % (contract_items))
 
         if tracking_items != contract_items:
-
             note = ContractNotification(
                 contract=contract,
                 icon="fa-unlink",
@@ -594,10 +581,8 @@ class Owner(models.Model):
 
         # If our tracked price is different than the actual contract price
         if tracking.net_price >= 0 and tracking.net_price != contract.price:
-
             # If contract price is bellow tracked price
             if contract.price > tracking.net_price:
-
                 note = ContractNotification(
                     contract=contract,
                     icon="fa-dollar-sign",
@@ -608,7 +593,6 @@ class Owner(models.Model):
                 notes.append(note)
 
             else:
-
                 note = ContractNotification(
                     contract=contract,
                     icon="fa-dollar-sign",
@@ -619,7 +603,6 @@ class Owner(models.Model):
                 notes.append(note)
 
         if structure_id and contract.start_location_id not in structure_id:
-
             note = ContractNotification(
                 contract=contract,
                 icon="fa-compass",
@@ -630,7 +613,6 @@ class Owner(models.Model):
             notes.append(note)
 
         if contract.assignee_id in corporations and not tracking.program.is_corporation:
-
             note = ContractNotification(
                 contract=contract,
                 icon="fa-home",
@@ -641,7 +623,6 @@ class Owner(models.Model):
             notes.append(note)
 
         if contract.assignee_id not in corporations and tracking.program.is_corporation:
-
             note = ContractNotification(
                 contract=contract,
                 icon="fa-user",
@@ -652,7 +633,6 @@ class Owner(models.Model):
             notes.append(note)
 
         if not tracking.tracking_number == contract.title:
-
             note = ContractNotification(
                 contract=contract,
                 icon="fa-exclamation",
@@ -664,7 +644,6 @@ class Owner(models.Model):
             notes.append(note)
 
         if tracking.donation:
-
             note = ContractNotification(
                 contract=contract,
                 icon="fa-hand-holding-usd",
@@ -784,7 +763,6 @@ class Location(models.Model):
     )
 
     def __str__(self):
-
         return (
             self.eve_solar_system.name
             + " | "
@@ -795,7 +773,6 @@ class Location(models.Model):
 
     @property
     def location_display_name(self):
-
         return self.eve_solar_system.name + ": " + self.name
 
 
@@ -1047,7 +1024,6 @@ class ItemPrices(models.Model):
 
 
 class Contract(models.Model):
-
     assignee_id = models.IntegerField()
     availability = models.CharField(max_length=20)
     contract_id = models.IntegerField()
@@ -1066,7 +1042,6 @@ class Contract(models.Model):
 
 
 class ContractItem(models.Model):
-
     contract = models.ForeignKey(
         Contract,
         on_delete=models.deletion.CASCADE,
@@ -1083,7 +1058,6 @@ class ContractItem(models.Model):
 
 
 class ContractNotification(models.Model):
-
     contract = models.ForeignKey(
         Contract,
         on_delete=models.deletion.CASCADE,
@@ -1130,7 +1104,6 @@ class Tracking(models.Model):
 
 
 class TrackingItem(models.Model):
-
     tracking = models.ForeignKey(
         Tracking,
         on_delete=models.deletion.CASCADE,

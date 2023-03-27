@@ -1,5 +1,7 @@
 from django.test import TestCase
-
+from unittest.mock import patch
+from app_utils.esi_testing import EsiClientStub, EsiEndpoint
+from app_utils.testing import NoSocketsTestCase
 from .testdata.factories import (
     ContractFactory,
     ContractItemFactory,
@@ -8,19 +10,147 @@ from .testdata.factories import (
     LocationFactory,
     OwnerFactory,
     ProgramFactory,
+    EsiContractItemFactory,
     ProgramItemFactory,
     TrackingFactory,
     TrackingItemFactory,
+    EveEntityCharacterFactory,
+    EsiContractFactory,
+    UserProjectManagerFactory,
+    UserSettingsFactory,
 )
+from eveuniverse.models import EveType
 from .testdata.load_eveuniverse import load_eveuniverse
+from buybackprogram.models import Contract
+
+MODULE_PATH = "buybackprogram.models"
 
 
-class TestOwners(TestCase):
+class TestOwners(NoSocketsTestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        load_eveuniverse()
+        cls.project_manager = UserProjectManagerFactory()
+
     def test_should_have_str_method(self):
         # given
-        obj = OwnerFactory()
+        obj = OwnerFactory(user=self.project_manager)
         # when/then
         self.assertIsInstance(str(obj), str)
+
+
+@patch(MODULE_PATH + ".send_user_notification")
+@patch(MODULE_PATH + ".Owner._get_location_name")
+@patch(MODULE_PATH + ".esi")
+class TestOwnersUpdateContractFromEsi(NoSocketsTestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        load_eveuniverse()
+        cls.project_manager = UserProjectManagerFactory()
+
+    def test_should_create_new_contract(
+        self, mock_esi, mock_get_location_name, mock_send_user_notification
+    ):
+        # given
+        tracking_number = "AB1"
+        eve_type = EveType.objects.get(name="Pyerite")
+        owner = OwnerFactory(user=self.project_manager)
+        owner_character_id = owner.character.character.character_id
+        owner_corporation_id = owner.corporation.corporation_id
+        issuer = EveEntityCharacterFactory()
+        esi_contract = EsiContractFactory(title=tracking_number, issuer_id=issuer.id)
+        esi_contract_item = EsiContractItemFactory(type_id=eve_type.id)
+        endpoints = [
+            EsiEndpoint(
+                "Contracts",
+                "get_characters_character_id_contracts",
+                "character_id",
+                needs_token=True,
+                data={str(owner_character_id): [esi_contract]},
+            ),
+            EsiEndpoint(
+                "Contracts",
+                "get_characters_character_id_contracts_contract_id_items",
+                ("character_id", "contract_id"),
+                needs_token=True,
+                data={
+                    str(owner_character_id): {
+                        str(esi_contract["contract_id"]): [esi_contract_item]
+                    }
+                },
+            ),
+            EsiEndpoint(
+                "Contracts",
+                "get_corporations_corporation_id_contracts",
+                "corporation_id",
+                needs_token=True,
+                data={str(owner_corporation_id): []},
+            ),
+        ]
+        mock_esi.client = EsiClientStub.create_from_endpoints(endpoints)
+        program = ProgramFactory(owner=owner)
+        tracking = TrackingFactory(program=program, tracking_number=tracking_number)
+        TrackingItemFactory(tracking=tracking, eve_type=eve_type)
+        mock_get_location_name.return_value = "Unknown"
+        # when
+        owner.update_contracts_esi()
+        # then
+        self.assertEqual(Contract.objects.count(), 1)
+        contract = Contract.objects.first()
+        self.assertEqual(contract.contract_id, esi_contract["contract_id"])
+        self.assertEqual(contract.title, esi_contract["title"])
+        self.assertEqual(contract.contractitem_set.count(), 1)
+        item = contract.contractitem_set.first()
+        self.assertEqual(item.eve_type_id, esi_contract_item["type_id"])
+        self.assertEqual(item.quantity, esi_contract_item["quantity"])
+
+    def test_should_update_existing_contract(
+        self, mock_esi, mock_get_location_name, mock_send_user_notification
+    ):
+        # given
+        tracking_number = "AB1"
+        eve_type = EveType.objects.get(name="Pyerite")
+        owner = OwnerFactory(user=self.project_manager)
+        owner_character_id = owner.character.character.character_id
+        owner_corporation_id = owner.corporation.corporation_id
+        issuer = EveEntityCharacterFactory()
+        contract = ContractFactory(title=tracking_number, issuer_id=issuer.id)
+        esi_contract = EsiContractFactory(
+            contract_id=contract.contract_id,
+            title=tracking_number,
+            issuer_id=issuer.id,
+            status="finished",
+        )
+        endpoints = [
+            EsiEndpoint(
+                "Contracts",
+                "get_characters_character_id_contracts",
+                "character_id",
+                needs_token=True,
+                data={str(owner_character_id): [esi_contract]},
+            ),
+            EsiEndpoint(
+                "Contracts",
+                "get_corporations_corporation_id_contracts",
+                "corporation_id",
+                needs_token=True,
+                data={str(owner_corporation_id): []},
+            ),
+        ]
+        mock_esi.client = EsiClientStub.create_from_endpoints(endpoints)
+        program = ProgramFactory(owner=owner)
+        tracking = TrackingFactory(program=program, tracking_number=tracking_number)
+        TrackingItemFactory(tracking=tracking, eve_type=eve_type)
+        UserSettingsFactory(user=tracking.issuer_user)
+        mock_get_location_name.return_value = "Unknown"
+        # when
+        owner.update_contracts_esi()
+        # then
+        contract.refresh_from_db()
+        self.assertEqual(contract.status, "finished")
+        self.assertTrue(mock_send_user_notification.called)
 
 
 class TestLocations(TestCase):

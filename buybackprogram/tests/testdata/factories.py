@@ -2,7 +2,12 @@ import datetime as dt
 
 import factory
 import factory.fuzzy
-from app_utils.testdata_factories import EveCorporationInfoFactory, UserMainFactory
+from app_utils.testdata_factories import (
+    EveCorporationInfoFactory,
+    UserMainFactory,
+    EveCharacterFactory,
+    EveAllianceInfoFactory,
+)
 from buybackprogram.models import (
     Contract,
     ContractItem,
@@ -14,13 +19,61 @@ from buybackprogram.models import (
     ProgramItem,
     Tracking,
     TrackingItem,
+    UserSettings,
 )
 from django.utils.timezone import now
-from eveuniverse.models import EveSolarSystem, EveType
+from eveuniverse.models import EveSolarSystem, EveType, EveEntity
+
+
+def random_eve_type_id() -> int:
+    ids = EveType.objects.filter(published=True).values_list("id", flat=True)
+    if not ids:
+        return None
+    return factory.fuzzy.FuzzyChoice(ids).fuzz()
 
 
 def random_eve_type() -> EveType:
-    return EveType.objects.filter(published=True).order_by("?").first()
+    eve_type_did = random_eve_type_id()
+    if not eve_type_did:
+        return None
+    return EveType.objects.get(id=eve_type_did)
+
+
+# TODO: Move to app_utils
+class EveEntityFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = EveEntity
+        django_get_or_create = ("id", "name")
+
+    category = EveEntity.CATEGORY_CHARACTER
+
+    @factory.lazy_attribute
+    def id(self):
+        if self.category == EveEntity.CATEGORY_CHARACTER:
+            obj = EveCharacterFactory()
+            return obj.character_id
+        if self.category == EveEntity.CATEGORY_CORPORATION:
+            obj = EveCorporationInfoFactory()
+            return obj.corporation_id
+        if self.category == EveEntity.CATEGORY_ALLIANCE:
+            obj = EveAllianceInfoFactory()
+            return obj.alliance_id
+        raise NotImplementedError(f"Unknown category: {self.category}")
+
+
+class EveEntityCharacterFactory(EveEntityFactory):
+    name = factory.Faker("name")
+    category = EveEntity.CATEGORY_CHARACTER
+
+
+class EveEntityCorporationFactory(EveEntityFactory):
+    name = factory.Faker("company")
+    category = EveEntity.CATEGORY_CORPORATION
+
+
+class EveEntityAllianceFactory(EveEntityFactory):
+    name = factory.Faker("company")
+    category = EveEntity.CATEGORY_ALLIANCE
 
 
 class UserProjectManagerFactory(UserMainFactory):
@@ -139,12 +192,57 @@ class ContractFactory(factory.django.DjangoModelFactory):
     volume = factory.fuzzy.FuzzyInteger(10, 320)
 
 
+class EsiContractFactory(factory.DictFactory):
+    """Contract dictionary returned from ESI endpoint."""
+
+    # acceptor_id
+    assignee_id = factory.fuzzy.FuzzyInteger(90_000, 99_000)
+    availability = "public"
+    contract_id = factory.fuzzy.FuzzyInteger(1_000_000_000, 2_000_000_000)
+    date_issued = factory.fuzzy.FuzzyDateTime(now() - dt.timedelta(days=3))
+    for_corporation = False
+    issuer_corporation_id = factory.fuzzy.FuzzyInteger(90_000, 99_000)
+    issuer_id = factory.fuzzy.FuzzyInteger(90_000, 99_000)
+    price = factory.fuzzy.FuzzyInteger(90_000, 99_000)
+    status = "outstanding"
+    start_location_id = 60003760
+    title = factory.Faker("sentence")
+    type = "item_exchange"
+    volume = factory.fuzzy.FuzzyInteger(10, 320)
+
+    @factory.lazy_attribute
+    def date_expired(self):
+        return factory.fuzzy.FuzzyDateTime(
+            self.date_issued, self.date_issued + dt.timedelta(days=10)
+        ).fuzz()
+
+    @factory.lazy_attribute
+    def date_completed(self):
+        return factory.fuzzy.FuzzyDateTime(self.date_issued, self.date_expired).fuzz()
+
+
+class EsiContractItemFactory(factory.DictFactory):
+    """Contract item dictionary returned from ESI endpoint."""
+
+    is_included = True
+    is_singleton = False
+    quantity = factory.fuzzy.FuzzyInteger(1, 999)
+    record_id = factory.Sequence(lambda n: n)
+
+    @factory.lazy_attribute
+    def type_id(self):
+        id = random_eve_type_id()
+        if not id:
+            raise RuntimeError("No EveType found for EsiContractItemFactory.")
+        return id
+
+
 class ContractItemFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ContractItem
 
     contract = factory.SubFactory(ContractFactory)
-    quantity = factory.fuzzy.FuzzyInteger(1, 99)
+    quantity = factory.fuzzy.FuzzyInteger(1, 999)
 
     @factory.lazy_attribute
     def eve_type(self):
@@ -192,3 +290,10 @@ class TrackingItemFactory(factory.django.DjangoModelFactory):
         if not obj:
             raise RuntimeError("No EveType found for ProgramItemFactory.")
         return obj
+
+
+class UserSettingsFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = UserSettings
+
+    user = factory.SubFactory(UserIssuerFactory)

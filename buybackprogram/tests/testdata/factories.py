@@ -2,12 +2,18 @@ import datetime as dt
 
 import factory
 import factory.fuzzy
+from faker import Faker
+
+from django.utils.timezone import now
+from eveuniverse.models import EveEntity, EveSolarSystem, EveType
+
 from app_utils.testdata_factories import (
+    EveAllianceInfoFactory,
+    EveCharacterFactory,
     EveCorporationInfoFactory,
     UserMainFactory,
-    EveCharacterFactory,
-    EveAllianceInfoFactory,
 )
+
 from buybackprogram.models import (
     Contract,
     ContractItem,
@@ -21,8 +27,9 @@ from buybackprogram.models import (
     TrackingItem,
     UserSettings,
 )
-from django.utils.timezone import now
-from eveuniverse.models import EveSolarSystem, EveType, EveEntity
+
+fake = Faker()
+Faker.seed(0)
 
 
 def random_eve_type_id() -> int:
@@ -274,6 +281,10 @@ class TrackingFactory(factory.django.DjangoModelFactory):
     hauling_cost = factory.fuzzy.FuzzyInteger(1_000_000, 5_000_000)
     tracking_number = 5  # what is this?
     created_at = factory.fuzzy.FuzzyDateTime(now() - dt.timedelta(days=3))
+
+    @factory.lazy_attribute
+    def tracking_number(self):
+        return "aa-bbp-" + fake.uuid4()[:6].upper()
 
 
 class TrackingItemFactory(factory.django.DjangoModelFactory):

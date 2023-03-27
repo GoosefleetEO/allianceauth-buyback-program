@@ -1,28 +1,32 @@
-from django.test import TestCase
 from unittest.mock import patch
+
+from django.test import TestCase
+from eveuniverse.models import EveType
+
+from app_utils.esi import EsiStatus
 from app_utils.esi_testing import EsiClientStub, EsiEndpoint
 from app_utils.testing import NoSocketsTestCase
-from app_utils.esi import EsiStatus
+
+from buybackprogram.models import Contract
+
 from .testdata.factories import (
     ContractFactory,
     ContractItemFactory,
     ContractNotificationFactory,
+    EsiContractFactory,
+    EsiContractItemFactory,
+    EveEntityCharacterFactory,
     ItemPricesFactory,
     LocationFactory,
     OwnerFactory,
     ProgramFactory,
-    EsiContractItemFactory,
     ProgramItemFactory,
     TrackingFactory,
     TrackingItemFactory,
-    EveEntityCharacterFactory,
-    EsiContractFactory,
     UserProjectManagerFactory,
     UserSettingsFactory,
 )
-from eveuniverse.models import EveType
 from .testdata.load_eveuniverse import load_eveuniverse
-from buybackprogram.models import Contract
 
 MODULE_PATH = "buybackprogram.models"
 

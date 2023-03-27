@@ -149,7 +149,9 @@ class Owner(models.Model):
                                 "No matching contracts stored for %s in database, new contract."
                                 % contract["contract_id"]
                             )
-                            old_contract = Contract.objects.none()
+                            old_contract = (
+                                Contract.objects.none()
+                            )  # FIXME: This returns a queryset, not an object
                             old_contract.status = False
 
                         logger.debug(

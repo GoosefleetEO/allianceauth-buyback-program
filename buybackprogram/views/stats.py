@@ -476,6 +476,7 @@ def program_stats(request):
         "untracked_contracts": untracked_contracts,
         "values": values,
         "mine": True,
+        "BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS": BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS,
     }
 
     return render(request, "buybackprogram/stats.html", context)
@@ -559,6 +560,7 @@ def program_stats_all(request):
         "untracked_contracts": untracked_contracts,
         "values": values,
         "mine": True,
+        "BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS": BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS,
     }
 
     return render(request, "buybackprogram/stats.html", context)

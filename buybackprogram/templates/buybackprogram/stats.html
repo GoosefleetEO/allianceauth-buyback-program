@@ -23,7 +23,7 @@
                         <th>Total bought:</th>
                         <td>{{values.finished|floatformat:0|intcomma|price}}</td>
                     </tr>
-                    {% if untracked_contracts %}
+                    {% if BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS %}
                         <tr>
                             <th>Untracked count:</th>
                             <td>{{values.untracked_count}}</td>
@@ -42,7 +42,7 @@
         <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Outstanding ({{values.outstanding_count}})</a></li>
             <li role="presentation"><a href="#finished" aria-controls="finished" role="tab" data-toggle="tab">Finished ({{values.finished_count}})</a></li>
-            {% if untracked_contracts %}
+            {% if BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS %}
                 <li role="presentation"><a href="#untracked" aria-controls="untracked" role="tab" data-toggle="tab">Untracked ({{values.untracked_count}})</a>
                 </li>
             {% endif %}
@@ -162,7 +162,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% if untracked_contracts %}
+                                {% if BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS %}
                                     {% for contract in untracked_contracts %}
                                         {% if contract.status == 'outstanding' %}
                                             <tr>

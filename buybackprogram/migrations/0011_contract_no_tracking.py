@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('buybackprogram', '0010_alter_tracking_tracking_number'),
+        ("buybackprogram", "0010_alter_tracking_tracking_number"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contract',
-            name='no_tracking',
+            model_name="contract",
+            name="no_tracking",
             field=models.BooleanField(default=False),
         ),
     ]

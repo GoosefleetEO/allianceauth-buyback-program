@@ -179,27 +179,52 @@ class TestOwnerGetLocationName(NoSocketsTestCase):
         # then
         self.assertEqual(result, "Jita 4-4")
 
-    # def test_should_return_name_for_structure(
-    #     self, mock_provider, mock_fetch_esi_status, mock_resolve_name
-    # ):
-    #     # given
-    #     mock_fetch_esi_status.return_value = EsiStatus(True, 99, 99)
-    #     endpoints = [
-    #         EsiEndpoint(
-    #             "Universe",
-    #             "get_universe_structures_structure_id",
-    #             "structure_id",
-    #             needs_token=True,
-    #             data={"100000001": {"name": "My home"}},
-    #         )
-    #     ]
-    #     mock_provider.return_value.client = EsiClientStub.create_from_endpoints(
-    #         endpoints
-    #     )
-    #     # when
-    #     result = self.owner._get_location_name(100000001)
-    #     # then
-    #     self.assertEqual(result, "My home")
+    def test_should_return_name_for_structure(
+        self, mock_provider, mock_fetch_esi_status, mock_resolve_name
+    ):
+        # given
+        mock_fetch_esi_status.return_value = EsiStatus(True, 99, 99)
+        endpoints = [
+            EsiEndpoint(
+                "Universe",
+                "get_universe_structures_structure_id",
+                "structure_id",
+                needs_token=True,
+                data={"100000001": {"name": "My structure"}},
+            )
+        ]
+        mock_provider.return_value.client = EsiClientStub.create_from_endpoints(
+            endpoints
+        )
+        # when
+        result = self.owner._get_location_name(100000001)
+        # then
+        self.assertEqual(result, "My structure")
+
+    def test_should_return_unknown_when_esi_is_down(
+        self, mock_provider, mock_fetch_esi_status, mock_resolve_name
+    ):
+        # given
+        mock_fetch_esi_status.return_value = EsiStatus(False, 99, 99)
+        mock_resolve_name.return_value = "Jita 4-4"
+        # when
+        result = self.owner._get_location_name(60003760)
+        # then
+        self.assertEqual(result, "Unknown")
+
+    def test_should_return_unknown_when_structure_endpoints_returns_error(
+        self, mock_provider, mock_fetch_esi_status, mock_resolve_name
+    ):
+        # given
+        mock_fetch_esi_status.return_value = EsiStatus(True, 99, 99)
+        mock = mock_provider.return_value.client.Universe
+        mock.get_universe_structures_structure_id.return_value.result.side_effect = (
+            OSError
+        )
+        # when
+        result = self.owner._get_location_name(100000001)
+        # then
+        self.assertEqual(result, "Unknown")
 
 
 class TestLocations(TestCase):

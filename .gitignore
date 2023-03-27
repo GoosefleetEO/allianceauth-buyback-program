@@ -6,6 +6,7 @@ __pycache__
 .vscode/
 dist/
 build/
+htmlcov/
 *.egg-info/
 .coverage
 coverage.xml

@@ -995,7 +995,10 @@ def item_missing(item_name, quantity):
 def get_tracking_number(
     user, program, form_donation, buyback_data, contract_price_data
 ):
-    last_id = Tracking.objects.last().id
+    try:
+        last_id = Tracking.objects.last().id
+    except AttributeError:
+        last_id = 0
 
     tracking_number = (
         BUYBACKPROGRAM_TRACKING_PREFILL

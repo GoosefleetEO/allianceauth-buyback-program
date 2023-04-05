@@ -1227,9 +1227,7 @@ class Contract(models.Model):
     status = models.CharField(max_length=30)
     title = models.CharField(max_length=128)
     volume = models.BigIntegerField()
-    no_tracking = models.BooleanField(
-        default=False,
-    )
+    no_tracking = models.BooleanField(default=False)
 
 
 class ContractItem(models.Model):

@@ -186,13 +186,13 @@ class ContractFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Contract
 
-    assignee_id = factory.fuzzy.FuzzyInteger(90_000, 99_000)
+    assignee_id = factory.Sequence(lambda n: 90_000 + n)
     availability = "public"
-    contract_id = factory.fuzzy.FuzzyInteger(1_000_000_000, 2_000_000_000)
+    contract_id = factory.Sequence(lambda n: 1_000_000_000 + n)
     date_issued = factory.fuzzy.FuzzyDateTime(now() - dt.timedelta(days=3))
     for_corporation = False
-    issuer_corporation_id = factory.fuzzy.FuzzyInteger(90_000, 99_000)
-    issuer_id = factory.fuzzy.FuzzyInteger(90_000, 99_000)
+    issuer_corporation_id = factory.Sequence(lambda n: 99_000 + n)
+    issuer_id = factory.Sequence(lambda n: 95_000 + n)
     price = factory.fuzzy.FuzzyInteger(90_000, 99_000)
     status = "outstanding"
     title = factory.Faker("sentence")
@@ -203,13 +203,13 @@ class EsiContractFactory(factory.DictFactory):
     """Contract dictionary returned from ESI endpoint."""
 
     # acceptor_id
-    assignee_id = factory.fuzzy.FuzzyInteger(90_000, 99_000)
+    assignee_id = factory.Sequence(lambda n: 90_000 + n)
     availability = "public"
-    contract_id = factory.fuzzy.FuzzyInteger(1_000_000_000, 2_000_000_000)
+    contract_id = factory.Sequence(lambda n: 1_000_000_000 + n)
     date_issued = factory.fuzzy.FuzzyDateTime(now() - dt.timedelta(days=3))
     for_corporation = False
-    issuer_corporation_id = factory.fuzzy.FuzzyInteger(90_000, 99_000)
-    issuer_id = factory.fuzzy.FuzzyInteger(90_000, 99_000)
+    issuer_corporation_id = factory.Sequence(lambda n: 99_000 + n)
+    issuer_id = factory.Sequence(lambda n: 95_000 + n)
     price = factory.fuzzy.FuzzyInteger(90_000, 99_000)
     status = "outstanding"
     start_location_id = 60003760
@@ -234,7 +234,7 @@ class EsiContractItemFactory(factory.DictFactory):
     is_included = True
     is_singleton = False
     quantity = factory.fuzzy.FuzzyInteger(1, 999)
-    record_id = factory.Sequence(lambda n: n)
+    record_id = factory.Sequence(lambda n: 1 + n)
 
     @factory.lazy_attribute
     def type_id(self):

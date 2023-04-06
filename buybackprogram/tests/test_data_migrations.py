@@ -20,7 +20,7 @@ def all_contracts() -> set:
     return set(Contract.objects.all())
 
 
-# @unittest.skip  # Test no longer works after migration 0012 is applied
+@unittest.skip  # Test no longer works after migration 0012 is applied
 class TestDataMigration(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -86,14 +86,3 @@ class TestDataMigration(TestCase):
         data_migration.forwards(apps, connection.schema_editor())
         # then
         self.assertSetEqual(all_contracts(), {contract_1, contract_2b})
-
-    # def test_should_abort_when_duplicates_remain_after_deletion(self):
-    #     # given
-    #     contract_1 = ContractFactory(contract_id=1)  # noqa: F841
-    #     contract_2a = ContractFactory(contract_id=2, no_tracking=False)
-    #     contract_2b = ContractFactory(contract_id=2, no_tracking=False)  # noqa: F841
-    #     contract_2c = ContractFactory(contract_id=2, no_tracking=True)  # noqa: F841
-    #     TrackingFactory(program=self.program, contract=contract_2a)
-    #     # when/then
-    #     with self.assertRaises(SystemExit):
-    #         data_migration.forwards(apps, connection.schema_editor())

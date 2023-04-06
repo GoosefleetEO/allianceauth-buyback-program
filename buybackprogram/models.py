@@ -1229,6 +1229,9 @@ class Contract(models.Model):
     volume = models.BigIntegerField()
     no_tracking = models.BooleanField(default=False)
 
+    def __str__(self) -> str:
+        return str(self.contract_id)
+
 
 class ContractItem(models.Model):
     contract = models.ForeignKey(

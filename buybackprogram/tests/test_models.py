@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.db import IntegrityError
 from django.test import TestCase
 from eveuniverse.models import EveType
 
@@ -283,6 +284,13 @@ class TestContracts(TestCase):
         obj = ContractFactory()
         # when/then
         self.assertIsInstance(str(obj), str)
+
+    def test_contract_id_should_be_unique(self):
+        # given
+        contract = ContractFactory()
+        # when/then
+        with self.assertRaises(IntegrityError):
+            ContractFactory(contract_id=contract.contract_id)
 
 
 class TestContractItems(TestCase):

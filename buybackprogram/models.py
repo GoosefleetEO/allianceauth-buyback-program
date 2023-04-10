@@ -462,6 +462,7 @@ class Owner(models.Model):
                     )
 
                     notes = str()
+                    items = []
 
                     if notifications:
                         notes += "\n\n**Notes**:\n"
@@ -471,15 +472,10 @@ class Owner(models.Model):
 
                     user_message = {
                         "contract": obj,
-                        "contract_items": objs,
-                        "title": "Buyback contract {0}".format(status),
-                        "description": "Your outstanding buyback contract {0} has been {1} by {2}.{3}".format(
-                            tracking.tracking_number,
-                            status,
-                            self.character.character,
-                            notes,
-                        ),
+                        "tracking": tracking,
+                        "title": "Your buyback contract has been {0}".format(status),
                         "color": color,
+                        "notes": notes,
                         "value": intcomma(int(contract["price"])),
                         "assigned_to": assigned_to,
                         "assigned_from": EveEntity.objects.resolve_name(

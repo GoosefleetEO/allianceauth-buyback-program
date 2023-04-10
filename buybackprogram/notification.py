@@ -172,7 +172,6 @@ def send_user_notification(user: User, level: str, message: dict) -> None:
             )
 
             embed = Embed(
-                description=message["contract_items"],
                 title=message["title"],
                 color=message["color"],
                 fields=fields,

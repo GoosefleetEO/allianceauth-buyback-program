@@ -1235,7 +1235,7 @@ class ItemPrices(models.Model):
 class Contract(models.Model):
     assignee_id = models.IntegerField()
     availability = models.CharField(max_length=20)
-    contract_id = models.IntegerField()
+    contract_id = models.IntegerField(unique=True)
     date_completed = models.DateTimeField(null=True)
     date_expired = models.DateTimeField(null=True)
     date_issued = models.DateTimeField()
@@ -1248,9 +1248,10 @@ class Contract(models.Model):
     status = models.CharField(max_length=30)
     title = models.CharField(max_length=128)
     volume = models.BigIntegerField()
-    no_tracking = models.BooleanField(
-        default=False,
-    )
+    no_tracking = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return str(self.contract_id)
 
 
 class ContractItem(models.Model):

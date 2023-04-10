@@ -1,11 +1,20 @@
 from django.conf import settings
+import re
 
 from .utils import clean_setting
 
 # put your app settings here
 
 
-EXAMPLE_SETTING_ONE = getattr(settings, "EXAMPLE_SETTING_ONE", None)
+def get_site_url():  # regex sso url
+    regex = r"^(.+)\/s.+"
+    matches = re.finditer(regex, settings.ESI_SSO_CALLBACK_URL, re.MULTILINE)
+    url = "http://"
+
+    for m in matches:
+        url = m.groups()[0]  # first match
+
+    return url
 
 
 # Hard timeout for tasks in seconds to reduce task accumulation during outages

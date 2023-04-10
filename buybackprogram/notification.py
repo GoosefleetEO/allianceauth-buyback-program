@@ -2,7 +2,7 @@
 notifications helper
 """
 import requests
-
+from django.contrib.humanize.templatetags.humanize import intcomma
 from django.contrib.auth.models import User
 
 from allianceauth.notifications import notify
@@ -22,19 +22,37 @@ def send_aa_discordbot_notification(user, message):
         from aadiscordbot.tasks import send_message
         from discord import Embed
 
+        contract = message["contract"]
+        tracking = message["tracking"]
+
         embed = Embed(
-            description=message["description"],
+            description=message["contract_items"],
             title=message["title"],
             color=message["color"],
         )
 
-        embed.set_footer(text=message["footer"])
-
-        embed.add_field(name="Value", value=message["value"], inline=True)
-        embed.add_field(name="Assigned to", value=message["assigned_to"], inline=True)
         embed.add_field(
-            name="Assigned from", value=message["assigned_from"], inline=True
+            name="Date issued", value=str(contract.date_issued), inline=True
         )
+        embed.add_field(
+            name="Issued from", value=str(message["assigned_from"]), inline=True
+        )
+        embed.add_field(
+            name="Issued to", value=str(message["assigned_to"]), inline=True
+        )
+        embed.add_field(name="Location", value=str(contract.location_name), inline=True)
+        embed.add_field(
+            name="Tracking #", value=str(tracking.tracking_number), inline=True
+        )
+        embed.add_field(
+            name="Volume",
+            value=str(intcomma(int(contract.volume))) + " m3",
+            inline=True,
+        )
+        embed.add_field(
+            name="Value", value=str(intcomma(int(contract.price))) + " ISK", inline=True
+        )
+        embed.add_field(name="Notes", value=str(message["notes"]), inline=False)
 
         send_message(user_pk=user, embed=embed)
 
@@ -61,13 +79,34 @@ def send_aa_discordbot_channel_notification(channel_id, message):
         )
 
 
+# This will set a auth notification and send the user a direct notification on discord if requested for new contracts
 def send_user_notification(user: User, level: str, message: dict) -> None:
-    # Send AA text notification
+    contract = message["contract"]
+    tracking = message["tracking"]
+
+    msg = (
+        "Date issued: "
+        + str(contract.date_issued)
+        + "\n"
+        + "Issued from: "
+        + str(message["assigned_from"])
+        + "\n"
+        + "Location: "
+        + str(contract.location_name)
+        + "\n"
+        + "Tracking #: "
+        + str(tracking.tracking_number)
+        + "\n"
+        + "Price #: "
+        + str(intcomma(int(contract.price)))
+        + " ISK"
+        + "\n"
+    )
     notify(
         user=user,
         title=message["title"],
         level=level,
-        message=message["description"],
+        message=msg,
     )
 
     if not aa_discordnotify_active():
@@ -84,27 +123,58 @@ def send_user_notification(user: User, level: str, message: dict) -> None:
 
             client = DiscordClient()
 
+            contract = message["contract"]
+            tracking = message["tracking"]
+
             fields = []
 
             fields.append(
-                Embed.Field(name="Value", value=message["value"], inline=True)
-            )
-            fields.append(
                 Embed.Field(
-                    name="Assigned to", value=message["assigned_to"], inline=True
+                    name="Date issued", value=str(contract.date_issued), inline=True
                 )
             )
             fields.append(
                 Embed.Field(
-                    name="Assigned from", value=message["assigned_from"], inline=True
+                    name="Issued from", value=str(message["assigned_from"]), inline=True
                 )
+            )
+            fields.append(
+                Embed.Field(
+                    name="Issued to", value=str(message["assigned_to"]), inline=True
+                )
+            )
+            fields.append(
+                Embed.Field(
+                    name="Location", value=str(contract.location_name), inline=True
+                )
+            )
+            fields.append(
+                Embed.Field(
+                    name="Tracking #", value=str(tracking.tracking_number), inline=True
+                )
+            )
+            fields.append(
+                Embed.Field(
+                    name="Volume",
+                    value=str(intcomma(int(contract.volume))) + " m3",
+                    inline=True,
+                )
+            )
+            fields.append(
+                Embed.Field(
+                    name="Value",
+                    value=str(intcomma(int(contract.price))) + " ISK",
+                    inline=True,
+                )
+            )
+            fields.append(
+                Embed.Field(name="Notes", value=str(message["notes"]), inline=False)
             )
 
             embed = Embed(
-                description=message["description"],
+                description=message["contract_items"],
                 title=message["title"],
                 color=message["color"],
-                footer=Embed.Footer(text=message["footer"]),
                 fields=fields,
                 author=Embed.Author(name="AA Buyback Program"),
             )
@@ -138,6 +208,7 @@ def send_user_notification(user: User, level: str, message: dict) -> None:
         )
 
 
+# This will send the contract notification to a selected webhook on discord
 def send_message_to_discord_channel(
     webhook, message: dict, embed: bool = False
 ) -> None:
@@ -150,24 +221,52 @@ def send_message_to_discord_channel(
 
     # leave this out if you dont want an embed
     # for all params, see https://discordapp.com/developers/docs/resources/channel#embed-object
+
+    contract = message["contract"]
+    tracking = message["tracking"]
+
     data["embeds"] = [
         {
-            "description": message["description"],
+            "description": message["contract_items"],
             "title": message["title"],
             "color": message["color"],
-            "footer": {"text": message["footer"]},
             "fields": [
-                {"name": "Value", "value": message["value"], "inline": True},
                 {
-                    "name": "Assigned to",
-                    "value": message["assigned_to"],
+                    "name": "Date issued",
+                    "value": str(contract.date_issued),
                     "inline": True,
                 },
                 {
-                    "name": "Assigned from",
-                    "value": message["assigned_from"],
+                    "name": "Issued from",
+                    "value": str(message["assigned_from"]),
                     "inline": True,
                 },
+                {
+                    "name": "Issued to",
+                    "value": str(message["assigned_to"]),
+                    "inline": True,
+                },
+                {
+                    "name": "Location",
+                    "value": str(contract.location_name),
+                    "inline": True,
+                },
+                {
+                    "name": "Tracking #",
+                    "value": str(tracking.tracking_number),
+                    "inline": True,
+                },
+                {
+                    "name": "Volume",
+                    "value": str(intcomma(int(contract.volume))) + " m3",
+                    "inline": True,
+                },
+                {
+                    "name": "Value",
+                    "value": str(intcomma(int(contract.price))) + " ISK",
+                    "inline": True,
+                },
+                {"name": "Notes", "value": str(message["notes"]), "inline": False},
             ],
         }
     ]

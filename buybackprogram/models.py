@@ -25,6 +25,7 @@ from buybackprogram.notification import (
 from .app_settings import (
     BUYBACKPROGRAM_TRACKING_PREFILL,
     BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS,
+    get_site_url,
 )
 
 from .decorators import fetch_token_for_owner
@@ -301,6 +302,7 @@ class Owner(models.Model):
                 logger.debug("Got corporations for contract owner: %s" % corporations)
 
                 objs = []
+                items = []
 
                 # Prepare objects for bulk create
                 for item in contract_items:
@@ -314,6 +316,12 @@ class Owner(models.Model):
                     )
 
                     objs.append(contract_item)
+
+                    items.append(
+                        str(EveType.objects.get(id=item["type_id"]))
+                        + " x "
+                        + str(item["quantity"])
+                    )
 
                 try:
                     ContractItem.objects.bulk_create(objs)
@@ -346,17 +354,35 @@ class Owner(models.Model):
                 notes = str()
 
                 if notifications:
-                    notes += "\n\n**Notes**:\n"
                     for note in notifications:
                         notes += str(note.message)
                         notes += "\n\n"
 
+                logger.debug("Contract contains %s" % "\n".join(items))
+
+                contract_item_list = "\n".join(items)
+                contract_url = (
+                    get_site_url()
+                    + "/buybackprogram/tracking/"
+                    + tracking.tracking_number
+                )
+
+                # Limit contract items to fit into embed limitations
+                if len(contract_item_list) > 2000:
+                    contract_item_list = (
+                        contract_item_list
+                        + "\n[See all items ...]("
+                        + contract_url
+                        + ")"
+                    )
+
                 user_message = {
-                    "title": "New buyback contract assigned",
-                    "description": "A new contract with tracking number {0} has been assigned to buyback program {1}.{2}".format(
-                        tracking.tracking_number,
-                        tracking.program.name,
-                        notes,
+                    "contract": obj,
+                    "contract_items": contract_item_list,
+                    "tracking": tracking,
+                    "notes": notes,
+                    "title": "New buyback contract assigned for program {0}".format(
+                        tracking.program.name
                     ),
                     "color": 0x5BC0DE,
                     "value": intcomma(int(contract["price"])),
@@ -364,7 +390,6 @@ class Owner(models.Model):
                     "assigned_from": EveEntity.objects.resolve_name(
                         contract["issuer_id"]
                     ),
-                    "footer": "Hint: You can disable these notifications from your program settings",
                 }
 
                 # If tracking is active and we should send a message for our users
@@ -445,6 +470,8 @@ class Owner(models.Model):
                             notes += "\n\n"
 
                     user_message = {
+                        "contract": obj,
+                        "contract_items": objs,
                         "title": "Buyback contract {0}".format(status),
                         "description": "Your outstanding buyback contract {0} has been {1} by {2}.{3}".format(
                             tracking.tracking_number,
@@ -458,7 +485,6 @@ class Owner(models.Model):
                         "assigned_from": EveEntity.objects.resolve_name(
                             contract["issuer_id"]
                         ),
-                        "footer": "Hint: You can disable these notifications from your buybackprogram settings",
                     }
 
                     send_user_notification(

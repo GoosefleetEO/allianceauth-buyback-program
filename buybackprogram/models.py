@@ -465,7 +465,6 @@ class Owner(models.Model):
                     items = []
 
                     if notifications:
-                        notes += "\n\n**Notes**:\n"
                         for note in notifications:
                             notes += str(note.message)
                             notes += "\n\n"

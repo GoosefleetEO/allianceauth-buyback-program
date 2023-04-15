@@ -1,8 +1,7 @@
 import os
 
-from setuptools import find_packages, setup
-
 from buybackprogram import __version__
+from setuptools import find_packages, setup
 
 # read the contents of your README file
 this_directory = os.path.abspath(os.path.dirname(__file__))
@@ -42,7 +41,7 @@ setup(
     python_requires="~=3.8",
     install_requires=[
         "allianceauth>=3.0",
-        "django-eveuniverse>=0.8.2",
+        "django-eveuniverse>=1.0.0a1",
         "allianceauth-app-utils>=1.17.1",
     ],
 )

@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('buybackprogram', '0012_make_contract_id_unique'),
+        ("buybackprogram", "0012_make_contract_id_unique"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='program',
-            name='discord_show_item_list',
-            field=models.BooleanField(default=False, help_text='Determines if you want to show the contract items in the discord messages. This applies to both webhooks and direct messages.', verbose_name='Show list of items on discord message'),
+            model_name="program",
+            name="discord_show_item_list",
+            field=models.BooleanField(
+                default=False,
+                help_text="Determines if you want to show the contract items in the discord messages. This applies to both webhooks and direct messages.",
+                verbose_name="Show list of items on discord message",
+            ),
         ),
     ]

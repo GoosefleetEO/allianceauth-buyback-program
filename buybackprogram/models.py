@@ -360,7 +360,12 @@ class Owner(models.Model):
 
                 logger.debug("Contract contains %s" % "\n".join(items))
 
-                contract_item_list = "\n".join(items)
+                # Check if the program wants to display the item list
+                if tracking.program.discord_show_item_list:
+                    contract_item_list = "\n".join(items)
+                else:
+                    contract_item_list = ""
+
                 contract_url = (
                     get_site_url()
                     + "/buybackprogram/tracking/"
@@ -368,10 +373,13 @@ class Owner(models.Model):
                 )
 
                 # Limit contract items to fit into embed limitations
-                if len(contract_item_list) > 2000:
+                if (
+                    len(contract_item_list) > 2000
+                    or not tracking.program.discord_show_item_list
+                ):
                     contract_item_list = (
                         contract_item_list
-                        + "\n[See all items ...]("
+                        + "\n[See all contract items ...]("
                         + contract_url
                         + ")"
                     )
@@ -1151,6 +1159,12 @@ class Program(models.Model):
         verbose_name="Discord direct messages for new contracts",
         default=False,
         help_text="Check if you want to receive a direct message notification each time a new contract is created. <b>Requires aa-discordbot app or discordproxy app to work</b>",
+    )
+
+    discord_show_item_list = models.BooleanField(
+        verbose_name="Show list of items on discord message",
+        default=False,
+        help_text="Determines if you want to show the contract items in the discord messages. This applies to both webhooks and direct messages.",
     )
 
     discord_channel_notification = models.CharField(

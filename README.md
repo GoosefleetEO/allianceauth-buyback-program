@@ -276,6 +276,9 @@ If you want to receive messages over discord for every new contract you can tick
 
 > :information_source: Requires the [aa-discordbot plugin](https://github.com/pvyParts/allianceauth-discordbot) or [discordproxy app](https://gitlab.com/ErikKalkoken/discordproxy) to work
 
+### Show list of items on discord message
+This option will determine if a list of all contract items is added into the discord message description field. If you are accepting all items the list may become very long. If set to false will show a link to the tracking page instead.
+
 ### Discord channel messages
 You can send notifications about new contracts directly into the discord channel which is linked to AUTH,
 

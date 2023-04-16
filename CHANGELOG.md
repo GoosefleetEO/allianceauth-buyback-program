@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased] - yyyy-mm-dd
+
+### Added
+- Closes #61, added an option for programs to display or hide the contract item list on discord messages.
+
 ## [1.10.0] - 2023-04-10
 
 ### Added

@@ -122,6 +122,7 @@ class Owner(models.Model):
 
         # Merge all contracts into a single list
         all_contracts = contracts + corporation_contracts
+        tracked_contrats = list()
 
         logger.debug("Total contracts received: %s" % len(all_contracts))
 
@@ -140,6 +141,8 @@ class Owner(models.Model):
                     if tracking.tracking_number in contract["title"]:
                         self._process_contract(contract, tracking, token)
 
+                        tracked_contrats.append(contract)
+
                         break  # If we have found a match from our ESI contracts wi will stop looping on the contract
 
         # Check for possible scam contracts that are pretending to be buyback contracts
@@ -147,7 +150,17 @@ class Owner(models.Model):
         if BUYBACKPROGRAM_TRACK_PREFILL_CONTRACTS:
             logger.debug("Starting untracked contracts check")
 
-            for contract in all_contracts:
+            # Check what contracts we already have processed earlier
+            untracked_contracts = [
+                x for x in all_contracts if x not in tracked_contrats
+            ]
+
+            logger.debug(
+                "Found %s untracked contracts out of %s"
+                % (len(untracked_contracts), len(all_contracts))
+            )
+
+            for contract in untracked_contracts:
                 if BUYBACKPROGRAM_TRACKING_PREFILL in contract["title"]:
                     try:
                         tracking = Tracking.objects.get(

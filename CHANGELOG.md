@@ -5,11 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased] - yyyy-mm-dd
-
-### Added
-
-### Changed
+## [1.11.1] - 2023-04-18
 
 ### Fixed
 - Fixes #60, contracts with titles that include extra character no longer gets marked as untracked

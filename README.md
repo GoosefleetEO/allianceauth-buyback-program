@@ -1,5 +1,7 @@
 # Buyback Program
 
+Gooseflock fork
+
 An Alliance Auth app for creating buyback programs and to allow users calculate prices for buyback contracts.
 
 [![pipeline](https://gitlab.com/paulipa/allianceauth-buyback-program/badges/master/pipeline.svg)](https://gitlab.com/paulipa/allianceauth-buyback-program/-/commits/master)
